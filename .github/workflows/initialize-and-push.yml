@@ -1,0 +1,56 @@
+# Create this file in your repository at .github/workflows/initialize-and-push.yml
+# Trigger: run manually from the Actions tab (workflow_dispatch)
+name: Initialize and push (manual)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  initialize-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Configure git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Ensure branch 'main' exists locally
+        run: |
+          # create and switch to main if it doesn't exist; otherwise switch to main
+          git switch -c main || git switch main
+
+      - name: Stage and commit any changes
+        run: |
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Initial commit: Janus-Omega-OS" || true
+          fi
+
+      - name: Rebase on remote main if it exists
+        run: |
+          if git ls-remote --exit-code --heads origin main >/dev/null 2>&1; then
+            git fetch origin main
+            # Attempt a rebase to integrate remote changes; fail the job if rebase has conflicts.
+            if ! git rebase origin/main; then
+              git rebase --abort || true
+              echo "Rebase failed due to conflicts — resolve locally and re-run workflow or push from your machine."
+              exit 1
+            fi
+          else
+            echo "Remote 'main' does not exist; will push local 'main' as new branch."
+          fi
+
+      - name: Push changes to origin/main
+        run: |
+          git push origin main

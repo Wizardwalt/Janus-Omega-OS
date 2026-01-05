@@ -1,0 +1,64 @@
+name: Build JanusOS
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+      options: --privileged
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Tools
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm archiso rust cargo make git gcc pkg-config openssl
+
+      - name: Compile Rust Core
+        run: |
+          cargo build --release
+          ls target/release/janus_omega
+
+      - name: Configure ISO
+        run: |
+          cp -r /usr/share/archiso/configs/releng/ build_dir
+          
+          # ADD PACKAGES
+          echo "android-tools" >> build_dir/packages.x86_64
+          echo "libimobiledevice" >> build_dir/packages.x86_64
+          echo "alacritty" >> build_dir/packages.x86_64
+          echo "lua" >> build_dir/packages.x86_64
+          echo "ttf-jetbrains-mono" >> build_dir/packages.x86_64
+          
+          # INJECT FILES
+          mkdir -p build_dir/airootfs/usr/local/bin
+          mkdir -p build_dir/airootfs/opt/janus/plugins
+          
+          cp target/release/janus_omega build_dir/airootfs/usr/local/bin/janus
+          chmod +x build_dir/airootfs/usr/local/bin/janus
+          cp plugins/*.lua build_dir/airootfs/opt/janus/plugins/
+
+          # AUTO-START CONFIG
+          echo -e '#!/bin/sh\n\nadb start-server &\nxset s off\nwhile true; do alacritty --working-directory /opt/janus -o font.size=14 -e /usr/local/bin/janus; sleep 1; done' > build_dir/airootfs/root/.xinitrc
+          
+          # AUTO-LOGIN
+          mkdir -p build_dir/airootfs/etc/systemd/system/getty@tty1.service.d
+          echo -e '[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin root --noclear %I $TERM' > build_dir/airootfs/etc/systemd/system/getty@tty1.service.d/autologin.conf
+          
+          # START GRAPHICS
+          echo '[[ -z $DISPLAY && $XDG_VTNR -eq 1 ]] && exec startx' >> build_dir/airootfs/root/.bash_profile
+
+      - name: Build ISO
+        run: |
+          cd build_dir
+          mkarchiso -v -w work/ -o out/ .
+
+      - name: Upload ISO
+        uses: actions/upload-artifact@v4
+        with:
+          name: JanusOS-Omega
+          path: build_dir/out/*.iso
