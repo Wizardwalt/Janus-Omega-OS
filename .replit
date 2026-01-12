@@ -5,7 +5,7 @@ modules = ["rust-stable"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["jq", "openssl", "pkg-config"]
+packages = ["jq", "openssl", "pkg-config", "udev"]
 
 [gitHubImport]
 requiredFiles = [".replit"]
