@@ -1,0 +1,31 @@
+name: Build Janus Mobile
+on: workflow_dispatch
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with: { distribution: 'zulu', java-version: '17' }
+      - uses: subosito/flutter-action@v2
+        with: { flutter-version: '3.16.0' }
+      - uses: dtolnay/rust-toolchain@stable
+        with: { targets: aarch64-linux-android armv7-linux-androideabi }
+      - uses: nttld/setup-ndk@v1
+        with: { ndk-version: r25c }
+      - run: |
+          flutter create . --project-name janus_mobile --org com.janus
+          flutter pub add flutter_rust_bridge ffi
+          mkdir -p android/app/src/main/assets/plugins
+          cp plugins/*.lua android/app/src/main/assets/plugins/
+          sed -i 's/# assets:/assets:\n    - android\/app\/src\/main\/assets\/plugins\//' pubspec.yaml
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          sed -i '/<application/i <uses-feature android:name="android.hardware.usb.host" />' $MANIFEST
+          sed -i '/<application/i <uses-permission android:name="android.permission.USB_PERMISSION" />' $MANIFEST
+          cargo install cargo-ndk
+          cd native && cargo ndk -t aarch64-linux-android -t armv7-linux-androideabi -o ../android/app/src/main/jniLibs build --release
+          cd .. && flutter build apk --release --no-tree-shake-icons
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Janus-Mobile-APK
+          path: build/app/outputs/flutter-apk/app-release.apk
