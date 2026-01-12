@@ -11,6 +11,17 @@ use tokio::runtime::Runtime;
 use chrono::Local;
 use rusqlite::{params, Connection};
 
+fn trigger_hardware_glitch(logs: Arc<Mutex<Vec<String>>>) {
+    // Tries to talk to Pandora Box via Serial
+    match serialport::new("/dev/ttyAMA0", 115200).open() {
+        Ok(mut port) => {
+            let _ = port.write(b"GLITCH");
+            logs.lock().unwrap().push("[HW] PANDORA: GLITCH SENT".to_string());
+        },
+        Err(_) => logs.lock().unwrap().push("[HW] PANDORA NOT FOUND".to_string()),
+    }
+}
+
 fn run_script(code: String, logs: Arc<Mutex<Vec<String>>>, db: Arc<Mutex<Connection>>) {
     let rt = Runtime::new().unwrap();
     rt.block_on(async {
@@ -28,6 +39,11 @@ fn run_script(code: String, logs: Arc<Mutex<Vec<String>>>, db: Arc<Mutex<Connect
                 Ok(o) => Ok(String::from_utf8_lossy(&o.stdout).trim().to_string()),
                 Err(e) => Ok(format!("ERR: {}", e)),
             }
+        }).unwrap()).unwrap();
+        janus.set("pull", lua.create_function(move |_, (remote, local): (String, String)| {
+             let _ = fs::create_dir_all("extracted_data");
+             let output = Command::new("adb").arg("pull").arg(&remote).arg(format!("extracted_data/{}", local)).output();
+             Ok("Done".to_string())
         }).unwrap()).unwrap();
         lua.globals().set("janus", janus).unwrap();
         match lua.load(&code).exec_async().await {
@@ -48,7 +64,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut terminal = Terminal::new(backend);
     let mut list_state = ListState::default();
     list_state.select(Some(0));
-    let logs = Arc::new(Mutex::new(vec!["JANUS TITAN ONLINE.".to_string()]));
+    let logs = Arc::new(Mutex::new(vec!["JANUS OMEGA ONLINE.".to_string()]));
     let mut current_tab = 0;
     loop {
         let mut scripts = Vec::new();
@@ -62,14 +78,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         scripts.sort();
         terminal.draw(|f| {
             let chunks = Layout::default().direction(Direction::Vertical).constraints([Constraint::Length(3), Constraint::Min(0), Constraint::Length(10)].as_ref()).split(f.size());
-            let tabs = Tabs::new(vec!["Dashboard", "Ops", "Cerberus"]).block(Block::default().borders(Borders::ALL).title(" JANUS TITAN ")).select(current_tab).highlight_style(Style::default().fg(Color::Cyan));
+            let tabs = Tabs::new(vec!["Dashboard", "Ops", "Cerberus"]).block(Block::default().borders(Borders::ALL).title(" JANUS OMEGA ")).select(current_tab).highlight_style(Style::default().fg(Color::Cyan));
             f.render_widget(tabs, chunks[0]);
             if current_tab == 1 { 
                 let items: Vec<ListItem> = scripts.iter().map(|p| ListItem::new(p.file_name().unwrap().to_string_lossy()).style(Style::default().fg(Color::Green))).collect();
                 let list = List::new(items).block(Block::default().borders(Borders::ALL).title(" MODULES ")).highlight_style(Style::default().bg(Color::DarkGray));
                 f.render_stateful_widget(list, chunks[1], &mut list_state);
             } else {
-                let dash = Paragraph::new("\n   SYSTEM STATUS: ARMORED\n   AI: ONLINE\n\n   [<- ->] Nav   [Q] Quit").block(Block::default().borders(Borders::ALL).title(" STATUS "));
+                let dash = Paragraph::new("\n   SYSTEM STATUS: ARMORED\n   AI: ONLINE\n\n   [G] Hardware Glitch   [Enter] Exec   [Q] Quit").block(Block::default().borders(Borders::ALL).title(" STATUS "));
                 f.render_widget(dash, chunks[1]);
             }
             let log_lock = logs.lock().unwrap();
@@ -83,6 +99,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     KeyCode::Char('q') => break,
                     KeyCode::Right => current_tab = (current_tab + 1) % 3,
                     KeyCode::Left => current_tab = if current_tab == 0 { 2 } else { current_tab - 1 },
+                    KeyCode::Char('g') => trigger_hardware_glitch(logs.clone()),
                     KeyCode::Down => { let i = list_state.selected().unwrap_or(0); if i < scripts.len().saturating_sub(1) { list_state.select(Some(i + 1)); } },
                     KeyCode::Up => { let i = list_state.selected().unwrap_or(0); if i > 0 { list_state.select(Some(i - 1)); } },
                     KeyCode::Enter => {

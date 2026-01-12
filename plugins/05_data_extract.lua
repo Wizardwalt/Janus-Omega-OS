@@ -1,0 +1,5 @@
+janus.log(">>> [INTEL] DATA PULL")
+janus.log("Pulling DCIM...")
+janus.pull("/sdcard/DCIM/Camera", "Evidence_Photos")
+janus.log("Pulling Downloads...")
+janus.pull("/sdcard/Download", "Evidence_Downloads")

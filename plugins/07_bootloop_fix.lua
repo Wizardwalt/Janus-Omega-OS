@@ -1,0 +1,5 @@
+janus.log(">>> [REPAIR] BOOTLOOP FIX")
+janus.log("Wiping Cache...")
+janus.shell("pm trim-caches 4096G")
+janus.log("Restarting UI...")
+janus.shell("service call activity 42 s16 com.android.systemui")

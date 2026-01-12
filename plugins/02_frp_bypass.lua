@@ -1,0 +1,5 @@
+janus.log(">>> [HACK] FRP BYPASS")
+janus.log("[1] Youtube Inject...")
+janus.shell("am start -a android.intent.action.VIEW -d 'https://www.youtube.com'")
+janus.log("[2] Maps Inject...")
+janus.shell("am start -a android.intent.action.VIEW -d 'geo:0,0?q=London'")

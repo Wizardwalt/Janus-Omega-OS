@@ -1,4 +1,5 @@
-janus.log(">>> [RADIO] WI-FI MARAUDER ONLINE")
-janus.log("[1] Scan APs")
-janus.log("[*] Initializing Monitor Mode...")
+janus.log(">>> [RADIO] WI-FI ATTACK")
+janus.log("Starting Monitor Mode...")
 janus.shell("airmon-ng start wlan0")
+janus.log("Scanning APs...")
+janus.shell("airodump-ng wlan0mon")

@@ -1,4 +1,4 @@
-name: Build JanusOS God Mode
+name: Build JanusOS
 on: workflow_dispatch
 jobs:
   build:
@@ -8,12 +8,9 @@ jobs:
       options: --privileged
     steps:
       - uses: actions/checkout@v3
-      - name: Install
-        run: pacman -Syu --noconfirm archiso rust cargo make git gcc pkg-config openssl python python-pip
-      - name: Compile
-        run: cargo build --release
-      - name: Config ISO
-        run: |
+      - run: pacman -Syu --noconfirm archiso rust cargo make git gcc pkg-config openssl python python-pip
+      - run: cargo build --release
+      - run: |
           cp -r /usr/share/archiso/configs/releng/ build_dir
           echo "android-tools" >> build_dir/packages.x86_64
           echo "libimobiledevice" >> build_dir/packages.x86_64
@@ -31,8 +28,7 @@ jobs:
           cp plugins/*.lua build_dir/airootfs/opt/janus/plugins/
           echo -e '#!/bin/sh\nadb start-server &\nxset s off\nwhile true; do alacritty --working-directory /opt/janus -o font.size=14 -e /usr/local/bin/janus; sleep 1; done' > build_dir/airootfs/root/.xinitrc
           echo '[[ -z $DISPLAY && $XDG_VTNR -eq 1 ]] && exec startx' >> build_dir/airootfs/root/.bash_profile
-      - name: Build
-        run: cd build_dir && mkarchiso -v -w work/ -o out/ .
+      - run: cd build_dir && mkarchiso -v -w work/ -o out/ .
       - uses: actions/upload-artifact@v4
         with:
           name: JanusOS-Titan-ISO
