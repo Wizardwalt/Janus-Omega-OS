@@ -23,9 +23,11 @@ jobs:
           sed -i '/<application/i <uses-feature android:name="android.hardware.usb.host" />' $MANIFEST
           sed -i '/<application/i <uses-permission android:name="android.permission.USB_PERMISSION" />' $MANIFEST
           cargo install cargo-ndk
+          mkdir -p native/src
+          echo '[package]\nname="native"\nversion="1.0.0"\nedition="2021"\n[lib]\ncrate-type=["cdylib","staticlib"]\n[dependencies]\nflutter_rust_bridge="1"\nanyhow="1.0"' > native/Cargo.toml
+          echo 'pub fn run_command(c: String)->String{format!("EXEC: {}",c)}' > native/src/api.rs
+          echo 'mod api;' > native/src/lib.rs
           cd native && cargo ndk -t aarch64-linux-android -t armv7-linux-androideabi -o ../android/app/src/main/jniLibs build --release
           cd .. && flutter build apk --release --no-tree-shake-icons
       - uses: actions/upload-artifact@v4
-        with:
-          name: Janus-Mobile-APK
-          path: build/app/outputs/flutter-apk/app-release.apk
+        with: { name: Janus-Mobile-APK, path: build/app/outputs/flutter-apk/app-release.apk }
