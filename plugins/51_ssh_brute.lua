@@ -1,0 +1,5 @@
+janus.log(">>> [NETWORK] SSH BRUTE-FORCER")
+janus.log("Initializing SSH attack on local subnet...")
+janus.log("Targeting port 22...")
+janus.log("Loading credentials list: rockyou_top100.txt")
+janus.log("Attack status: RUNNING")

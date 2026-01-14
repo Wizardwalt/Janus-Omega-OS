@@ -1,0 +1,5 @@
+janus.log(">>> [SECURITY] BIOMETRIC TEMPLATE EXTRACTOR")
+janus.log("Scanning for biometric template files...")
+local templates = janus.shell("ls -R /data/system/users/0/fpdata/")
+janus.log("Templates: " .. (templates or "Not Found"))
+janus.log("Biometric extraction complete.")
