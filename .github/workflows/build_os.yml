@@ -26,10 +26,12 @@ jobs:
 
       - name: Configure ISO
         run: |
+          # Use a clean build directory
           mkdir -p build_dir
+          # Copy releng files correctly - ensuring we have a proper profile
           cp -rv /usr/share/archiso/configs/releng/* build_dir/
           
-          # ADD PACKAGES
+          # ADD PACKAGES to the correct file
           echo "android-tools" >> build_dir/packages.x86_64
           echo "libimobiledevice" >> build_dir/packages.x86_64
           echo "alacritty" >> build_dir/packages.x86_64
@@ -39,7 +41,7 @@ jobs:
           echo "xorg-xinit" >> build_dir/packages.x86_64
           echo "xorg-xset" >> build_dir/packages.x86_64
           
-          # INJECT FILES
+          # INJECT FILES into airootfs
           mkdir -p build_dir/airootfs/usr/local/bin
           mkdir -p build_dir/airootfs/opt/janus/plugins
           
@@ -60,8 +62,10 @@ jobs:
 
       - name: Build ISO
         run: |
+          # mkarchiso needs to run in the directory containing the profile
+          # We also need to make sure we're running as root which the container already is
           cd build_dir
-          mkarchiso -v -w work/ -o out/ .
+          mkarchiso -v -w /tmp/archiso-work -o out .
 
       - name: Upload ISO
         uses: actions/upload-artifact@v4
