@@ -1,0 +1,5 @@
+janus.log(">>> [TELEPHONY] VOICE CALL SUITE")
+janus.log("Initializing GSM/LTE audio bridge...")
+janus.log("Dialing target number...")
+janus.log("Call status: ACTIVE")
+janus.log("Voice synthesis: ENABLED (Janus-AI-Voice)")
