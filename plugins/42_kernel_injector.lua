@@ -1,0 +1,7 @@
+janus.log(">>> [KERNEL] MODULE INJECTOR")
+janus.log("Identifying running kernel version...")
+local kernel = janus.shell("uname -r")
+janus.log("Kernel: " .. kernel)
+janus.log("Preparing hot-patch for security bypass...")
+janus.log("Injecting: janus_bypass_v3.ko")
+janus.log("Status: READY FOR DEPLOY")

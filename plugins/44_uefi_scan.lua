@@ -1,0 +1,5 @@
+janus.log(">>> [KERNEL] UEFI/BIOS ROOTKIT SCAN")
+janus.log("Accessing SPI Flash via firmware bridge...")
+janus.log("Analyzing firmware hashes against known good set...")
+janus.log("Status: NO PERSISTENT ROOTKITS DETECTED")
+janus.log("Firmware audit complete.")

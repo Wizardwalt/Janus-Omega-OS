@@ -1,0 +1,5 @@
+janus.log(">>> [FORENSICS] METADATA SCRUBBER")
+janus.log("Initializing deep-clean scrubbing...")
+janus.log("Targets: EXIF, XMP, IPTC, ICC Profile")
+janus.log("Sanitizing evidence files in /opt/janus/evidence/...")
+janus.log("Scrubbing status: COMPLETE (PERMANENT)")

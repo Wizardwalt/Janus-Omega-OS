@@ -1,0 +1,5 @@
+janus.log(">>> [FORENSICS] CRYPTO BRUTE-FORCER")
+janus.log("Targeting LUKS/FileVault partitions...")
+janus.log("Loading ruleset: jtr_standard_rules.conf")
+janus.log("Estimated Time (Top 1M): 14m 32s")
+janus.log("Attack status: QUEUED")

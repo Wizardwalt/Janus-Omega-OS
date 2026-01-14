@@ -1,0 +1,5 @@
+janus.log(">>> [INTEL] JANUS MESH SYNC")
+janus.log("Initializing mesh network bridge...")
+janus.log("Searching for neighboring Janus units...")
+janus.log("Protocol: Encrypted P2P over WireGuard")
+janus.log("Mesh status: SEARCHING...")

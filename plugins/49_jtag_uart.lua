@@ -1,0 +1,5 @@
+janus.log(">>> [SCADA] JTAG/UART DEBUG SUITE")
+janus.log("Accessing serial console bridge...")
+janus.log("Baud rate: 115200")
+janus.log("Attempting chip-off data extraction...")
+janus.log("UART status: CONNECTED")

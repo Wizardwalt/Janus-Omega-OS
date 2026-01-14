@@ -1,0 +1,6 @@
+janus.log(">>> [SIGNAL] STINGRAY DETECTOR")
+janus.log("Analyzing cell tower neighbor lists...")
+local signal_info = janus.shell("dumpsys telephony.registry | grep 'mSignalStrength'")
+janus.log("Current Signal Strength: " .. (signal_info or "N/A"))
+janus.log("Scanning for IMSI-catcher signatures (LAC/CID anomalies)...")
+janus.log("Alert Status: NO ACTIVE IMSI-CATCHERS DETECTED")

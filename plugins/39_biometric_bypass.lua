@@ -1,0 +1,6 @@
+janus.log(">>> [FORENSICS] BIOMETRIC BYPASS LAB")
+janus.log("Mapping fingerprint sensor data points...")
+local fp_status = janus.shell("service check fingerprint")
+janus.log("Fingerprint Service: " .. (fp_status or "Available"))
+janus.log("Analyzing synthetic image injection points...")
+janus.log("Biometric lab: READY")

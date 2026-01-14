@@ -1,0 +1,5 @@
+janus.log(">>> [SCADA] CAN BUS BRIDGE")
+janus.log("Initializing OBD-II / CAN bridge...")
+janus.log("Scanning vehicle internal networks...")
+janus.log("Monitoring ECU messages...")
+janus.log("CAN Bus status: STANDBY (WAITING FOR LINK)")

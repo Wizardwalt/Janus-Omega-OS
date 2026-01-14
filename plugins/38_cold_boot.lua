@@ -1,0 +1,5 @@
+janus.log(">>> [FORENSICS] COLD BOOT ASSISTANT")
+janus.log("Preparing RAM imaging workflow...")
+janus.log("Recommendation: Liquid nitrogen cooling before power-off.")
+janus.log("RAM Dump path: /opt/janus/dumps/ram_image.bin")
+janus.log("Waiting for physical access trigger...")

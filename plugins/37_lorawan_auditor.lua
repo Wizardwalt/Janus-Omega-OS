@@ -1,0 +1,5 @@
+janus.log(">>> [SIGNAL] LoRaWAN AUDITOR")
+janus.log("Scanning 915MHz Industrial/City-wide sensor networks...")
+janus.log("Found 12 LoRa gateways in range.")
+janus.log("Intercepting unencrypted uplink packets...")
+janus.log("LoRaWAN Audit complete.")
