@@ -27,7 +27,7 @@ jobs:
       - name: Configure ISO
         run: |
           mkdir -p build_dir
-          cp -r /usr/share/archiso/configs/releng/* build_dir/
+          cp -rv /usr/share/archiso/configs/releng/* build_dir/
           
           # ADD PACKAGES
           echo "android-tools" >> build_dir/packages.x86_64
