@@ -1,0 +1,8 @@
+janus.log(">>> [SECURITY] DEVELOPER OPTIONS CHECK")
+janus.log("Checking developer settings status...")
+local dev = janus.shell("settings get global development_settings_enabled")
+janus.log("Developer Options Enabled: " .. (dev or "0"))
+janus.log("Checking USB Debugging status...")
+local usb = janus.shell("settings get global adb_enabled")
+janus.log("USB Debugging: " .. (usb or "0"))
+janus.log("Settings audit complete.")

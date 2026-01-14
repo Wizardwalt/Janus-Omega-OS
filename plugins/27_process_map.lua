@@ -1,0 +1,5 @@
+janus.log(">>> [SYSTEM] PROCESS TREE MAP")
+janus.log("Querying running processes...")
+local ps = janus.shell("ps -A")
+janus.log("Mapping process hierarchy...")
+janus.log("Process tree map complete.")

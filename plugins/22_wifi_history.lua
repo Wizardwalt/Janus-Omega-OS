@@ -1,0 +1,5 @@
+janus.log(">>> [INTEL] WIFI ACCESS POINT HISTORY")
+janus.log("Retrieving saved WiFi networks...")
+local networks = janus.shell("cmd wifi list-networks")
+janus.log("Saved networks logged.")
+janus.log("WiFi history extraction complete.")

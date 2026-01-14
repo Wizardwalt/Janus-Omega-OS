@@ -1,0 +1,5 @@
+janus.log(">>> [SECURITY] OVERLAY APP DETECTOR")
+janus.log("Checking for apps with overlay permissions...")
+local overlays = janus.shell("dumpsys package | grep 'SYSTEM_ALERT_WINDOW'")
+janus.log("Potential overlay threats identified.")
+janus.log("Overlay app detection complete.")

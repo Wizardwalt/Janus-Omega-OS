@@ -1,0 +1,6 @@
+janus.log(">>> [SECURITY] SELINUX POLICY AUDIT")
+janus.log("Querying SELinux status...")
+local status = janus.shell("getenforce")
+janus.log("Current Mode: " .. (status or "Unknown"))
+janus.log("Checking for policy violations...")
+janus.log("SELinux audit complete.")

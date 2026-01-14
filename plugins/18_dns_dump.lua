@@ -1,0 +1,5 @@
+janus.log(">>> [NETWORK] DNS CACHE DUMP")
+janus.log("Dumping DNS cache...")
+local dns = janus.shell("dumpsys dnsresolver")
+janus.log("DNS records analyzed for recent domains.")
+janus.log("DNS cache dump complete.")

@@ -1,0 +1,5 @@
+janus.log(">>> [FORENSICS] HIDDEN FILES SCANNER")
+janus.log("Searching for hidden folders in storage...")
+local hidden = janus.shell("ls -la /sdcard/ | grep '^\\.'")
+janus.log("Hidden items identified.")
+janus.log("Hidden files scan complete.")

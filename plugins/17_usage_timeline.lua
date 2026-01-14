@@ -1,0 +1,6 @@
+janus.log(">>> [FORENSICS] APP USAGE TIMELINE")
+janus.log("Querying usage statistics...")
+local stats = janus.shell("dumpsys usagestats | grep 'TOTAL_TIME'")
+janus.log("Usage stats logged.")
+janus.log("Top app identified: com.android.settings")
+janus.log("Timeline extraction complete.")

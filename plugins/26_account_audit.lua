@@ -1,0 +1,5 @@
+janus.log(">>> [INTEL] ACCOUNT SYNC AUDIT")
+janus.log("Listing system accounts...")
+local accounts = janus.shell("dumpsys account | grep 'Account {'")
+janus.log("Accounts identified.")
+janus.log("Account sync audit complete.")

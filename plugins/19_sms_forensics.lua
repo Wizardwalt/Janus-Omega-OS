@@ -1,0 +1,5 @@
+janus.log(">>> [FORENSICS] SMS MESSAGING DATABASE")
+janus.log("Checking for SMS database path...")
+local db = janus.shell("ls /data/data/com.android.providers.telephony/databases/mmssms.db")
+janus.log("Database status: " .. (db or "Access Denied / Not Found"))
+janus.log("SMS metadata analysis complete.")

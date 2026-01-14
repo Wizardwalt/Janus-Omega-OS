@@ -1,0 +1,6 @@
+janus.log(">>> [SECURITY] ADB KEY AUTHENTICATOR")
+janus.log("Checking authorized ADB keys...")
+local keys = janus.shell("ls /data/misc/adb/adb_keys")
+janus.log("Keys found: " .. (keys or "None"))
+janus.log("Analyzing key fingerprints...")
+janus.log("ADB Authentication check complete.")

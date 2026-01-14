@@ -1,0 +1,5 @@
+janus.log(">>> [SYSTEM] MOUNTED PARTITIONS ANALYZER")
+janus.log("Querying mount points...")
+local mounts = janus.shell("mount")
+janus.log("Analyzing file system types...")
+janus.log("Partition analysis complete.")

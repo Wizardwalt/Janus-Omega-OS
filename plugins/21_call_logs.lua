@@ -1,0 +1,5 @@
+janus.log(">>> [FORENSICS] CALL LOG EXTRACTION")
+janus.log("Checking call log database...")
+local db = janus.shell("ls /data/data/com.android.providers.contacts/databases/contacts2.db")
+janus.log("Database status: " .. (db or "Access Denied"))
+janus.log("Call log metadata scan complete.")
