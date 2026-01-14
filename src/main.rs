@@ -61,7 +61,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen)?;
     let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend);
+    let mut terminal = Terminal::new(backend)?;
     let mut list_state = ListState::default();
     list_state.select(Some(0));
     let logs = Arc::new(Mutex::new(vec!["JANUS OMEGA ONLINE.".to_string()]));

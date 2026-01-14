@@ -38,3 +38,4 @@ args = "cargo run"
 
 [deployment]
 deploymentTarget = "cloudrun"
+run = ["sh", "-c", "No"]
