@@ -72,3 +72,4 @@ jobs:
         with:
           name: JanusOS-Omega
           path: build_dir/out/*.iso
+          retention-days: 1
