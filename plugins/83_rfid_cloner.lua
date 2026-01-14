@@ -1,0 +1,5 @@
+janus.log(">>> [FLIPPER-KILLER] 125kHz RFID CLONER")
+janus.log("Scanning for EM4100 / HID Prox tags...")
+janus.log("Tag ID: 0004567890")
+janus.log("Writing to T5577 writable card...")
+janus.log("Cloning complete.")

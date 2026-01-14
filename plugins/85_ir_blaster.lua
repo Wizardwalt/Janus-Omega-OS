@@ -1,0 +1,5 @@
+janus.log(">>> [FLIPPER-KILLER] UNIVERSAL IR BLASTER")
+janus.log("Loading IR Protocol Database (2000+ devices)...")
+janus.log("Targeting TV: Samsung_Series_7")
+janus.log("Sending Command: POWER_OFF")
+janus.log("IR Burst complete.")

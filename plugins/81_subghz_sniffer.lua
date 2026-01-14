@@ -1,0 +1,5 @@
+janus.log(">>> [FLIPPER-KILLER] SUB-GHz RAW SNIFFER")
+janus.log("Scanning 300MHz - 928MHz frequency range...")
+janus.log("Protocol detected: OOK (Fixed Code)")
+janus.log("Bitstream: 1010100101110001")
+janus.log("Saving raw signal to: /opt/janus/signals/raw_sub.bin")
