@@ -12,6 +12,7 @@
 2. **Pandora Omega**: Radxa CM5 Cyberdeck (8-Core, 16GB RAM).
 3. **Pandora Titan**: Forearm-mounted "Pip-Boy" with Hydra Radio Array.
    - **Form Factor**: 10-inch ultra-widescreen rugged display, Fallout-inspired industrial aesthetic.
+   - **Storage**: 3x NVMe M.2 slots (supports up to 2 active drives + 1 expansion) and integrated MicroSD slot.
    - **Connectivity**: Integrated 5G/LTE Cellular, Wi-Fi 6E, and Bluetooth 5.3 for full smartphone and internet capabilities.
    - **Durability**: IP68 Weatherproof and MIL-STD-810H Shock-Resistant.
    - **Neural-Sync**: Haptic feedback linked to neural intent.

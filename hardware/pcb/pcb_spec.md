@@ -24,3 +24,11 @@
 - **Wired**: Dual USB-C (1x Data, 1x Power/Glitch)
 - **Antennas**: High-gain internal MIMO antenna array
 - **Expansion**: 40-Pin GPIO Header (Internal)
+
+## Storage Interface
+- **M.2 NVMe**: 3x M.2 slots (PCIe Gen 4)
+  - Slot 1: Primary OS Drive
+  - Slot 2: Secondary Data Drive
+  - Slot 3: Expansion/Spare
+- **MicroSD**: 1x MicroSD Card Slot (UHS-I, Integrated into chassis)
+- **Architecture**: PCIe lane muxing via Radxa CM5 for simultaneous multi-drive support.

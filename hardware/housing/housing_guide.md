@@ -13,8 +13,10 @@
   - Dual Large Analog-Style Rotary Knobs (Volume/Frequency)
   - 5-Way Navigation Joystick
   - Chorded Key Array (Mechanical Switches)
-- **Connectivity**: 
+- **Connectivity & Storage**: 
   - Dual SIM Slots (Waterproof sealed)
+  - 1x MicroSD Slot (Waterproof sealed)
+  - Internal M.2 Access hatch (Shock-resistant)
   - High-gain internal MIMO antenna array (LTE/5G/Wi-Fi/BT)
   - Built-in microphone and waterproof speaker for voice calls
 - **Panic Button**: Guarded physical toggle switch (Red).

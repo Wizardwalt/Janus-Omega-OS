@@ -13,7 +13,9 @@
 | RTL-SDR Integrated IC | DigiKey | $30.00 |
 | FLIR Lepton 3.5 Thermal Cam | GroupGets / DigiKey | $250.00 |
 | Custom 4-Layer Main PCB | JLCPCB / PCBWay | $50.00 (Batch) |
-| **Total Electronics** | | **~$841.00** |
+| 2x 1TB NVMe Gen 4 SSD | Samsung / WD | $160.00 |
+| 1TB MicroSD Card (Extreme) | SanDisk | $90.00 |
+| **Total Electronics** | | **~$1,091.00** |
 
 ## 2. Housing & Chassis
 | Item | Source | Est. Cost (USD) |
