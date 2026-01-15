@@ -10,7 +10,12 @@
 ### II. HARDWARE FLEET (Supported Specifications)
 1. **Pandora Mk.1**: RP2040-based USB Glitcher/Voltage Injector.
 2. **Pandora Omega**: Radxa CM5 Cyberdeck (8-Core, 16GB RAM).
-3. **Pandora Titan**: Forearm-mounted "Pip-Boy" with Hydra Radio Array (Sub-GHz, NFC, IR, UWB, SDR).
+3. **Pandora Titan**: Forearm-mounted "Pip-Boy" with Hydra Radio Array.
+   - **Neural-Sync**: Haptic feedback linked to neural intent.
+   - **AR-HUD**: Augmented Reality display for real-time threat highlighting.
+   - **CBRN Suite**: Chemical, Biological, Radiological, and Nuclear detection.
+   - **Kinetic Harvester**: Infinite power from arm movement.
+   - **Armor-Link**: Integrated ballistic plating and environmental sealing.
 
 ### III. SYSTEM INFRASTRUCTURE
 - **JanusOS**: RAM-only Live ISO, Kiosk Mode, Pre-loaded toolsets (Metasploit, etc.).
