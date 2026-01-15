@@ -1,15 +1,16 @@
 # Pandora Titan Housing Specification (CAD Guide)
 
 ## Material
-- Carbon Fiber infused PA12 (SLS 3D Printing)
-- 6061 Aluminum faceplate (CNC Machined)
+- Weatherproof & Shock-Resistant: High-impact reinforced polymer with 6061 Aluminum internal skeleton.
+- Weatherproofing: IP68 certified with silicone gaskets and sealed port covers.
+- Shock Resistance: MIL-STD-810H compliant rubberized bumpers and internal vibration dampening.
 
 ## Design Elements
-- **Forearm Mount**: Ergonomic curve with adjustable Velcro/Nylon straps.
-- **Display**: 5.0" Capacitive Touchscreen (Industrial grade).
+- **Aesthetic**: Classic "Retro-Future" industrial look inspired by nuclear-age aesthetics (Olive drab, brass accents, analog dials).
+- **Forearm Mount**: Ergonomic curved wrist-lock with breathable heavy-duty nylon straps.
+- **Display**: 10.0" Ultra-Widescreen Capacitive Touchscreen (1600x600), Sunlight readable, Gorilla Glass 5.
 - **Controls**: 
-  - Dual Rotary Encoders (Knob)
+  - Dual Large Analog-Style Rotary Knobs (Volume/Frequency)
   - 5-Way Navigation Joystick
   - Chorded Key Array (Mechanical Switches)
-- **Sealing**: IP67 Waterproof Gaskets.
-- **Panic Button**: Guarded toggle switch (Red).
+- **Panic Button**: Guarded physical toggle switch (Red).

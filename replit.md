@@ -11,6 +11,8 @@
 1. **Pandora Mk.1**: RP2040-based USB Glitcher/Voltage Injector.
 2. **Pandora Omega**: Radxa CM5 Cyberdeck (8-Core, 16GB RAM).
 3. **Pandora Titan**: Forearm-mounted "Pip-Boy" with Hydra Radio Array.
+   - **Form Factor**: 10-inch ultra-widescreen rugged display, Fallout-inspired industrial aesthetic.
+   - **Durability**: IP68 Weatherproof and MIL-STD-810H Shock-Resistant.
    - **Neural-Sync**: Haptic feedback linked to neural intent.
    - **AR-HUD**: Augmented Reality display for real-time threat highlighting.
    - **CBRN Suite**: Chemical, Biological, Radiological, and Nuclear detection.
