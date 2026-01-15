@@ -1,5 +1,28 @@
 # JanusOS - Replit Agent Guide
 
+## Master Inventory (The Omega Ecosystem)
+
+### I. SOFTWARE ARSENAL (Rust TUI + Lua Plugins)
+- **Mobile Offense**: FRP Bypass, Bloatware Matrix (150+ targets), Root Dragnet, Bootloop Resurrection, Game Alchemist.
+- **Forensics**: Data Extraction, WAL Carving, Timeline Reconstruction, Geo-Profiling.
+- **Network Warfare**: Nmap Cartography, Wi-Fi Marauder, MITM (SSL Strip), OSINT Oracle, Cellular Scanner.
+
+### II. HARDWARE FLEET (Supported Specifications)
+1. **Pandora Mk.1**: RP2040-based USB Glitcher/Voltage Injector.
+2. **Pandora Omega**: Radxa CM5 Cyberdeck (8-Core, 16GB RAM).
+3. **Pandora Titan**: Forearm-mounted "Pip-Boy" with Hydra Radio Array (Sub-GHz, NFC, IR, UWB, SDR).
+
+### III. SYSTEM INFRASTRUCTURE
+- **JanusOS**: RAM-only Live ISO, Kiosk Mode, Pre-loaded toolsets (Metasploit, etc.).
+- **Project Aether**: HWID-locked license validation.
+- **Project Ouroboros**: Polymorphic binary defense & Anti-debug protection.
+
+### IV. OMEGA UPGRADES
+- **Mjolnir**: 21700 Hot-swappable Battery System.
+- **Chameleon**: Panic Button (Instant Excel skin overlay).
+- **Vital**: Biometric Heart Rate Kill-switch.
+- **Stethoscope**: Acoustic motherboard diagnostics.
+
 ## Overview
 
 JanusOS is a custom Linux distribution (based on Arch Linux) with a Rust-based terminal application core called "janus_omega." The project builds a bootable ISO image that auto-launches a terminal interface for device management and forensics operations. The system integrates with mobile devices via ADB (Android) and libimobiledevice (iOS), and uses Lua for plugin extensibility.
