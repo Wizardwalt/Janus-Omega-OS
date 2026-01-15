@@ -29,6 +29,6 @@
 - **M.2 NVMe**: 3x M.2 slots (PCIe Gen 4)
   - Slot 1: Primary OS Drive
   - Slot 2: Secondary Data Drive
-  - Slot 3: Expansion/Spare
+  - Slot 3: Janus GPU Accelerator (Hailo-8/Orin Nano)
 - **MicroSD**: 1x MicroSD Card Slot (UHS-I, Integrated into chassis)
 - **Architecture**: PCIe lane muxing via Radxa CM5 for simultaneous multi-drive support.
