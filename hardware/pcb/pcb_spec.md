@@ -18,6 +18,9 @@
 - Bottom: Signal + Haptic Drivers
 
 ## Connectivity
-- Dual USB-C (1x Data, 1x Power/Glitch)
-- 40-Pin GPIO Header (Internal)
-- SMA Antenna Connectors x3
+- **5G/LTE Cellular**: Quectel RM520N-GL (Sub-6GHz/LTE Cat 19)
+- **SIM**: Integrated Nano-SIM Slot + eSIM Support
+- **Wi-Fi/BT**: Intel AX210 Wi-Fi 6E / Bluetooth 5.3
+- **Wired**: Dual USB-C (1x Data, 1x Power/Glitch)
+- **Antennas**: High-gain internal MIMO antenna array
+- **Expansion**: 40-Pin GPIO Header (Internal)
