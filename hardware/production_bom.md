@@ -5,7 +5,7 @@
 | :--- | :--- | :--- |
 | Radxa CM5 SOM (16GB RAM) | OKDO / Radxa Distro | $150.00 |
 | RP2040 Microcontroller | DigiKey / Mouser | $1.00 |
-| 10" Ultra-Wide Touchscreen (1600x600) | Waveshare / BuyDisplay | $120.00 |
+| 7" Ultra-Wide Touchscreen (1280x480) | Waveshare / BuyDisplay | $85.00 |
 | Quectel RM520N-GL 5G Module | AliExpress / Quectel | $180.00 |
 | Intel AX210 Wi-Fi 6E/BT 5.3 | Amazon / DigiKey | $25.00 |
 | CC1101 Sub-GHz Transceiver | Amazon / TI | $15.00 |

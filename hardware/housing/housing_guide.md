@@ -8,7 +8,7 @@
 ## Design Elements
 - **Aesthetic**: Classic "Retro-Future" industrial look inspired by nuclear-age aesthetics (Olive drab, brass accents, analog dials).
 - **Forearm Mount**: Ergonomic curved wrist-lock with breathable heavy-duty nylon straps.
-- **Display**: 10.0" Ultra-Widescreen Capacitive Touchscreen (1600x600), Sunlight readable, Gorilla Glass 5.
+- **Display**: 7.0" Ultra-Widescreen Capacitive Touchscreen (1280x480), Sunlight readable, Gorilla Glass 5.
 - **Controls**: 
   - Dual Large Analog-Style Rotary Knobs (Volume/Frequency)
   - 5-Way Navigation Joystick
