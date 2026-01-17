@@ -5,11 +5,11 @@
 | :--- | :--- | :--- |
 | Radxa CM5 SOM (16GB RAM) | OKDO / Radxa Distro | $150.00 |
 | RP2040 Microcontroller | DigiKey / Mouser | $1.00 |
-| 7" Ultra-Wide Touchscreen (1280x480) | Waveshare / BuyDisplay | $85.00 |
-| Quectel RM520N-GL 5G Module | AliExpress / Quectel | $180.00 |
-| Intel AX210 Wi-Fi 6E/BT 5.3 | Amazon / DigiKey | $25.00 |
-| CC1101 Sub-GHz Transceiver | Amazon / TI | $15.00 |
-| PN532 NFC Module | Adafruit / Amazon | $20.00 |
+| Titan Neural-Link Controller | Custom / Nordic Semi | $45.00 |
+| CBRN Sensor Module (Geiger/VOC) | Waveshare / Bosch | $120.00 |
+| Kinetic Harvester Unit | Piezo-Electric / Custom | $65.00 |
+| AR-HUD Bridge (HDMI-to-LVDS) | Custom / Realtek | $35.00 |
+| Level IIIa Ballistic Lining | DuPont / Honeywell | $150.00 |
 | RTL-SDR Integrated IC | DigiKey | $30.00 |
 | FLIR Lepton 3.5 Thermal Cam | GroupGets / DigiKey | $250.00 |
 | Custom 4-Layer Main PCB | JLCPCB / PCBWay | $50.00 (Batch) |
