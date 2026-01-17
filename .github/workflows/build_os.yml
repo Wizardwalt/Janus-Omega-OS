@@ -16,7 +16,6 @@ jobs:
           echo "libnfc" >> build_dir/packages.x86_64
           echo "rtl-sdr" >> build_dir/packages.x86_64
           echo "lirc" >> build_dir/packages.x86_64
-          echo "can-utils" >> build_dir/packages.x86_64
           # HACKING SUITE
           echo "android-tools" >> build_dir/packages.x86_64
           echo "libimobiledevice" >> build_dir/packages.x86_64
