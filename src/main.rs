@@ -4,7 +4,6 @@ use std::process::Command;
 use std::sync::{Arc, Mutex};
 use std::io::{self, Write};
 use std::time::Duration;
-use std::env;
 
 use crossterm::{
     event::{self, Event, KeyCode},
@@ -14,8 +13,8 @@ use crossterm::{
 use ratatui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
-    style::{Color, Modifier, Style},
-    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Tabs, StatefulWidget, Widget},
+    style::{Color, Style},
+    widgets::{Block, Borders, List, ListItem, ListState, Paragraph, Tabs},
     Terminal,
 };
 use mlua::prelude::*;
