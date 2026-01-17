@@ -80,12 +80,16 @@ fn run_script(code: String, logs: Arc<Mutex<Vec<String>>>, db: Arc<Mutex<Connect
             Ok(format!("AR-HUD OVERLAY: {}", if state { "ENGAGED" } else { "DISENGAGED" }))
         }).unwrap()).unwrap();
 
-        janus.set("neural_sync", lua.create_function(|_, intent: String| {
-            Ok(format!("NEURAL-SYNC: EXECUTING INTENT [{}]", intent.to_uppercase()))
+        janus.set("chameleon_engage", lua.create_function(|_, target_skin: String| {
+            Ok(format!("CHAMELEON MODE: ENGAGED [SKIN: {}]", target_skin.to_uppercase()))
         }).unwrap()).unwrap();
 
-        janus.set("haptic_pulse", lua.create_function(|_, intensity: u8| {
-            Ok(format!("HAPTIC FEEDBACK: {}%", intensity))
+        janus.set("blackbox_log", lua.create_function(|_, _: ()| {
+            Ok("BLACK-BOX RECORDER: 24/7 RF LOGGING ACTIVE".to_string())
+        }).unwrap()).unwrap();
+
+        janus.set("quantum_shield", lua.create_function(|_, _: ()| {
+            Ok("QUANTUM-RESISTANT ENCRYPTION: ACTIVE (KYBER-1024)".to_string())
         }).unwrap()).unwrap();
 
         lua.globals().set("janus", janus).unwrap();

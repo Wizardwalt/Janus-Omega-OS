@@ -17,16 +17,14 @@
    - **Acceleration**: Dedicated M.2 AI GPU for Neural-Sync and cryptographic offloading.
    - **Connectivity**: Integrated 5G/LTE Cellular, Wi-Fi 6E, and Bluetooth 5.3 for full smartphone and internet capabilities.
    - **Durability**: IP68 Weatherproof and MIL-STD-810H Shock-Resistant.
+   - **Armor-Link**: Integrated ballistic plating and environmental sealing.
+   - **Chameleon Mode**: Instant non-forensic skin overlay (e.g., medical readout or standard smartwatch).
+   - **Black-Box Flight Recorder**: Local 24/7 logging of all radio environment changes.
+   - **Quantum-Resistant Encryption**: Integrated post-quantum cryptographic primitives.
    - **Neural-Sync**: Haptic feedback linked to neural intent.
    - **AR-HUD**: Augmented Reality display for real-time threat highlighting.
    - **CBRN Suite**: Chemical, Biological, Radiological, and Nuclear detection.
    - **Kinetic Harvester**: Infinite power from arm movement.
-   - **Armor-Link**: Integrated ballistic plating and environmental sealing.
-   - **Neural-Sync**: Haptic feedback linked to neural intent.
-   - **AR-HUD**: Augmented Reality display for real-time threat highlighting.
-   - **CBRN Suite**: Chemical, Biological, Radiological, and Nuclear detection.
-   - **Kinetic Harvester**: Infinite power from arm movement.
-   - **Armor-Link**: Integrated ballistic plating and environmental sealing.
 
 ### III. SYSTEM INFRASTRUCTURE
 - **JanusOS**: RAM-only Live ISO, Kiosk Mode, Pre-loaded toolsets (Metasploit, etc.).
