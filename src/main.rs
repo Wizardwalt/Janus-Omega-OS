@@ -72,8 +72,20 @@ fn run_script(code: String, logs: Arc<Mutex<Vec<String>>>, db: Arc<Mutex<Connect
             Ok("ARMOR-LINK: 100% | INTEGRITY: NOMINAL".to_string())
         }).unwrap()).unwrap();
 
-        janus.set("cbrn_scan", lua.create_function(|_, _: ()| {
-            Ok("CBRN: CLEAN | RADIATION: 0.12 μSv/h".to_string())
+        janus.set("kinetic_charge", lua.create_function(|_, _: ()| {
+            Ok("KINETIC HARVESTER: ACTIVE | CHARGE RATE: +450mW".to_string())
+        }).unwrap()).unwrap();
+
+        janus.set("ar_hud_link", lua.create_function(|_, state: bool| {
+            Ok(format!("AR-HUD OVERLAY: {}", if state { "ENGAGED" } else { "DISENGAGED" }))
+        }).unwrap()).unwrap();
+
+        janus.set("neural_sync", lua.create_function(|_, intent: String| {
+            Ok(format!("NEURAL-SYNC: EXECUTING INTENT [{}]", intent.to_uppercase()))
+        }).unwrap()).unwrap();
+
+        janus.set("haptic_pulse", lua.create_function(|_, intensity: u8| {
+            Ok(format!("HAPTIC FEEDBACK: {}%", intensity))
         }).unwrap()).unwrap();
 
         lua.globals().set("janus", janus).unwrap();
