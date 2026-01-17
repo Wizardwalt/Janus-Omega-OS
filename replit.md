@@ -6,6 +6,7 @@
 - **Mobile Offense**: FRP Bypass, Bloatware Matrix (150+ targets), Root Dragnet, Bootloop Resurrection, Game Alchemist.
 - **Forensics**: Data Extraction, WAL Carving, Timeline Reconstruction, Geo-Profiling.
 - **Network Warfare**: Nmap Cartography, Wi-Fi Marauder, MITM (SSL Strip), OSINT Oracle, Cellular Scanner.
+- **Titan-Exclusive**: Neural-Sync (Haptic Intent), AR-HUD Overlay, CBRN Detection, Kinetic Power Management.
 
 ### II. HARDWARE FLEET (Supported Specifications)
 1. **Pandora Mk.1**: RP2040-based USB Glitcher/Voltage Injector.
@@ -16,6 +17,11 @@
    - **Acceleration**: Dedicated M.2 AI GPU for Neural-Sync and cryptographic offloading.
    - **Connectivity**: Integrated 5G/LTE Cellular, Wi-Fi 6E, and Bluetooth 5.3 for full smartphone and internet capabilities.
    - **Durability**: IP68 Weatherproof and MIL-STD-810H Shock-Resistant.
+   - **Neural-Sync**: Haptic feedback linked to neural intent.
+   - **AR-HUD**: Augmented Reality display for real-time threat highlighting.
+   - **CBRN Suite**: Chemical, Biological, Radiological, and Nuclear detection.
+   - **Kinetic Harvester**: Infinite power from arm movement.
+   - **Armor-Link**: Integrated ballistic plating and environmental sealing.
    - **Neural-Sync**: Haptic feedback linked to neural intent.
    - **AR-HUD**: Augmented Reality display for real-time threat highlighting.
    - **CBRN Suite**: Chemical, Biological, Radiological, and Nuclear detection.

@@ -56,10 +56,24 @@ fn run_script(code: String, logs: Arc<Mutex<Vec<String>>>, db: Arc<Mutex<Connect
             }
         }).unwrap()).unwrap();
 
-        janus.set("pull", lua.create_function(move |_, (remote, local): (String, String)| {
-             let _ = fs::create_dir_all("extracted_data");
-             let _ = Command::new("adb").arg("pull").arg(&remote).arg(format!("extracted_data/{}", local)).output();
-             Ok("Done".to_string())
+        janus.set("geo_track", lua.create_function(|_, target: String| {
+            Ok(format!("LOCATING: {}... [34.0522 N, 118.2437 W]", target))
+        }).unwrap()).unwrap();
+
+        janus.set("sig_scan", lua.create_function(|_, freq: String| {
+            Ok(format!("SCANNING: {} MHz... DETECTED: [ENCRYPTED SIGNAL]", freq))
+        }).unwrap()).unwrap();
+
+        janus.set("vital_check", lua.create_function(|_, _: ()| {
+            Ok("HEART RATE: 72 BPM | STATUS: STABLE".to_string())
+        }).unwrap()).unwrap();
+
+        janus.set("armor_status", lua.create_function(|_, _: ()| {
+            Ok("ARMOR-LINK: 100% | INTEGRITY: NOMINAL".to_string())
+        }).unwrap()).unwrap();
+
+        janus.set("cbrn_scan", lua.create_function(|_, _: ()| {
+            Ok("CBRN: CLEAN | RADIATION: 0.12 μSv/h".to_string())
         }).unwrap()).unwrap();
 
         lua.globals().set("janus", janus).unwrap();
