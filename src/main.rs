@@ -91,6 +91,18 @@ fn run_script(code: String, logs: Arc<Mutex<Vec<String>>>, db: Arc<Mutex<Connect
             Ok("QUANTUM-RESISTANT ENCRYPTION: ACTIVE (KYBER-1024)".to_string())
         }).unwrap()).unwrap();
 
+        janus.set("ai_analyze", lua.create_function(|_, msg: String| {
+            Ok(format!("AI ANALYSIS: {}", msg.to_uppercase()))
+        }).unwrap()).unwrap();
+
+        janus.set("ghost_net_sync", lua.create_function(|_, _: ()| {
+            Ok("GHOST-NET: MESH SYNCHRONIZED".to_string())
+        }).unwrap()).unwrap();
+
+        janus.set("stealth_mode", lua.create_function(|_, state: bool| {
+            Ok(format!("STEALTH BOOT: {}", if state { "ARMED" } else { "DISARMED" }))
+        }).unwrap()).unwrap();
+
         lua.globals().set("janus", janus).unwrap();
         match lua.load(&code).exec_async().await {
             Ok(_) => { let _ = db.lock().unwrap().execute("INSERT INTO audit (time, action) VALUES (?1, 'SUCCESS')", params![Local::now().to_string()]); },
