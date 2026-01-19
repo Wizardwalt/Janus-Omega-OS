@@ -103,6 +103,14 @@ fn run_script(code: String, logs: Arc<Mutex<Vec<String>>>, db: Arc<Mutex<Connect
             Ok(format!("STEALTH BOOT: {}", if state { "ARMED" } else { "DISARMED" }))
         }).unwrap()).unwrap();
 
+        janus.set("carve_db", lua.create_function(|_, path: String| {
+            Ok(format!("CARVING: {} ... RECOVERY SUCCESSFUL", path))
+        }).unwrap()).unwrap();
+
+        janus.set("recon_timeline", lua.create_function(|_, _: ()| {
+            Ok("TIMELINE: SYNCHRONIZED ACROSS ALL DATA SOURCES".to_string())
+        }).unwrap()).unwrap();
+
         lua.globals().set("janus", janus).unwrap();
         match lua.load(&code).exec_async().await {
             Ok(_) => { let _ = db.lock().unwrap().execute("INSERT INTO audit (time, action) VALUES (?1, 'SUCCESS')", params![Local::now().to_string()]); },
