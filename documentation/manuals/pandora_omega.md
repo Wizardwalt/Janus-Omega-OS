@@ -6,11 +6,12 @@
 ### 1. OVERVIEW
 The Pandora Omega is a high-performance handheld cyberdeck designed for deep network penetration and signal interception. Built on the Radxa CM5, it features a dual-screen layout and an integrated mechanical keyboard.
 
-### 2. HARDWARE INTERFACE
-- **Main Display**: High-resolution OLED for terminal operations.
-- **Secondary Display**: Dedicated status monitor for OSINT/Signal feeds.
-- **Keyboard**: 40% mechanical keyboard with tactile switches.
-- **Antenna Array**: Dual high-gain RPSMA ports for 2.4/5/6GHz and 5G Cellular.
+### 2. HARDWARE INTERFACE (BUTTON MAP)
+- **Power Switch (Recessed)**: Main system power.
+- **L/R Shoulder Triggers**: Tab navigation in JanusOS.
+- **Mechanical Keyboard**: Full QWERTY for terminal commands and Lua script editing.
+- **Trackball (Tactical)**: Precise selection in OSINT Oracle maps.
+- **Antenna Toggles**: Independent power control for Wi-Fi 6E, 5G, and SDR radios.
 
 ### 3. OPERATION
 - **Network Discovery**: Use the Wi-Fi Marauder module to map local environments.

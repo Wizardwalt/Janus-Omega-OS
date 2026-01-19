@@ -6,11 +6,13 @@
 ### 1. OVERVIEW
 The Pandora Titan is the ultimate realization of the Janus project. It is a 7-inch, ultra-widescreen rugged terminal designed to be worn on the forearm. It provides real-time signal intelligence, CBRN detection, and advanced mobile forensics in a heavy industrial "Vault-Tec" inspired chassis.
 
-### 2. HARDWARE INTERFACE
-- **Display**: 7" Ultra-Widescreen (21:9) High-Brightness CRT-style Panel.
-- **Toggles**: Side-mounted chunky mechanical knobs and brass master toggles.
-- **Neural-Sync**: Integrated haptic pads for intent-based control.
-- **Kinetic Harvester**: Internal pendulums charge the Mjolnir battery via arm movement.
+### 2. HARDWARE INTERFACE (BUTTON MAP)
+- **Brass Toggle (Master Power)**: Engages the 4-second boot sequence.
+- **Large Top Knob**: CRT Horizontal/Vertical Sync calibration.
+- **Small Bottom Knob**: Screen Gain and monochrome intensity.
+- **Tactical Button (Side)**: Confirms 'Panic Wipe' or 'Trigger Glitch' actions.
+- **Haptic Sensors (Inner Strap)**: Link to Neural-Sync controller for hands-free intent detection.
+- **Mjolnir Battery Slot**: Rear magnetic hatch for hot-swapping 21700 cells.
 
 ### 3. OPERATION
 - **Deployment**: Secure the ballistic nylon straps to your non-dominant forearm using the heavy-duty buckles.
