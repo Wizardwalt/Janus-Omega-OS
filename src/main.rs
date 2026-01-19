@@ -133,6 +133,14 @@ fn run_script(code: String, logs: Arc<Mutex<Vec<String>>>, db: Arc<Mutex<Connect
             Ok(format!("GHOST MODE: {}", if state { "ENGAGED" } else { "DISENGAGED" }))
         }).unwrap()).unwrap();
 
+        janus.set("sensor_access", lua.create_function(|_, sensor: String| {
+            Ok(format!("SENSOR: {} ... STREAMING", sensor.to_uppercase()))
+        }).unwrap()).unwrap();
+
+        janus.set("app_sandbox", lua.create_function(|_, app_id: String| {
+            Ok(format!("SANDBOX: {} ... VIRTUALIZED", app_id))
+        }).unwrap()).unwrap();
+
         lua.globals().set("janus", janus).unwrap();
         match lua.load(&code).exec_async().await {
             Ok(_) => { let _ = db.lock().unwrap().execute("INSERT INTO audit (time, action) VALUES (?1, 'SUCCESS')", params![Local::now().to_string()]); },
