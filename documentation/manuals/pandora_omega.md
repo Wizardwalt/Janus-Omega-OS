@@ -4,7 +4,7 @@
 ![Pandora Omega Hero](images/pandora_omega/hero.png)
 
 ### 1. OVERVIEW
-The Pandora Omega is a high-performance handheld cyberdeck designed for deep network penetration and signal interception. Built on the Radxa CM5, it features a dual-screen layout and an integrated mechanical keyboard.
+The Pandora Omega is a high-performance handheld cyberdeck designed for deep network penetration and signal interception. Featuring a tactical **Green and Purple high-contrast UI**, it is optimized for rapid deployment in complex signal environments.
 
 ### 2. HARDWARE INTERFACE (BUTTON MAP)
 - **Power Switch (Recessed)**: Main system power.
