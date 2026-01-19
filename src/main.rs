@@ -50,7 +50,17 @@ fn run_script(code: String, logs: Arc<Mutex<Vec<String>>>, db: Arc<Mutex<Connect
         janus.set("shell", lua.create_function(|_, cmd: String| {
             let output = Command::new("sh").arg("-c").arg(&cmd).output();
             match output {
-                Ok(o) => Ok(String::from_utf8_lossy(&o.stdout).trim().to_string()),
+                Ok(o) => {
+                    let stdout = String::from_utf8_lossy(&o.stdout).trim().to_string();
+                    let stderr = String::from_utf8_lossy(&o.stderr).trim().to_string();
+                    if !stdout.is_empty() {
+                        Ok(stdout)
+                    } else if !stderr.is_empty() {
+                        Ok(format!("ERR: {}", stderr))
+                    } else {
+                        Ok("".to_string())
+                    }
+                },
                 Err(e) => Ok(format!("ERR: {}", e)),
             }
         }).unwrap()).unwrap();
