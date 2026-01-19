@@ -1,7 +1,8 @@
-name: Build JanusOS God Mode
+name: "🟣 Build JanusOS Green & Purple Singularity 🟢"
 on: workflow_dispatch
 jobs:
   build:
+    name: "🟢 Compiling Purple Tactical ISO 🟣"
     runs-on: ubuntu-latest
     container:
       image: archlinux:latest
@@ -34,7 +35,7 @@ jobs:
           chmod +x build_dir/airootfs/usr/local/bin/janus
           cp plugins/*.lua build_dir/airootfs/opt/janus/plugins/
           # STARTUP
-          echo -e '#!/bin/sh\nadb start-server &\nxset s off\nwhile true; do alacritty --working-directory /opt/janus -o font.size=16 -e /usr/local/bin/janus; sleep 1; done' > build_dir/airootfs/root/.xinitrc
+          echo -e '#!/bin/sh\nadb start-server &\nxset s off\nwhile true; do alacritty --working-directory /opt/janus -o font.size=16 -o "colors.primary.foreground='\''#00FF41'\''" -o "colors.primary.background='\''#0A0A0A'\''" -o "colors.cursor.cursor='\''#9D00FF'\''" -e /usr/local/bin/janus; sleep 1; done' > build_dir/airootfs/root/.xinitrc
           echo '[[ -z $DISPLAY && $XDG_VTNR -eq 1 ]] && exec startx' >> build_dir/airootfs/root/.bash_profile
       - run: cd build_dir && mkarchiso -v -w work/ -o out/ .
       - uses: actions/upload-artifact@v4
