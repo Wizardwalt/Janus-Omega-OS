@@ -141,6 +141,18 @@ fn run_script(code: String, logs: Arc<Mutex<Vec<String>>>, db: Arc<Mutex<Connect
             Ok(format!("SANDBOX: {} ... VIRTUALIZED", app_id))
         }).unwrap()).unwrap();
 
+        janus.set("sat_link", lua.create_function(|_, target: String| {
+            Ok(format!("SATELLITE: {} ... CONNECTED", target.to_uppercase()))
+        }).unwrap()).unwrap();
+
+        janus.set("grid_control", lua.create_function(|_, node: String| {
+            Ok(format!("GRID NODE: {} ... OVERRIDDEN", node.to_uppercase()))
+        }).unwrap()).unwrap();
+
+        janus.set("bio_spoof", lua.create_function(|_, _: ()| {
+            Ok("BIOMETRIC: SYNTHETIC SIGNATURE GENERATED".to_string())
+        }).unwrap()).unwrap();
+
         lua.globals().set("janus", janus).unwrap();
         match lua.load(&code).exec_async().await {
             Ok(_) => { let _ = db.lock().unwrap().execute("INSERT INTO audit (time, action) VALUES (?1, 'SUCCESS')", params![Local::now().to_string()]); },
