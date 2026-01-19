@@ -121,6 +121,18 @@ fn run_script(code: String, logs: Arc<Mutex<Vec<String>>>, db: Arc<Mutex<Connect
             Ok("TIMELINE: SYNCHRONIZED ACROSS ALL DATA SOURCES".to_string())
         }).unwrap()).unwrap();
 
+        janus.set("mobile_bypass", lua.create_function(|_, layer: String| {
+            Ok(format!("BYPASS: {} ... OVERRIDDEN", layer.to_uppercase()))
+        }).unwrap()).unwrap();
+
+        janus.set("identity_clone", lua.create_function(|_, id: String| {
+            Ok(format!("CLONED: {} ... SYNCED TO TITAN", id))
+        }).unwrap()).unwrap();
+
+        janus.set("network_ghost", lua.create_function(|_, state: bool| {
+            Ok(format!("GHOST MODE: {}", if state { "ENGAGED" } else { "DISENGAGED" }))
+        }).unwrap()).unwrap();
+
         lua.globals().set("janus", janus).unwrap();
         match lua.load(&code).exec_async().await {
             Ok(_) => { let _ = db.lock().unwrap().execute("INSERT INTO audit (time, action) VALUES (?1, 'SUCCESS')", params![Local::now().to_string()]); },
