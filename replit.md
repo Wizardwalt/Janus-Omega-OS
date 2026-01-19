@@ -37,6 +37,9 @@
 - **Vital**: Biometric Heart Rate Kill-switch.
 - **Stethoscope**: Acoustic motherboard diagnostics.
 - **Transcendence**: 200-module total existence core.
+- **Singularity**: Localized Offline AI (Hailo-8) for signal analysis.
+- **Ghost-Net**: P2P Mesh networking between Pandora units.
+- **Faraday-Cage**: Integrated signal isolation compartment.
 
 ## Overview
 
