@@ -140,7 +140,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let tabs = Tabs::new(vec!["Dashboard", "Ops", "Hardware"])
                 .block(Block::default().borders(Borders::ALL).title(" JANUS OMEGA "))
                 .select(current_tab)
-                .highlight_style(Style::default().fg(Color::Cyan));
+                .highlight_style(Style::default().fg(Color::Rgb(157, 0, 255)));
             f.render_widget(tabs, chunks[0]);
 
             if current_tab == 1 || current_tab == 2 {
@@ -148,28 +148,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 
                 let items: Vec<ListItem> = scripts.iter().map(|p| {
                     ListItem::new(p.file_name().unwrap().to_string_lossy().to_string())
-                        .style(Style::default().fg(Color::Green))
+                        .style(Style::default().fg(Color::Rgb(0, 255, 65)))
                 }).collect();
                 
                 let list = List::new(items)
-                    .block(Block::default().borders(Borders::ALL).title(" MODULES "))
-                    .highlight_style(Style::default().bg(Color::DarkGray));
+                    .block(Block::default().borders(Borders::ALL).title(" MODULES ").border_style(Style::default().fg(Color::Rgb(157, 0, 255))))
+                    .highlight_style(Style::default().bg(Color::Rgb(10, 10, 10)).fg(Color::Rgb(0, 255, 65)));
                 
                 // FIXED: Explicitly calling render_stateful_widget
                 f.render_stateful_widget(list, ops_layout[0], &mut list_state);
                 
                 let info = Paragraph::new("SELECT MODULE AND PRESS ENTER")
-                    .block(Block::default().borders(Borders::ALL));
+                    .block(Block::default().borders(Borders::ALL).border_style(Style::default().fg(Color::Rgb(0, 255, 65))));
                 f.render_widget(info, ops_layout[1]);
             } else {
                 let dash = Paragraph::new("\n   SYSTEM: ARMORED\n   STATUS: ONLINE\n   [Q] QUIT")
-                    .block(Block::default().borders(Borders::ALL).title(" STATUS "));
+                    .block(Block::default().borders(Borders::ALL).title(" STATUS ").border_style(Style::default().fg(Color::Rgb(157, 0, 255))))
+                    .style(Style::default().fg(Color::Rgb(0, 255, 65)));
                 f.render_widget(dash, chunks[1]);
             }
             
             let log_lock = logs.lock().unwrap();
             let log_text = log_lock.iter().rev().take(10).rev().cloned().collect::<Vec<String>>().join("\n");
-            let logger = Paragraph::new(log_text).block(Block::default().borders(Borders::ALL).title(" LOGS "));
+            let logger = Paragraph::new(log_text).block(Block::default().borders(Borders::ALL).title(" LOGS ").border_style(Style::default().fg(Color::Rgb(0, 255, 65))))
+                .style(Style::default().fg(Color::Rgb(157, 0, 255)));
             f.render_widget(logger, chunks[2]);
         })?;
 
