@@ -2,7 +2,7 @@
 ## "The 200-Module Singularity"
 
 ### 1. SYSTEM ARCHITECTURE
-JanusOS is a RAM-only, hardened Linux environment built for speed and security. It runs the Janus Omega terminal (Rust) and leverages a 200-module Lua plugin system.
+JanusOS is a RAM-only, hardened Linux environment built for speed and security. It runs the Janus Omega terminal (Rust) featuring a tactical **Green and Purple high-contrast UI theme** for maximum legibility in radioactive or low-light environments.
 
 ### 2. CORE MODULES (TOP CATEGORIES)
 
