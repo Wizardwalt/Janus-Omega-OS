@@ -12,7 +12,7 @@
 1. **Pandora Mk.1**: RP2040-based USB Glitcher/Voltage Injector.
 2. **Pandora Omega**: Radxa CM5 Cyberdeck (8-Core, 16GB RAM).
 3. **Pandora Titan**: Forearm-mounted "Pip-Boy" with Hydra Radio Array.
-   - **Form Factor**: 7-inch ultra-widescreen rugged display, Fallout-inspired industrial aesthetic.
+   - **Form Factor**: 7-inch ultra-widescreen rugged display (21:9 aspect ratio), authentic 'Vault-Tec' inspired heavy industrial aesthetic with chunky mechanical controls.
    - **Storage**: 3x NVMe M.2 slots (supports up to 2 active drives + 1 GPU expansion) and integrated MicroSD slot.
    - **Acceleration**: Dedicated M.2 AI GPU for Neural-Sync and cryptographic offloading.
    - **Connectivity**: Integrated 5G/LTE Cellular, Wi-Fi 6E, and Bluetooth 5.3 for full smartphone and internet capabilities.
