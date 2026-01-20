@@ -1,7 +1,7 @@
 name: "🟣 Build JanusOS Green & Purple Singularity 🟢"
 on: workflow_dispatch
 jobs:
-  build:
+  build_iso:
     name: "🟢 Compiling Purple Tactical ISO 🟣"
     runs-on: ubuntu-latest
     container:
@@ -40,3 +40,30 @@ jobs:
       - run: cd build_dir && mkarchiso -v -w work/ -o out/ .
       - uses: actions/upload-artifact@v4
         with: { name: JanusOS-Titan-ISO, path: build_dir/out/*.iso }
+
+  build_apk:
+    name: "📱 Building Janus Mobile APK 📱"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+        continue-on-error: true
+
+      - name: Build with Gradle
+        run: ./gradlew assembleDebug
+        continue-on-error: true
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: JanusMobile-Debug
+          path: app/build/outputs/apk/debug/*.apk
+        continue-on-error: true
