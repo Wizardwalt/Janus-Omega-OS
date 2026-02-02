@@ -165,6 +165,14 @@ fn run_script(code: String, logs: Arc<Mutex<Vec<String>>>, db: Arc<Mutex<Connect
             Ok(format!("TRIGGERING: {} ... PAYLOAD DEPLOYED", exploit.to_uppercase()))
         }).unwrap()).unwrap();
 
+        janus.set("net_cartography", lua.create_function(|_, subnet: String| {
+            Ok(format!("MAPPING: {} ... 12 NODES IDENTIFIED | TOPOLOGY SYNCED", subnet))
+        }).unwrap()).unwrap();
+
+        janus.set("sig_fingerprint", lua.create_function(|_, _: ()| {
+            Ok("SIGNAL: DUAL-SPECTRAL FINGERPRINT MATCHED [UPLINK-7]".to_string())
+        }).unwrap()).unwrap();
+
         lua.globals().set("janus", janus).unwrap();
         match lua.load(&code).exec_async().await {
             Ok(_) => { let _ = db.lock().unwrap().execute("INSERT INTO audit (time, action) VALUES (?1, 'SUCCESS')", params![Local::now().to_string()]); },
