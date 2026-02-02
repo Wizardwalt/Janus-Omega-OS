@@ -173,6 +173,18 @@ fn run_script(code: String, logs: Arc<Mutex<Vec<String>>>, db: Arc<Mutex<Connect
             Ok("SIGNAL: DUAL-SPECTRAL FINGERPRINT MATCHED [UPLINK-7]".to_string())
         }).unwrap()).unwrap();
 
+        janus.set("neural_link", lua.create_function(|_, intent: String| {
+            Ok(format!("NEURAL SYNC: {} ... COMMAND EXECUTED", intent.to_uppercase()))
+        }).unwrap()).unwrap();
+
+        janus.set("cbrn_scan", lua.create_function(|_, _: ()| {
+            Ok("CBRN: RAD=0.01uSv/h | BIO=NEG | CHEM=NEG".to_string())
+        }).unwrap()).unwrap();
+
+        janus.set("ar_highlight", lua.create_function(|_, target: String| {
+            Ok(format!("AR-HUD: HIGHLIGHTING TARGET [{}]", target.to_uppercase()))
+        }).unwrap()).unwrap();
+
         lua.globals().set("janus", janus).unwrap();
         match lua.load(&code).exec_async().await {
             Ok(_) => { let _ = db.lock().unwrap().execute("INSERT INTO audit (time, action) VALUES (?1, 'SUCCESS')", params![Local::now().to_string()]); },
