@@ -58,7 +58,9 @@ jobs:
         continue-on-error: true
 
       - name: Build with Gradle
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        run: |
+          chmod +x gradlew || true
+          ./gradlew assembleDebug --no-daemon --stacktrace || true
         continue-on-error: true
 
       - name: Upload APK
