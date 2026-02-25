@@ -61,11 +61,12 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew :app:assembleDebug --no-daemon --stacktrace
-        continue-on-error: true
+          ls -R app/build/outputs/apk/
+        continue-on-error: false
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: JanusMobile-Debug
-          path: app/build/outputs/apk/debug/*.apk
-        continue-on-error: true
+          path: "app/build/outputs/apk/debug/*.apk"
+        if: always()
