@@ -14,7 +14,6 @@ requiredFiles = [".replit"]
 expertMode = true
 
 [workflows]
-runButton = "Run Application"
 
 [[workflows.workflow]]
 name = "Project"
