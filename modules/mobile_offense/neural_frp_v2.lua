@@ -1,10 +1,10 @@
--- reality_anchor.lua
--- Category: god_protocols
+-- neural_frp_v2.lua
+-- Category: mobile_offense
 -- Advanced Module #30 of 500
--- Reality anchor
+-- Second-generation neural FRP bypass
 
 function execute(target, options)
-    overseer_speak("Advanced module reality_anchor activated.")
+    overseer_speak("Advanced module neural_frp_v2 activated.")
     
     -- Advanced hardware integration
     local rotary_value = read_rotary_dial()
@@ -18,18 +18,18 @@ function execute(target, options)
     local result = perform_advanced_action(target, rotary_value, options)
     
     log_to_blackbox({
-        module = "reality_anchor",
+        module = "neural_frp_v2",
         target = target or "unknown",
         rotary_input = rotary_value,
         status = result.status
     })
     
-    overseer_speak("reality_anchor execution completed with status: " .. result.status)
+    overseer_speak("neural_frp_v2 execution completed with status: " .. result.status)
     return result
 end
 
 function perform_advanced_action(target, rotary_value, options)
     -- Advanced logic with hardware awareness
-    print("Performing advanced reality_anchor action. Rotary input: " .. rotary_value)
+    print("Performing advanced neural_frp_v2 action. Rotary input: " .. rotary_value)
     return {status = "success", details = "Advanced operation completed"}
 end

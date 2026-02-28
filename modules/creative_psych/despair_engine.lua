@@ -1,10 +1,10 @@
--- reality_anchor.lua
--- Category: god_protocols
+-- despair_engine.lua
+-- Category: creative_psych
 -- Advanced Module #30 of 500
--- Reality anchor
+-- Despair engine v2
 
 function execute(target, options)
-    overseer_speak("Advanced module reality_anchor activated.")
+    overseer_speak("Advanced module despair_engine activated.")
     
     -- Advanced hardware integration
     local rotary_value = read_rotary_dial()
@@ -18,18 +18,18 @@ function execute(target, options)
     local result = perform_advanced_action(target, rotary_value, options)
     
     log_to_blackbox({
-        module = "reality_anchor",
+        module = "despair_engine",
         target = target or "unknown",
         rotary_input = rotary_value,
         status = result.status
     })
     
-    overseer_speak("reality_anchor execution completed with status: " .. result.status)
+    overseer_speak("despair_engine execution completed with status: " .. result.status)
     return result
 end
 
 function perform_advanced_action(target, rotary_value, options)
     -- Advanced logic with hardware awareness
-    print("Performing advanced reality_anchor action. Rotary input: " .. rotary_value)
+    print("Performing advanced despair_engine action. Rotary input: " .. rotary_value)
     return {status = "success", details = "Advanced operation completed"}
 end
