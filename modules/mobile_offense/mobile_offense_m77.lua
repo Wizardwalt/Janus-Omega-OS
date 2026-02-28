@@ -1,41 +1,50 @@
 -- mobile_offense_m77.lua
 -- Category: mobile_offense
--- Module #77 of 500
+-- Module #77 of 1000
 
 function execute(target, options)
-    overseer_speak("Module 77 of 500 activated: mobile_offense_m77")
+    overseer_speak("Module 77 of 1000 activated: mobile_offense_m77")
     
-    -- Core execution
-    local result = perform_core_action(target, options)
+    -- Hardware integration
+    local rotary_value = read_rotary_dial() or 50
+    local haptic_confirm = wait_for_haptic_confirmation(2)
     
-    -- Standard logging
+    if not haptic_confirm then
+        overseer_speak("Haptic confirmation denied. Operation aborted.")
+        return {status = "aborted"}
+    end
+    
+    local result = perform_core_action(target, rotary_value, options)
+    
     log_to_blackbox({
         module = "mobile_offense_m77",
         target = target or "unknown",
-        status = result.status,
-        timestamp = os.time()
+        rotary_input = rotary_value,
+        status = result.status
     })
     
     overseer_speak("mobile_offense_m77 execution completed successfully.")
     return result
 end
 
-function perform_core_action(target, options)
-    -- Category-specific behavior
+function perform_core_action(target, rotary_value, options)
+    -- Category-specific advanced logic
+    print("Executing mobile_offense_m77 with rotary input: " .. rotary_value)
+    
     if string.find("mobile_offense", "mobile_offense") then
-        return {status = "success", action = "device_liberated", target = target}
+        return {status = "success", action = "device_liberated"}
     elseif string.find("mobile_offense", "forensics") then
-        return {status = "success", action = "data_recovered", count = math.random(50,500)}
+        return {status = "success", action = "deep_recovery"}
     elseif string.find("mobile_offense", "network") then
-        return {status = "success", action = "network_compromised"}
+        return {status = "success", action = "network_dominated"}
     elseif string.find("mobile_offense", "sigint") then
-        return {status = "success", action = "signal_captured"}
+        return {status = "success", action = "signal_mastered"}
     elseif string.find("mobile_offense", "tactical") then
         return {status = "success", action = "defense_activated"}
     elseif string.find("mobile_offense", "creative") then
-        return {status = "success", action = "psychological_payload_deployed"}
+        return {status = "success", action = "psychological_impact_maximized"}
     elseif string.find("mobile_offense", "god") then
-        return {status = "success", action = "reality_altered"}
+        return {status = "success", action = "reality_influenced"}
     elseif string.find("mobile_offense", "apocalypse") then
         return {status = "success", action = "survival_tool_created"}
     else
