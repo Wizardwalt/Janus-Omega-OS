@@ -1,23 +1,23 @@
--- mobile_offense_module_1.lua
+-- mobile_offense_module_9.lua
 -- Category: mobile_offense
--- Module #1 of 500
+-- Module #9 of 500
 
 function execute(target, options)
-    overseer_speak("Module 1 activated: mobile_offense_module_1")
+    overseer_speak("Module 9 activated: mobile_offense_module_9")
     
     -- Core action with category-specific flavor
     local result = perform_core_action(target, options)
     
     -- Log to Black Box
-    log_to_blackbox({module = "mobile_offense_module_1", target = target or "unknown", status = result.status})
+    log_to_blackbox({module = "mobile_offense_module_9", target = target or "unknown", status = result.status})
     
-    overseer_speak("Module mobile_offense_module_1 execution complete.")
+    overseer_speak("Module mobile_offense_module_9 execution complete.")
     return result
 end
 
 function perform_core_action(target, options)
     -- Unique logic for this module
-    print("Performing mobile_offense_module_1 action on target: " .. (target or "unknown"))
+    print("Performing mobile_offense_module_9 action on target: " .. (target or "unknown"))
     
     -- Different behavior per category
     if string.find("mobile_offense", "mobile_offense") then

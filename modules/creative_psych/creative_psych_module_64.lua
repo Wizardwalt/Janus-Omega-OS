@@ -1,38 +1,38 @@
--- mobile_offense_module_1.lua
--- Category: mobile_offense
--- Module #1 of 500
+-- creative_psych_module_64.lua
+-- Category: creative_psych
+-- Module #64 of 500
 
 function execute(target, options)
-    overseer_speak("Module 1 activated: mobile_offense_module_1")
+    overseer_speak("Module 64 activated: creative_psych_module_64")
     
     -- Core action with category-specific flavor
     local result = perform_core_action(target, options)
     
     -- Log to Black Box
-    log_to_blackbox({module = "mobile_offense_module_1", target = target or "unknown", status = result.status})
+    log_to_blackbox({module = "creative_psych_module_64", target = target or "unknown", status = result.status})
     
-    overseer_speak("Module mobile_offense_module_1 execution complete.")
+    overseer_speak("Module creative_psych_module_64 execution complete.")
     return result
 end
 
 function perform_core_action(target, options)
     -- Unique logic for this module
-    print("Performing mobile_offense_module_1 action on target: " .. (target or "unknown"))
+    print("Performing creative_psych_module_64 action on target: " .. (target or "unknown"))
     
     -- Different behavior per category
-    if string.find("mobile_offense", "mobile_offense") then
+    if string.find("creative_psych", "mobile_offense") then
         return {status = "success", action = "device_liberated"}
-    elseif string.find("mobile_offense", "forensics") then
+    elseif string.find("creative_psych", "forensics") then
         return {status = "success", action = "data_recovered"}
-    elseif string.find("mobile_offense", "network") then
+    elseif string.find("creative_psych", "network") then
         return {status = "success", action = "network_compromised"}
-    elseif string.find("mobile_offense", "sigint") then
+    elseif string.find("creative_psych", "sigint") then
         return {status = "success", action = "signal_captured"}
-    elseif string.find("mobile_offense", "tactical") then
+    elseif string.find("creative_psych", "tactical") then
         return {status = "success", action = "defense_activated"}
-    elseif string.find("mobile_offense", "creative") then
+    elseif string.find("creative_psych", "creative") then
         return {status = "success", action = "psychological_payload_deployed"}
-    elseif string.find("mobile_offense", "god") then
+    elseif string.find("creative_psych", "god") then
         return {status = "success", action = "reality_altered"}
     else
         return {status = "success", action = "operation_complete"}

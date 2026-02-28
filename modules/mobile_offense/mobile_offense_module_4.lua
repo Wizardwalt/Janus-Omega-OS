@@ -5,18 +5,36 @@
 function execute(target, options)
     overseer_speak("Module 4 activated: mobile_offense_module_4")
     
-    -- Core action
+    -- Core action with category-specific flavor
     local result = perform_core_action(target, options)
     
     -- Log to Black Box
-    log_to_blackbox({module = "mobile_offense_module_4", target = target, status = result.status})
+    log_to_blackbox({module = "mobile_offense_module_4", target = target or "unknown", status = result.status})
     
     overseer_speak("Module mobile_offense_module_4 execution complete.")
     return result
 end
 
 function perform_core_action(target, options)
-    -- Unique logic per module
+    -- Unique logic for this module
     print("Performing mobile_offense_module_4 action on target: " .. (target or "unknown"))
-    return {status = "success", details = "mobile_offense_module_4 completed successfully"}
+    
+    -- Different behavior per category
+    if string.find("mobile_offense", "mobile_offense") then
+        return {status = "success", action = "device_liberated"}
+    elseif string.find("mobile_offense", "forensics") then
+        return {status = "success", action = "data_recovered"}
+    elseif string.find("mobile_offense", "network") then
+        return {status = "success", action = "network_compromised"}
+    elseif string.find("mobile_offense", "sigint") then
+        return {status = "success", action = "signal_captured"}
+    elseif string.find("mobile_offense", "tactical") then
+        return {status = "success", action = "defense_activated"}
+    elseif string.find("mobile_offense", "creative") then
+        return {status = "success", action = "psychological_payload_deployed"}
+    elseif string.find("mobile_offense", "god") then
+        return {status = "success", action = "reality_altered"}
+    else
+        return {status = "success", action = "operation_complete"}
+    end
 end
