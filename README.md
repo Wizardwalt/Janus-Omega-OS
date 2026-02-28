@@ -6,6 +6,6 @@ A RAM-only immutable Linux OS with authentic Pip-Boy CRT aesthetic, sentient loc
 
 **[Live Website & Demo](https://wizardwalt.github.io/Janus-Omega-OS)**
 
-500 Modules • Local AI • Physical Controls • Apotheosis Protocol
+**500 Modules • Local AI • Physical Controls • Apotheosis Protocol**
 
-Built for the wasteland.
+Built for survivors who refuse to compromise.
