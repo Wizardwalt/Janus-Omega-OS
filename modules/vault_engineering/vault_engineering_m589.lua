@@ -5,7 +5,6 @@
 function execute(target, options)
     overseer_speak("Module 589 of 1000 activated: vault_engineering_m589")
     
-    -- Hardware integration
     local rotary_value = read_rotary_dial() or 50
     local haptic_confirm = wait_for_haptic_confirmation(2)
     
@@ -28,26 +27,6 @@ function execute(target, options)
 end
 
 function perform_core_action(target, rotary_value, options)
-    -- Category-specific logic
     print("Executing vault_engineering_m589 with rotary input: " .. rotary_value)
-    
-    if string.find("vault_engineering", "mobile_offense") then
-        return {status = "success", action = "device_liberated"}
-    elseif string.find("vault_engineering", "forensics") then
-        return {status = "success", action = "deep_recovery", items_found = math.random(50,300)}
-    elseif string.find("vault_engineering", "network") then
-        return {status = "success", action = "network_dominated"}
-    elseif string.find("vault_engineering", "sigint") then
-        return {status = "success", action = "signal_mastered"}
-    elseif string.find("vault_engineering", "tactical") then
-        return {status = "success", action = "defense_activated"}
-    elseif string.find("vault_engineering", "creative") then
-        return {status = "success", action = "psychological_impact_maximized"}
-    elseif string.find("vault_engineering", "god") then
-        return {status = "success", action = "reality_influenced"}
-    elseif string.find("vault_engineering", "apocalypse") then
-        return {status = "success", action = "survival_tool_created"}
-    else
-        return {status = "success", action = "operation_complete"}
-    end
+    return {status = "success", details = "vault_engineering_m589 completed successfully"}
 end
