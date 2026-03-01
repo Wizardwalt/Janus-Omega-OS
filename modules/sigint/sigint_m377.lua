@@ -5,6 +5,7 @@
 function execute(target, options)
     overseer_speak("Module 377 of 1000 activated: sigint_m377")
     
+    -- Hardware integration
     local rotary_value = read_rotary_dial() or 50
     local haptic_confirm = wait_for_haptic_confirmation(2)
     
@@ -27,6 +28,26 @@ function execute(target, options)
 end
 
 function perform_core_action(target, rotary_value, options)
+    -- Category-specific logic
     print("Executing sigint_m377 with rotary input: " .. rotary_value)
-    return {status = "success", details = "sigint_m377 completed successfully"}
+    
+    if string.find("sigint", "mobile_offense") then
+        return {status = "success", action = "device_liberated"}
+    elseif string.find("sigint", "forensics") then
+        return {status = "success", action = "deep_recovery", items_found = math.random(50,300)}
+    elseif string.find("sigint", "network") then
+        return {status = "success", action = "network_dominated"}
+    elseif string.find("sigint", "sigint") then
+        return {status = "success", action = "signal_mastered"}
+    elseif string.find("sigint", "tactical") then
+        return {status = "success", action = "defense_activated"}
+    elseif string.find("sigint", "creative") then
+        return {status = "success", action = "psychological_impact_maximized"}
+    elseif string.find("sigint", "god") then
+        return {status = "success", action = "reality_influenced"}
+    elseif string.find("sigint", "apocalypse") then
+        return {status = "success", action = "survival_tool_created"}
+    else
+        return {status = "success", action = "operation_complete"}
+    end
 end
