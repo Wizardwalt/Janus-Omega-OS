@@ -28,13 +28,13 @@ function execute(target, options)
 end
 
 function perform_core_action(target, rotary_value, options)
-    -- Category-specific advanced logic
+    -- Category-specific logic
     print("Executing creative_psych_m613 with rotary input: " .. rotary_value)
     
     if string.find("creative_psych", "mobile_offense") then
         return {status = "success", action = "device_liberated"}
     elseif string.find("creative_psych", "forensics") then
-        return {status = "success", action = "deep_recovery"}
+        return {status = "success", action = "deep_recovery", items_found = math.random(50,300)}
     elseif string.find("creative_psych", "network") then
         return {status = "success", action = "network_dominated"}
     elseif string.find("creative_psych", "sigint") then
