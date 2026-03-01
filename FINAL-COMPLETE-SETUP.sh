@@ -1,10 +1,9 @@
 #!/bin/bash
-echo "=== FINAL COMPLETE SETUP — EVERYTHING FROM BEGINNING TO END ==="
+echo "=== FINAL COMPLETE SETUP — 1000 MODULES + FULL WEBSITE + DOCUMENTATION ==="
 
-# Create all folders
-mkdir -p website docs/hardware docs/software modules/legendary overseer scripts marketplace airootfs android/app/src/main/kotlin/com/wizardwalt/janus android/gradle/wrapper .github/workflows
+mkdir -p website docs/hardware docs/software modules/legendary overseer scripts marketplace airootfs
 
-# ==================== WEBSITE ====================
+# Beautiful Landing Page
 cat > website/index.html << 'EOR'
 <!DOCTYPE html>
 <html lang="en">
@@ -37,6 +36,7 @@ cat > website/index.html << 'EOR'
 </html>
 EOR
 
+# Interactive Demo
 cat > website/demo.html << 'EOR'
 <!DOCTYPE html>
 <html lang="en">
@@ -80,7 +80,7 @@ cat > website/demo.html << 'EOR'
 </html>
 EOR
 
-# ==================== FIELD-MANUAL.md ====================
+# Field Manual
 cat > docs/FIELD-MANUAL.md << 'EOR'
 # JANUS OS FIELD MANUAL — 1000-MODULE SINGULARITY
 **VAULT-TEC APPROVED • PANDORA SERIES • v7.1 God Tier Codex**
@@ -104,68 +104,4 @@ cat > docs/FIELD-MANUAL.md << 'EOR'
 The Vault is eternal.
 EOR
 
-# ==================== USER-MANUAL.md ====================
-cat > docs/USER-MANUAL.md << 'EOR'
-# JANUS OMEGA OS — EXTENSIVE USER MANUAL
-
-**Version 7.1 God Tier Codex**
-
-**Welcome, Overseer.**
-
-This is the complete guide to the full 1000-module system.
-
-**Basic Operation**
-- Strap the Pandora Titan to your forearm.
-- Flip the brass master toggle to boot.
-- Long-press haptic pads for voice commands.
-- Use rotary dials to adjust power level.
-
-**God Tier Modules**
-The 100 Legendary modules in `modules/legendary/` are the most powerful. They require triple haptic confirmation.
-
-**Signature Examples:**
-- apotheosis.lua: Become one with the system
-- reality_forge.lua: Rewrite local reality
-- psyche_reaver.lua: Break minds with tailored attacks
-
-**Voice Commands**
-- "Overseer, plan a mission"
-- "Overseer, activate apotheosis"
-- "Overseer, full network takeover"
-
-The system is now complete.
-You are the Overseer.
-The wasteland is yours.
-EOR
-
-# ==================== HARDWARE SPECS (All in one file) ====================
-cat > docs/hardware/HARDWARE-SPECS.md << 'EOR'
-# HARDWARE SPECS — Ready for Manufacturing
-
-**1. Pandora Titan (Forearm Mount)**
-- Housing: High-impact reinforced polymer with 6061 Aluminum skeleton, IP68, MIL-STD-810H
-- Display: 7" 1280x480 ultra-widescreen capacitive touchscreen
-- Controls: Brass master toggle, dual rotary knobs, 5-way joystick, chorded key array, guarded red panic toggle, haptic side-pads, Mjolnir 21700 battery hatch
-- Board: 8-10 layer HDI with Radxa CM5, Hailo-8 AI, LimeSDR Mini, 32GB RAM + 64GB virtual RAM support
-
-**2. Pandora Omega (Handheld Cyberdeck)**
-- Carbon fiber chassis, mechanical keyboard, trackball, shoulder triggers, antenna toggles, Faraday-lined storage
-
-**3. Monolith (Display Stand)**
-- Weighted black anodized aluminum base, 15W Qi wireless charging, USB-C 3.2 passthrough
-
-**4. Forge (Battery Dock)**
-- Charges 4x Mjolnir 21700 batteries with 100W PD, cyan breathing LEDs
-
-**5. Dongle (Flipper Enhanced)**
-- STM32H7 + ESP32, full Sub-GHz/NFC/IR/GPIO/BadUSB with direct Janus serial control
-
-**6. Dual-Screen Tablet**
-- RK3588-based with dual MIPI displays, 16-24GB RAM, NVMe, convergence support
-
-**BOM and KiCad/Fusion 360 descriptions are in the hardware/ folder.**
-**Ready to send to manufacturers (JLCPCB for PCBs, Seeed/PCBWay for assembly, injection molding for housings).**
-EOR
-
-echo "✅ All files created: website, documentation, hardware specs, and 1000 modules structure."
-echo "Next: git add . && git commit -m 'feat: v7.1 Apotheosis — complete legendary system with 1000 modules, full website, and hardware specs' && git push"
+echo "✅ Full setup complete."
