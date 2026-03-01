@@ -7,7 +7,7 @@
     body { background:#000; color:#00FF41; font-family:'VT323', monospace; }
     #terminal { width:820px; height:520px; margin:40px auto; border:14px solid #222; background:#001100; box-shadow:0 0 60px #00FF41; position:relative; overflow:hidden; }
     .header { background:#002200; padding:10px; text-align:center; font-size:1.8rem; }
-    .output { padding:20px; height:380px; overflow-y:auto; line-height:1.4; }
+    .output { padding:20px; height:380px; overflow-y:auto; }
     button { background:#003300; color:#00FF41; border:2px solid #00FF41; padding:12px 24px; margin:8px; font-size:1.4rem; cursor:pointer; }
   </style>
 </head>
@@ -19,7 +19,7 @@
   </div>
 
   <div style="text-align:center; margin-top:20px;">
-    <button onclick="speakCommand('Overseer, plan a carrier unlock')">Carrier Liberation Mission</button>
+    <button onclick="speakCommand('Overseer, plan a carrier unlock')">Carrier Liberation</button>
     <button onclick="speakCommand('Overseer, activate fear cascade')">Fear Cascade</button>
     <button onclick="speakCommand('Overseer, full network takeover')">Network Takeover</button>
   </div>
@@ -31,12 +31,10 @@
       output.scrollTop = output.scrollHeight;
     }
     function speakCommand(cmd) {
-      addLine(`Voice command received: "${cmd}"`);
-      setTimeout(() => {
-        addLine("Executing... Mission in progress.");
-      }, 600);
+      addLine(`Voice command: "${cmd}"`);
+      setTimeout(() => addLine("Executing... Mission in progress."), 600);
     }
-    addLine("Overseer AI online. 500 modules ready.");
+    addLine("Overseer AI online. 1000 modules ready.");
   </script>
 </body>
 </html>
