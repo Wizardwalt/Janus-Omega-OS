@@ -1,0 +1,56 @@
+name: Build Janus Omega OS (APK + ISO)
+
+on:
+  push:
+    branches: [ main, master, release* ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ==================== BUILD APK ====================
+      - name: Setup Java for APK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build APK
+        if: ${{ hashFiles('android/**') != '' }}
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
+
+      - name: Upload APK Artifact
+        if: ${{ hashFiles('android/app/build/outputs/apk/debug/app-debug.apk') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: Janus-Omega-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      # ==================== BUILD ISO ====================
+      - name: Build ISO using Docker
+        if: ${{ hashFiles('airootfs/**') != '' }}
+        run: |
+          docker run --rm -v "$(pwd)":/build --privileged archlinux \
+            bash -c '
+              pacman -Syu --noconfirm archiso &&
+              cd /build &&
+              rm -rf work/ out/ 2>/dev/null || true &&
+              mkarchiso -v -w work/ -o out/ airootfs/
+            '
+
+      - name: Upload ISO Artifact
+        if: ${{ hashFiles('out/*.iso') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: Janus-Omega-ISO
+          path: out/*.iso
+
