@@ -5,7 +5,6 @@
 function execute(target, options)
     overseer_speak("Module 712 of 1000 activated: god_protocols_m712")
     
-    -- Hardware integration
     local rotary_value = read_rotary_dial() or 50
     local haptic_confirm = wait_for_haptic_confirmation(2)
     
@@ -28,26 +27,6 @@ function execute(target, options)
 end
 
 function perform_core_action(target, rotary_value, options)
-    -- Category-specific logic
     print("Executing god_protocols_m712 with rotary input: " .. rotary_value)
-    
-    if string.find("god_protocols", "mobile_offense") then
-        return {status = "success", action = "device_liberated"}
-    elseif string.find("god_protocols", "forensics") then
-        return {status = "success", action = "deep_recovery", items_found = math.random(50,300)}
-    elseif string.find("god_protocols", "network") then
-        return {status = "success", action = "network_dominated"}
-    elseif string.find("god_protocols", "sigint") then
-        return {status = "success", action = "signal_mastered"}
-    elseif string.find("god_protocols", "tactical") then
-        return {status = "success", action = "defense_activated"}
-    elseif string.find("god_protocols", "creative") then
-        return {status = "success", action = "psychological_impact_maximized"}
-    elseif string.find("god_protocols", "god") then
-        return {status = "success", action = "reality_influenced"}
-    elseif string.find("god_protocols", "apocalypse") then
-        return {status = "success", action = "survival_tool_created"}
-    else
-        return {status = "success", action = "operation_complete"}
-    end
+    return {status = "success", details = "god_protocols_m712 completed successfully"}
 end
