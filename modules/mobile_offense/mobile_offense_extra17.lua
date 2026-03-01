@@ -1,6 +1,6 @@
 -- mobile_offense_extra17.lua
 -- Category: mobile_offense
--- Additional Working Module
+-- Additional Working Module #17
 
 function execute(target, options)
     overseer_speak("Module activated: mobile_offense_extra17")

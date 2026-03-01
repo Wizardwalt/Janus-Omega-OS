@@ -1,6 +1,6 @@
 -- sigint_extra160.lua
 -- Category: sigint
--- Additional Working Module
+-- Additional Working Module #160
 
 function execute(target, options)
     overseer_speak("Module activated: sigint_extra160")

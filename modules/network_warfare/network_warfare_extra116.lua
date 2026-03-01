@@ -1,6 +1,6 @@
 -- network_warfare_extra116.lua
 -- Category: network_warfare
--- Additional Working Module
+-- Additional Working Module #116
 
 function execute(target, options)
     overseer_speak("Module activated: network_warfare_extra116")

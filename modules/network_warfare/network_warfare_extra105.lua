@@ -1,6 +1,6 @@
 -- network_warfare_extra105.lua
 -- Category: network_warfare
--- Additional Working Module
+-- Additional Working Module #105
 
 function execute(target, options)
     overseer_speak("Module activated: network_warfare_extra105")
