@@ -1,34 +1,14 @@
 -- god_tier_101.lua
--- GOD TIER MODULE #101 of 1000
--- The most powerful and mythic tools in existence
+-- God Tier Module #101 of 1000
 
 function execute(target, options)
-    overseer_speak("GOD TIER MODULE 101 ACTIVATED.")
-    overseer_speak("The wasteland itself bows before this power.")
-
-    local rotary_value = read_rotary_dial() or 100
-    local haptic_confirm = wait_for_haptic_confirmation(3)
-
-    if not haptic_confirm then
-        overseer_speak("The gods reject unworthy hands.")
-        return {status = "rejected"}
-    end
-
-    local result = unleash_god_tier_power(target, rotary_value, options)
-    
-    log_to_blackbox({
-        module = "god_tier_101",
-        target = target or "the_wasteland",
-        rotary_input = rotary_value,
-        status = result.status,
-        tier = "GOD"
-    })
-    
-    overseer_speak("The legend has been forged into reality.")
-    return result
+    overseer_speak("God Tier Module 101 activated.")
+    local rotary = read_rotary_dial() or 100
+    local result = unleash_god_tier_power(target, rotary)
+    log_to_blackbox({module = "god_tier_101", status = result.status})
+    overseer_speak("Power unleashed.")
 end
 
-function unleash_god_tier_power(target, rotary_value, options)
-    print("Unleashing GOD TIER power of god_tier_101...")
-    return {status = "success", power_level = "apocalyptic"}
+function unleash_god_tier_power(target, rotary)
+    return {status = "success", power = rotary}
 end
