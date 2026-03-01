@@ -4,27 +4,31 @@
 
 **Welcome, Overseer.**
 
-This is the complete guide to using the full 1000-module system.
+This is the complete guide to the full 1000-module system.
 
 **Basic Operation**
-- Strap on the Pandora Titan
-- Flip the brass master toggle
-- Long-press haptic pads for voice commands
-- Use rotary dials to adjust power level
+- Strap the Pandora Titan to your forearm.
+- Flip the brass master toggle to boot.
+- Long-press inner haptic pads to activate voice commands with Overseer.
+- Use top rotary dial for intensity and bottom dial for gain.
+
+**Module System**
+All modules follow `execute(target, options)`.
+
+**Voice Commands**
+- "Overseer, plan a carrier unlock"
+- "Overseer, activate fear cascade"
+- "Overseer, full network takeover"
 
 **God Tier Modules**
-The 100 Legendary modules in `modules/legendary/` are the most powerful. They require triple haptic confirmation.
+The 100 Legendary modules are the most powerful. Use with triple haptic confirmation.
 
 **Signature Examples:**
 - apotheosis.lua: Become one with the system
 - reality_forge.lua: Rewrite local reality
 - psyche_reaver.lua: Break minds with tailored attacks
 
-**Voice Commands**
-- "Overseer, plan a mission"
-- "Overseer, activate apotheosis"
-- "Overseer, full network takeover"
+**The system is now complete.**
 
-The system is now complete.
 You are the Overseer.
 The wasteland is yours.

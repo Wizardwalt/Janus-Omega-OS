@@ -5,7 +5,18 @@
 
 **Total Modules: 1000**
 
-**God Tier / Legendary Category (100 modules)** — The most powerful mythic tools.
+**Major Categories:**
+- Mobile Offense (140)
+- Forensics & Recovery (120)
+- Network Warfare (110)
+- Signals Intelligence (90)
+- Tactical & Defensive (80)
+- Vault Engineering (70)
+- Creative & Psychological Warfare (60)
+- Apocalypse Engineering (90)
+- God Protocols (50)
+- Legacy of the Vault (90)
+- **God Tier / Legendary (100)** — The most powerful mythic modules
 
 **Signature God Tier Modules:**
 - apotheosis.lua — Final ascension
@@ -14,9 +25,9 @@
 - reality_forge.lua — Rewrite reality
 - overseer_ascension.lua — Operator and AI become one
 
-**Usage:**
+**Usage Commands:**
 - `modules list`
+- `modules search god`
 - `overseer recommend`
-- Triple haptic tap for God Tier modules
 
-The Vault is eternal.
+**The Vault is eternal.**
