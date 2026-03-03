@@ -1,8 +1,6 @@
 # JANUS OS FIELD MANUAL — 1000-MODULE SINGULARITY
 **VAULT-TEC APPROVED • PANDORA SERIES • v7.1 God Tier Codex**
 
-**"1000 tools. One wrist. Absolute dominion."**
-
 **Total Modules: 1000**
 
 **God Tier / Legendary Category (100 modules)** — The most powerful mythic tools.
