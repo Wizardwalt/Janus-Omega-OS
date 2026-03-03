@@ -5,7 +5,7 @@
 
 **Total Modules: 1000**
 
-**Hardware Note:** Pandora Titan now includes **3 M.2 bays** (Hailo-8, primary NVMe, secondary NVMe/LimeSDR).
+**God Tier / Legendary Category (100 modules)** — The most powerful mythic tools.
 
 **Signature God Tier Modules:**
 - apotheosis.lua — Final ascension

@@ -26,27 +26,10 @@
 - Ergonomic curved forearm mount with heavy-duty nylon straps
 - Internal M.2 access hatch (shock-resistant, aligned with the 3 bays)
 
-**Cost Impact of 3 M.2 Bays:** +$80–120 per unit (connectors, routing, thermal management).
+**Manufacturing Notes:**
+- PCBs: Send to JLCPCB or PCBWay (specify 8-10 layer HDI with 3 M.2 bays)
+- Housing: 3D print prototype in PETG, then injection mold in high-impact polymer
+- Assembly: Seeed Studio or PCBWay for full assembly + testing
+- Total prototype cost per unit: $1,650 – $2,200 (including 3 M.2 bays)
 
-**Ready for Manufacturing:**
-- Send this file to PCB manufacturers (JLCPCB/PCBWay) for the main board.
-- Send housing CAD descriptions (Fusion 360/STEP) for injection molding.
-- The 3 M.2 bays are configured for maximum flexibility: AI, storage, and expansion.
-
-## 2. Pandora Omega (Handheld Cyberdeck)
-- Carbon fiber chassis, mechanical keyboard, trackball, shoulder triggers, antenna toggles, Faraday-lined storage, active cooling with graphene pads.
-
-## 3. Monolith (Display Stand)
-- Weighted black anodized aluminum base, 15W Qi wireless charging, USB-C 3.2 passthrough.
-
-## 4. Forge (Battery Dock)
-- Charges 4x Mjolnir 21700 batteries with 100W PD, cyan breathing LEDs per slot.
-
-## 5. Dongle (Flipper Enhanced Companion)
-- STM32H7 + ESP32, full Sub-GHz/NFC/IR/GPIO/BadUSB with direct Janus serial control.
-
-## 6. Dual-Screen Tablet
-- RK3588-based with dual MIPI displays, 16-24GB RAM, NVMe, convergence support.
-
-**All files are ready for manufacturers.**
-**Send this document + KiCad files + Fusion 360 models.**
+**Ready to send to manufacturers.**

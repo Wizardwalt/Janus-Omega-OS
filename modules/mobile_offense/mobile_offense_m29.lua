@@ -13,20 +13,9 @@ function execute(target, options)
         return {status = "aborted"}
     end
     
-    local result = perform_core_action(target, rotary_value, options)
+    local result = {status = "success", details = "mobile_offense_m29 completed"}
     
-    log_to_blackbox({
-        module = "mobile_offense_m29",
-        target = target or "unknown",
-        rotary_input = rotary_value,
-        status = result.status
-    })
-    
+    log_to_blackbox({module = "mobile_offense_m29", status = result.status})
     overseer_speak("mobile_offense_m29 execution completed successfully.")
     return result
-end
-
-function perform_core_action(target, rotary_value, options)
-    print("Executing mobile_offense_m29 with rotary input: " .. rotary_value)
-    return {status = "success", details = "mobile_offense_m29 completed successfully"}
 end

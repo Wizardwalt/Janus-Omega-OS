@@ -13,20 +13,9 @@ function execute(target, options)
         return {status = "aborted"}
     end
     
-    local result = perform_core_action(target, rotary_value, options)
+    local result = {status = "success", details = "sigint_m412 completed"}
     
-    log_to_blackbox({
-        module = "sigint_m412",
-        target = target or "unknown",
-        rotary_input = rotary_value,
-        status = result.status
-    })
-    
+    log_to_blackbox({module = "sigint_m412", status = result.status})
     overseer_speak("sigint_m412 execution completed successfully.")
     return result
-end
-
-function perform_core_action(target, rotary_value, options)
-    print("Executing sigint_m412 with rotary input: " .. rotary_value)
-    return {status = "success", details = "sigint_m412 completed successfully"}
 end

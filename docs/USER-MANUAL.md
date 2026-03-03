@@ -6,8 +6,6 @@
 
 This is the complete guide to the full 1000-module system.
 
-**Hardware Note:** The Pandora Titan now has **3 M.2 bays** for Hailo-8 AI, primary NVMe storage, and secondary expansion/LimeSDR.
-
 **Basic Operation**
 - Strap the Pandora Titan to your forearm.
 - Flip the brass master toggle to boot.

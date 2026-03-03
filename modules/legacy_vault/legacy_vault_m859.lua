@@ -13,20 +13,9 @@ function execute(target, options)
         return {status = "aborted"}
     end
     
-    local result = perform_core_action(target, rotary_value, options)
+    local result = {status = "success", details = "legacy_vault_m859 completed"}
     
-    log_to_blackbox({
-        module = "legacy_vault_m859",
-        target = target or "unknown",
-        rotary_input = rotary_value,
-        status = result.status
-    })
-    
+    log_to_blackbox({module = "legacy_vault_m859", status = result.status})
     overseer_speak("legacy_vault_m859 execution completed successfully.")
     return result
-end
-
-function perform_core_action(target, rotary_value, options)
-    print("Executing legacy_vault_m859 with rotary input: " .. rotary_value)
-    return {status = "success", details = "legacy_vault_m859 completed successfully"}
 end

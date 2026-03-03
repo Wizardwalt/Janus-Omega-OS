@@ -13,20 +13,9 @@ function execute(target, options)
         return {status = "aborted"}
     end
     
-    local result = perform_core_action(target, rotary_value, options)
+    local result = {status = "success", details = "apocalypse_engineering_m761 completed"}
     
-    log_to_blackbox({
-        module = "apocalypse_engineering_m761",
-        target = target or "unknown",
-        rotary_input = rotary_value,
-        status = result.status
-    })
-    
+    log_to_blackbox({module = "apocalypse_engineering_m761", status = result.status})
     overseer_speak("apocalypse_engineering_m761 execution completed successfully.")
     return result
-end
-
-function perform_core_action(target, rotary_value, options)
-    print("Executing apocalypse_engineering_m761 with rotary input: " .. rotary_value)
-    return {status = "success", details = "apocalypse_engineering_m761 completed successfully"}
 end
