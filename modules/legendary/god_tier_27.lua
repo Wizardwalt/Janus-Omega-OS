@@ -2,19 +2,9 @@
 -- God Tier Module #27 of 1000
 
 function execute(target, options)
-    overseer_speak("GOD TIER MODULE 27 ACTIVATED.")
-    overseer_speak("The wasteland trembles before this power.")
-
+    overseer_speak("God Tier Module 27 activated.")
     local rotary = read_rotary_dial() or 100
-    local haptic = wait_for_haptic_confirmation(3)
-
-    if not haptic then
-        overseer_speak("The gods reject unworthy hands.")
-        return {status = "rejected"}
-    end
-
-    local result = {status = "success", power = "apocalyptic"}
-    log_to_blackbox({module = "god_tier_27", status = "success"})
-    overseer_speak("The legend has been forged.")
-    return result
+    local result = {status = "success", power = rotary}
+    log_to_blackbox({module = "god_tier_27", status = result.status})
+    overseer_speak("Power unleashed.")
 end

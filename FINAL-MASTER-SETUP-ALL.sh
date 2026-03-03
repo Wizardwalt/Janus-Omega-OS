@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "=== JANUS OMEGA OS v7.1 FINAL MASTER SETUP — EVERYTHING IN ONE SCRIPT ==="
+echo "=== JANUS OMEGA OS v7.1 FINAL MASTER SETUP — EVERYTHING FROM BEGINNING TO END ==="
 
 # Create all folders
 mkdir -p website docs/hardware docs/software modules/legendary overseer scripts marketplace airootfs android/app/src/main/kotlin/com/wizardwalt/janus android/gradle/wrapper .github/workflows
