@@ -36,5 +36,5 @@ task = "shell.exec"
 args = "cargo run"
 
 [deployment]
-deploymentTarget = "cloudrun"
-run = ["sh", "-c", "No"]
+deploymentTarget = "vm"
+run = ["cargo", "run", "--release"]
