@@ -1,0 +1,40 @@
+hidden = ["target", ".cargo"]
+
+entrypoint = "src/main.rs"
+modules = ["rust-stable"]
+
+[nix]
+channel = "stable-24_05"
+packages = ["jq", "openssl", "pkg-config", "udev", "android-tools", "libimobiledevice", "nvidia-docker"]
+
+[gitHubImport]
+requiredFiles = [".replit"]
+
+[agent]
+expertMode = true
+
+[workflows]
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Run Application"
+
+[[workflows.workflow]]
+name = "Run Application"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "vnc"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cargo run"
+
+[deployment]
+deploymentTarget = "static"
+run = ["sh", "-c", "No"]
