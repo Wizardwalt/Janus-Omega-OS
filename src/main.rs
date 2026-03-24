@@ -229,19 +229,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut current_tab = 0;
 
     loop {
-        // FIXED: Explicit type annotation for scripts to prevent E0282
         let mut scripts: Vec<PathBuf> = Vec::new();
-        
-        if let Ok(paths) = fs::read_dir("plugins") {
-            for path in paths {
-                if let Ok(entry) = path {
-                    let p = entry.path();
-                    if p.extension().unwrap_or_default() == "lua" { 
-                        scripts.push(p); 
+
+        fn scan_dir(dir: &str, scripts: &mut Vec<PathBuf>) {
+            if let Ok(paths) = fs::read_dir(dir) {
+                for path in paths.flatten() {
+                    let p = path.path();
+                    if p.is_dir() {
+                        scan_dir(p.to_str().unwrap_or(""), scripts);
+                    } else if p.extension().unwrap_or_default() == "lua" {
+                        scripts.push(p);
                     }
                 }
             }
         }
+        scan_dir("plugins", &mut scripts);
         scripts.sort();
 
         terminal.draw(|f| {
