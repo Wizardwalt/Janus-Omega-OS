@@ -5,7 +5,7 @@
 
 **Total Modules: 1000**
 
-**Hardware Note:** Pandora Titan includes **3 M.2 bays** and **full Flipper Zero integration** (built-in submodule + external USB-C OTG port).
+**God Tier / Legendary Category (100 modules)** — The most powerful mythic tools.
 
 **Signature God Tier Modules:**
 - apotheosis.lua — Final ascension

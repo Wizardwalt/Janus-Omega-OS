@@ -38,3 +38,7 @@ args = "cargo run"
 [deployment]
 deploymentTarget = "vm"
 run = ["cargo", "run", "--release"]
+
+[[ports]]
+localPort = 5904
+externalPort = 80
