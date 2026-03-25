@@ -303,9 +303,20 @@ fn run_web_server() -> Result<(), Box<dyn std::error::Error>> {
 
 // --- MAIN ---
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // If not in a TTY (deployed environment), run the web status server
-    if !atty::is(atty::Stream::Stdout) {
-        return run_web_server();
+    // Always start the web server in a background thread so the port is ALWAYS open.
+    // In deployment (no TTY) the TUI will fail to start and the web server keeps running.
+    // In local dev the TUI runs normally alongside the background web server.
+    std::thread::spawn(|| {
+        let _ = run_web_server();
+    });
+
+    // Give web server a moment to bind
+    std::thread::sleep(Duration::from_millis(200));
+
+    // If not in a real TTY (deployed/CI), just keep the web server alive
+    if !atty::is(atty::Stream::Stdin) {
+        println!("JANUS OMEGA :: DEPLOYED MODE :: WEB SERVER ACTIVE");
+        loop { std::thread::sleep(Duration::from_secs(60)); }
     }
 
     // 1. SETUP DB
