@@ -14,7 +14,7 @@ jobs:
       - name: Install build dependencies
         run: |
           pacman -Syu --noconfirm
-          pacman -S --noconfirm archiso rust cargo make git gcc pkg-config openssl python lua
+          pacman -S --noconfirm --needed archiso rust make git gcc pkg-config openssl python lua
 
       - name: Build Janus binary
         run: cargo build --release
@@ -23,17 +23,11 @@ jobs:
         run: |
           cp -r /usr/share/archiso/configs/releng/ build_dir
 
-          # HARDWARE DRIVERS
-          echo "libnfc" >> build_dir/packages.x86_64
-          echo "rtl-sdr" >> build_dir/packages.x86_64
-
-          # TOOLS
+          # TOOLS (standard Arch repos only)
           echo "android-tools" >> build_dir/packages.x86_64
           echo "libimobiledevice" >> build_dir/packages.x86_64
           echo "nmap" >> build_dir/packages.x86_64
           echo "aircrack-ng" >> build_dir/packages.x86_64
-
-          # SYSTEM
           echo "alacritty" >> build_dir/packages.x86_64
           echo "lua" >> build_dir/packages.x86_64
 
@@ -42,25 +36,26 @@ jobs:
           cp target/release/janus_omega build_dir/airootfs/usr/local/bin/janus
           chmod +x build_dir/airootfs/usr/local/bin/janus
 
-          # INJECT ALL PLUGINS (recursive copy to preserve subdirectories)
+          # INJECT ALL PLUGINS (recursive - all 1233 modules)
           mkdir -p build_dir/airootfs/opt/janus
           cp -r plugins build_dir/airootfs/opt/janus/plugins
 
           # STARTUP SCRIPT
-          cat > build_dir/airootfs/root/.xinitrc << 'EOF'
-          #!/bin/sh
-          adb start-server &
-          xset s off
-          while true; do
-            alacritty -o font.size=16 \
-              -o "colors.primary.foreground='#00FF41'" \
-              -o "colors.primary.background='#0A0A0A'" \
-              -o "colors.cursor.cursor='#9D00FF'" \
-              --working-directory /opt/janus \
-              -e /usr/local/bin/janus
-            sleep 1
-          done
-          EOF
+          mkdir -p build_dir/airootfs/root
+          cat > build_dir/airootfs/root/.xinitrc << 'XINITRC'
+#!/bin/sh
+adb start-server &
+xset s off
+while true; do
+  alacritty -o font.size=16 \
+    -o "colors.primary.foreground='#00FF41'" \
+    -o "colors.primary.background='#0A0A0A'" \
+    -o "colors.cursor.cursor='#9D00FF'" \
+    --working-directory /opt/janus \
+    -e /usr/local/bin/janus
+  sleep 1
+done
+XINITRC
           chmod +x build_dir/airootfs/root/.xinitrc
           echo '[[ -z $DISPLAY && $XDG_VTNR -eq 1 ]] && exec startx' >> build_dir/airootfs/root/.bash_profile
 
@@ -86,11 +81,12 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Download Gradle wrapper JAR
+      - name: Generate Gradle wrapper JAR
         run: |
+          wget -q "https://services.gradle.org/distributions/gradle-8.5-bin.zip" -P /tmp
+          unzip -q /tmp/gradle-8.5-bin.zip -d /tmp/gradle
           mkdir -p gradle/wrapper
-          curl -L -o gradle/wrapper/gradle-wrapper.jar \
-            https://github.com/gradle/gradle/raw/v8.5.0/gradle/wrapper/gradle-wrapper.jar
+          /tmp/gradle/gradle-8.5/bin/gradle wrapper --gradle-version 8.5 --distribution-type bin
           chmod +x gradlew
 
       - name: Build APK
