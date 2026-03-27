@@ -1,33 +1,37 @@
 name: Build Janus Mobile
-on: workflow_dispatch
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+
 jobs:
-  build:
+  build_apk:
+    name: "Build Android APK"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3
-        with: { distribution: 'zulu', java-version: '17' }
-      - uses: subosito/flutter-action@v2
-        with: { flutter-version: '3.16.0' }
-      - uses: dtolnay/rust-toolchain@stable
-        with: { targets: aarch64-linux-android armv7-linux-androideabi }
-      - uses: nttld/setup-ndk@v1
-        with: { ndk-version: r25c }
-      - run: |
-          flutter create . --project-name janus_mobile --org com.janus
-          flutter pub add flutter_rust_bridge ffi
-          mkdir -p android/app/src/main/assets/plugins
-          cp plugins/*.lua android/app/src/main/assets/plugins/
-          sed -i 's/# assets:/assets:\n    - android\/app\/src\/main\/assets\/plugins\//' pubspec.yaml
-          MANIFEST="android/app/src/main/AndroidManifest.xml"
-          sed -i '/<application/i <uses-feature android:name="android.hardware.usb.host" />' $MANIFEST
-          sed -i '/<application/i <uses-permission android:name="android.permission.USB_PERMISSION" />' $MANIFEST
-          cargo install cargo-ndk
-          mkdir -p native/src
-          echo '[package]\nname="native"\nversion="1.0.0"\nedition="2021"\n[lib]\ncrate-type=["cdylib","staticlib"]\n[dependencies]\nflutter_rust_bridge="1"\nanyhow="1.0"' > native/Cargo.toml
-          echo 'pub fn run_command(c: String)->String{format!("EXEC: {}",c)}' > native/src/api.rs
-          echo 'mod api;' > native/src/lib.rs
-          cd native && cargo ndk -t aarch64-linux-android -t armv7-linux-androideabi -o ../android/app/src/main/jniLibs build --release
-          cd .. && flutter build apk --release --no-tree-shake-icons
-      - uses: actions/upload-artifact@v4
-        with: { name: Janus-Mobile-APK, path: build/app/outputs/flutter-apk/app-release.apk }
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Generate Gradle wrapper JAR
+        run: |
+          wget -q "https://services.gradle.org/distributions/gradle-8.5-bin.zip" -P /tmp
+          unzip -q /tmp/gradle-8.5-bin.zip -d /tmp/gradle
+          mkdir -p gradle/wrapper
+          /tmp/gradle/gradle-8.5/bin/gradle wrapper --gradle-version 8.5 --distribution-type bin
+          chmod +x gradlew
+
+      - name: Build APK
+        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: JanusMobile-Debug
+          path: app/build/outputs/apk/debug/*.apk
+        if: always()
