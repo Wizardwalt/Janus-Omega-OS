@@ -1,26 +1,6 @@
+[package]
+name = "your_package_name"
+version = "0.1.0"
+edition = "2018"
+
 [dependencies]
-tokio = { version = "1", features = ["full"] }
-serde = { version = "1", features = ["derive"] }
-log = "0.4"
-
-[profile.dev]
-opt-level = 0
-debug = true
-split-debuginfo = "unpacked"
-
-[profile.release]
-opt-level = 3
-debug = false
-split-debuginfo = "packed"
-
-[target.android.armv7]
-rustflags = ["--cfg", "target_os=\"android\"", "--cfg", "target_arch=\"armv7\""]
-
-[target.android.aarch64]
-rustflags = ["--cfg", "target_os=\"android\"", "--cfg", "target_arch=\"aarch64\""]
-
-[target.android.x86]
-rustflags = ["--cfg", "target_os=\"android\"", "--cfg", "target_arch=\"x86\""]
-
-[target.android.x86_64]
-rustflags = ["--cfg", "target_os=\"android\"", "--cfg", "target_arch=\"x86_64\""]
