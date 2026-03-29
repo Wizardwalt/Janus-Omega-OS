@@ -1,15 +1,22 @@
-// Root build.gradle
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.2.2'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.22"
-    }
+plugins {
+    id 'java'
+    id 'application'
+    id 'maven-publish'
 }
 
-task clean(type: Delete) {
-    delete rootProject.buildDir
+group = 'com.example'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+dependencies {
+    implementation 'org.springframework:spring-core:5.3.8'
+    testImplementation 'junit:junit:4.13.2'
+}
+
+application {
+    mainClassName = 'com.example.Main'
 }
