@@ -1,1 +1,1 @@
-registries.crates-io.protocol = "sparse"
+[target]\n\n[target.armv7-linux-androideabi]\nlinker = "${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"\n\n[target.aarch64-linux-android]\nlinker = "${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"\n\n[target.i686-linux-android]\nlinker = "${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"\n\n[target.x86_64-linux-android]\nlinker = "${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
