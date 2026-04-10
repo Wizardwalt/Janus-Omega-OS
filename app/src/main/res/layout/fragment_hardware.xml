@@ -158,7 +158,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="  TITAN: 7\" Forearm Pip-Boy"
+            android:text="  TITAN: 7&quot; Forearm Pip-Boy"
             android:textColor="#9D00FF"
             android:fontFamily="monospace"
             android:textSize="13sp"
