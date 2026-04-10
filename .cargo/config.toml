@@ -1,1 +1,5 @@
-registries.crates-io.protocol = "sparse"
+[net]
+git-fetch-with-cli = true
+
+[registries.crates-io]
+protocol = "sparse"
