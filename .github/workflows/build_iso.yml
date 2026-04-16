@@ -1,6 +1,7 @@
 name: Build JanusOS ISO
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
