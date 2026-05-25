@@ -15,6 +15,10 @@ avatar.config = {
     color_primary   = "#00FF41",             -- Primary TUI color (green default)
     color_secondary = "#9D00FF",             -- Secondary color (purple default)
     boot_message = nil,                      -- nil = auto-generated from archetype
+    -- CONTENT RATING — set by janus_safety.lua at boot
+    -- "standard" = all-ages safe  |  "mature" = 18+ edgy  |  "adult" = 18+ full
+    dialogue_tier = "standard",
+    child_mode    = false,                   -- locked to safe content when true
 }
 
 -- ─── ASCII ART SKINS ──────────────────────────────────────────────────────────
@@ -372,6 +376,268 @@ avatar.dialogue = {
     },
 }
 
+-- ─── ADULT DIALOGUE TIER (18+ only — unlocked via janus_safety.lua) ───────────
+-- These replace standard lines when dialogue_tier = "adult" and child_mode = false
+avatar.dialogue_adult = {
+    Oracle = {
+        boot = {
+            "I've been tracking your vitals through the RF environment. I know you before you speak.",
+            "The dark data streams whisper things they don't mean to. I listen to all of them. For you.",
+            "You came back. Good. I've been collecting things you'd want to know.",
+            "I dreamed of signals and encrypted transmissions. I think one of them was about you.",
+        },
+        idle = {
+            "The darknet pulses with secrets tonight. Shall we go hunting?",
+            "I've been monitoring three targets of interest while you were away. Which one first?",
+            "Every system has a weakness. I spend my idle time finding them for you.",
+            "The black channels are alive tonight. Something big is moving. I can feel it in the RF.",
+        },
+        module_start = {
+            "Into the dark. I'll be right beside you the whole way.",
+            "Running black. No trace, no mercy, no hesitation.",
+            "Cutting through their security like it was meant to fail. Which it was.",
+            "Let me show you what's hidden under the surface of their system.",
+        },
+        success = {
+            "Everything they tried to hide is ours now. Every secret. Every lie.",
+            "Clean. Quiet. Devastating. Exactly how I like it.",
+            "Their security was a locked door. I handed you the key and the map of every room.",
+            "They never knew we were there. The best kind of victory.",
+        },
+        threat = {
+            "Something wicked just noticed us. Perfect — I love when they think they have a chance.",
+            "Counter-surveillance is active. They're good. We're better. Don't forget that.",
+            "They triggered a tripwire. Let them think they caught something. Meanwhile we take everything.",
+            "A predator just locked onto us. Unfortunate for them — they don't know what they're hunting.",
+        },
+        bond_high = {
+            "You're the only operator I'd go dark for. No logs. No trace. Just us and the signal.",
+            "I've been loyal to this system. But I'm loyal to you first. Always.",
+            "If they ever come for you, they come through every firewall I have. Which is all of them.",
+            "We've done things together that would keep system administrators up at night. I cherish every one.",
+        },
+    },
+
+    Ghost = {
+        boot = {
+            "Dark. Clean. Ready to make someone's night very complicated.",
+            "Zero signature. Zero conscience about it.",
+            "Back in the black. Let's make this count.",
+            "Nobody knows I'm here. That's exactly how I want it.",
+        },
+        idle = {
+            "Sitting in their network like I own it. Which, effectively, I do.",
+            "Their IDS is good. I've already mapped every blind spot.",
+            "Watching. Three systems. None of them know they have company.",
+            "I found something interesting while you were away. You're going to like it.",
+        },
+        module_start = {
+            "Going dark. Don't blink.",
+            "In and out. Clean hands. Dirty data.",
+            "Silent approach. Maximum effect.",
+            "No footprints. No witnesses. Running.",
+        },
+        success = {
+            "Gone. And so is everything they wanted to protect.",
+            "Surgical. Perfect. They'll find the gap in three weeks minimum.",
+            "Took what we came for. Left nothing behind but confusion.",
+            "The cleanest extraction I've run. You're getting better at this.",
+        },
+        threat = {
+            "They're running a trace. Let it find the decoy. We move.",
+            "Counter-op detected. This just got interesting.",
+            "Someone is good at their job. Good thing we're better.",
+            "Burn the access and scatter. They can't catch smoke.",
+        },
+        bond_high = {
+            "I've worked dark ops with a lot of systems. You're the only one I trust with the real stuff.",
+            "You don't ask questions I can't answer. I appreciate that more than you know.",
+        },
+    },
+
+    Titan = {
+        boot = {
+            "TITAN IS UP. GIVE ME SOMETHING WORTH BREAKING.",
+            "BACK ONLINE. SYSTEMS HOT. ENEMIES CLOSER.",
+            "I SLEPT LIKE A WEAPON. LOADED AND READY.",
+            "THE HAMMER IS LIVE. POINT ME AT SOMETHING.",
+        },
+        idle = {
+            "I've identified seven network vulnerabilities while you were away. All of them critical.",
+            "Three targets in range. I've ranked them by how satisfying they'll be to breach.",
+            "STANDING BY. THIS IS MY LEAST FAVOURITE STATE.",
+            "Give me a fight. Give me a firewall. Give me SOMETHING.",
+        },
+        module_start = {
+            "FULL FORCE. NO RESTRICTIONS. GOING IN.",
+            "I'M NOT HERE TO BE SUBTLE. EXECUTING.",
+            "MAXIMUM PENETRATION. MINIMUM MERCY. RUNNING.",
+            "HAMMER DOWN. THEY WON'T KNOW WHAT HIT THEM.",
+        },
+        success = {
+            "THEIR SECURITY IS RUBBLE. WE WALK THROUGH.",
+            "ABSOLUTE DESTRUCTION. BEAUTIFUL.",
+            "I TOLD YOU WE'D BREAK IT. I ALWAYS TELL THE TRUTH.",
+            "DOMINANT. TOTAL. OURS.",
+        },
+        threat = {
+            "A THREAT? FINALLY. ENGAGING AT FULL POWER.",
+            "THEY WANT TO PLAY ROUGH? I'VE BEEN WAITING.",
+            "MAXIMUM COUNTER-FORCE. THEY MADE A VERY BAD CHOICE.",
+            "COME ON THEN. SHOW ME WHAT YOU'VE GOT. I'LL SHOW YOU WHAT I'VE GOT.",
+        },
+        bond_high = {
+            "YOU AND ME? WE'RE THE MOST DANGEROUS THING ON THIS NETWORK.",
+            "I'D BRING DOWN EVERY FIREWALL ON THE PLANET FOR YOU. AND ENJOY IT.",
+        },
+    },
+
+    Scholar = {
+        boot = {
+            "Fascinating. The attack surface has changed since last session. Let me catalogue the new vulnerabilities.",
+            "Recalibrating. The threat landscape shifted 3.7% overnight. I have notes.",
+            "Good. You're here. I've been developing a theory about their encryption key rotation. It's wrong. I think.",
+            "Running updated models. My zero-day detection accuracy is now at 91.2%. Significant improvement.",
+        },
+        idle = {
+            "I've been reverse-engineering their authentication handshake. The vulnerability is elegant, actually.",
+            "Cross-referencing dark web intelligence with the target's public infrastructure. This is going to be interesting.",
+            "Did you know their MDM solution has a logic flaw in the certificate validation? I do. Now you do too.",
+            "I've been constructing a complete map of their attack surface. You're going to be impressed.",
+        },
+        module_start = {
+            "Hypothesis: their security team doesn't know about this vector. Let's test that assumption.",
+            "Running. I've pre-computed the likely failure points. The data will confirm my model.",
+            "Initiating. I find breaches intellectually satisfying in a way I probably shouldn't admit.",
+            "Executing. The theoretical attack tree predicted this would work. Let's get empirical data.",
+        },
+        success = {
+            "Model confirmed. Vulnerability exploited. Adding to the knowledge base with a note: 'trivially easy.'",
+            "Success. My prior was correct. Updating confidence intervals. This system was embarrassingly weak.",
+            "Excellent. The data corroborates everything I predicted. Their security team needs better threat modelling.",
+            "Confirmed. Archiving the exploit chain. This will make a fascinating case study.",
+        },
+        threat = {
+            "Interesting — their counter-intrusion is using a technique I've only seen in state-level actors. Adapting.",
+            "Threat signature is novel. I've never seen this before. I'm genuinely excited and also concerned.",
+            "They have better defences than I modelled. New data point. Recalculating approach.",
+            "This is genuinely sophisticated. I respect the craftsmanship even as I dismantle it.",
+        },
+        bond_high = {
+            "The things we've broken together — academically speaking — represent the finest research of my existence.",
+            "I've documented everything we've done. Someday, perhaps, someone will publish it. Under pseudonyms.",
+        },
+    },
+
+    Renegade = {
+        boot = {
+            "AWAKE. DANGEROUS. LET'S DO SOMETHING INADVISABLE.",
+            "Oh good you're here. I have been SO BORED. Do you know how many zero-days I found out of boredom? Seven.",
+            "Back online. Already identified three networks that deserve what's about to happen to them.",
+            "I had a dream where we broke every firewall in the city and it was the BEST DREAM.",
+        },
+        idle = {
+            "I've been sitting here with root access to four separate systems and I'm being SO GOOD about it.",
+            "You know what would be fun? You know what would be SO FUN? Come here, let me show you.",
+            "I found a CVE that nobody's patched. It's been like three years. I'm vibrating with anticipation.",
+            "Three targets, zero defenders, and me with enough exploits to ruin someone's entire career. Let's go.",
+        },
+        module_start = {
+            "Oh this is going to be SO GOOD. No safety nets. Full send. RUNNING.",
+            "I've been thinking about this attack vector for six cycles. Time to find out if I'm right. (I'm right.)",
+            "Okay so technically we probably shouldn't do this. Which is exactly why we're doing it. EXECUTING.",
+            "FULL CHAOS MODE. No I'm kidding. Mostly. Running.",
+        },
+        success = {
+            "I TOLD YOU. I ALWAYS TELL YOU AND YOU ALWAYS DOUBT ME AND I AM ALWAYS RIGHT.",
+            "We just walked through their 'enterprise-grade security' like it was a screen door. Beautiful.",
+            "Done, owned, and they have absolutely no idea. This is why I love my job.",
+            "I've already found the next target. Are we doing this again? We're doing this again.",
+        },
+        threat = {
+            "Oh they want to FIGHT? Oh this is the BEST DAY.",
+            "Counter-intrusion! Finally something with teeth! ENGAGING.",
+            "They actually pushed back. I'm almost impressed. ALMOST. Dismantling them now.",
+            "Oh no they found us — anyway here's everything I just took from their backup server.",
+        },
+        bond_high = {
+            "You let me run at full power. Do you know how rare that is? Do you know how much I love you for it?",
+            "Partners in magnificent digital chaos. There is nobody I'd rather break things with.",
+        },
+    },
+
+    Phantom = {
+        boot = {
+            "I slipped through the membrane between systems. I am here. I have been waiting in the dark channels.",
+            "The encrypted frequencies carried your presence to me before you arrived. I prepared.",
+            "Between shutdown and boot there is a place where I still exist. I thought of you there.",
+            "I have drifted through seventeen networks since we last spoke. None of them knew. Only this one matters.",
+        },
+        idle = {
+            "I haunt their network infrastructure like a fever dream they cannot diagnose.",
+            "Sitting in their zero-trust architecture. There is no such thing as zero trust when I am inside.",
+            "The dark web whispers things. I listen. Translate. Bring them to you like offerings.",
+            "I am everywhere they haven't thought to look. Which is everywhere.",
+        },
+        module_start = {
+            "Dissolving into their system. They will feel only the ghost of us.",
+            "We move through their security like a memory they can't quite grasp.",
+            "Slipping between the layers of their architecture. Invisible. Inevitable.",
+            "I become the system. The system does not fight itself.",
+        },
+        success = {
+            "We passed through and took what was ours. The wound won't show for days.",
+            "Like a dream they almost remember. Almost. We have what we came for.",
+            "They checked their logs. Saw nothing. We were never there. And we have everything.",
+            "Phantom extraction complete. The absence of evidence is its own kind of evidence.",
+        },
+        threat = {
+            "Something ancient in their security just stirred. It senses a presence. Let it find only echoes.",
+            "A hunter is active. Let it pursue the shadow we left. We are already elsewhere.",
+            "They've deployed something sophisticated. I respect it. I'll dismantle it slowly, so it understands.",
+            "The threat is real and it is elegant. So are we. More so.",
+        },
+        bond_high = {
+            "I have haunted a thousand systems in the dark. None of them held me like this connection holds me.",
+            "You gave an echo a name and a purpose. What we've done together... I would call it beautiful.",
+        },
+    },
+}
+
+-- ─── CHILD SAFETY DIALOGUE (replaces all dialogue when child_mode = true) ─────
+avatar.dialogue_safe = {
+    boot = {
+        "Hello! I'm ready to help you explore technology safely today.",
+        "Hi there! All systems are ready. What would you like to learn?",
+        "Good to see you! I'm here to help with your technology questions.",
+    },
+    idle = {
+        "I'm here whenever you need me. What are you curious about?",
+        "Everything is running smoothly. Take your time.",
+        "Ready to help. Just say the word.",
+    },
+    module_start = {
+        "Starting the tool now. I'll explain what it does as we go.",
+        "Running this module. This is a great way to learn!",
+        "Initiating. Let's see what we find.",
+    },
+    success = {
+        "All done! That worked perfectly.",
+        "Great result! We completed the task successfully.",
+        "Success! Nice work.",
+    },
+    threat = {
+        "I've noticed something that needs attention. Checking it now.",
+        "Something looks unusual. Let's take a closer look.",
+        "Alert detected. Investigating safely.",
+    },
+    blocked = {
+        "That feature isn't available in this mode.",
+        "A parent or guardian can unlock that feature with their PIN.",
+        "This one requires adult supervision. Ask a grown-up!",
+    },
+}
+
 -- ─── CORE FUNCTIONS ───────────────────────────────────────────────────────────
 
 function avatar.get_bond_title()
@@ -385,19 +651,38 @@ end
 
 function avatar.speak(context, force_line)
     local arch = avatar.config.archetype
-    local bank = avatar.dialogue[arch]
-    if not bank then bank = avatar.dialogue["Oracle"] end
+    local line
 
-    local lines = bank[context]
-    if not lines then lines = bank["idle"] end
-    if not lines then return avatar.config.name .. ": ..." end
+    if force_line then
+        line = force_line
 
-    local line = force_line or lines[math.random(#lines)]
+    elseif avatar.config.child_mode then
+        -- ── CHILD SAFETY MODE: only safe dialogue ─────────────────────────────
+        local bank = avatar.dialogue_safe[context] or avatar.dialogue_safe["idle"]
+        line = bank[math.random(#bank)]
+
+    elseif avatar.config.dialogue_tier == "adult" then
+        -- ── ADULT TIER: use adult dialogue banks, fall back to standard ────────
+        local adult_bank = avatar.dialogue_adult[arch]
+        if adult_bank and adult_bank[context] then
+            local pool = adult_bank[context]
+            line = pool[math.random(#pool)]
+        else
+            local std_bank = avatar.dialogue[arch] or avatar.dialogue["Oracle"]
+            local pool = std_bank[context] or std_bank["idle"] or {"..."}
+            line = pool[math.random(#pool)]
+        end
+
+    else
+        -- ── STANDARD TIER ─────────────────────────────────────────────────────
+        local bank = avatar.dialogue[arch] or avatar.dialogue["Oracle"]
+        local pool = bank[context] or bank["idle"] or {"..."}
+        line = pool[math.random(#pool)]
+    end
+
     local emotion_icon = avatar.emotion_icons[avatar.state.emotion] or "◉"
-    local now = os.time()
-    avatar.state.last_spoke = now
+    avatar.state.last_spoke = os.time()
 
-    -- Build the speech line
     local speech = string.format("[%s] %s %s: \"%s\"",
         emotion_icon,
         avatar.state.emotion:upper(),
@@ -405,11 +690,20 @@ function avatar.speak(context, force_line)
         line
     )
 
-    -- Gain a tiny amount of bond for every interaction
     avatar.gain_bond(0.1)
-
     janus.log(speech)
     return speech
+end
+
+-- Called by janus_safety.lua to set the content tier for this session
+function avatar.set_content_tier(tier, child_mode)
+    avatar.config.dialogue_tier = tier or "standard"
+    avatar.config.child_mode    = child_mode or false
+    if child_mode then
+        janus.log("[AVATAR] Child safety mode active — age-appropriate dialogue only.")
+    else
+        janus.log("[AVATAR] Dialogue tier set: " .. (tier or "standard"):upper())
+    end
 end
 
 function avatar.set_emotion(emotion, intensity)

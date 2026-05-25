@@ -27,33 +27,37 @@ use rusqlite::{params, Connection};
 // ─── AVATAR STATE (shared across TUI frames) ──────────────────────────────────
 #[derive(Clone)]
 struct AvatarState {
-    name:       String,
-    archetype:  String,
-    skin:       String,
-    emotion:    String,
-    intensity:  f64,    // 0.0-1.0
-    bond:       f64,    // 0.0-100.0
-    bond_title: String,
-    session_ops:u64,
-    level:      u32,
-    total_xp:   u64,
-    last_words: String,
+    name:           String,
+    archetype:      String,
+    skin:           String,
+    emotion:        String,
+    intensity:      f64,    // 0.0-1.0
+    bond:           f64,    // 0.0-100.0
+    bond_title:     String,
+    session_ops:    u64,
+    level:          u32,
+    total_xp:       u64,
+    last_words:     String,
+    content_rating: String, // SAFE | TEEN | ADULT | OPERATOR
+    child_mode:     bool,
 }
 
 impl Default for AvatarState {
     fn default() -> Self {
         Self {
-            name:       "ARIA".into(),
-            archetype:  "Oracle".into(),
-            skin:       "cyber".into(),
-            emotion:    "curious".into(),
-            intensity:  0.7,
-            bond:       0.0,
-            bond_title: "STRANGER".into(),
-            session_ops:0,
-            level:      1,
-            total_xp:   0,
-            last_words: "Systems online. I am ready.".into(),
+            name:           "ARIA".into(),
+            archetype:      "Oracle".into(),
+            skin:           "cyber".into(),
+            emotion:        "curious".into(),
+            intensity:      0.7,
+            bond:           0.0,
+            bond_title:     "STRANGER".into(),
+            session_ops:    0,
+            level:          1,
+            total_xp:       0,
+            last_words:     "Systems online. I am ready.".into(),
+            content_rating: "ADULT".into(),
+            child_mode:     false,
         }
     }
 }
@@ -151,6 +155,23 @@ fn run_script(
             let mut a = av5.lock().unwrap();
             a.total_xp = xp;
             a.level = level;
+            Ok(())
+        }).unwrap()).unwrap();
+
+        let av6 = avatar.clone();
+        janus.set("set_content_rating", lua.create_function(move |_, rating: String| {
+            let mut a = av6.lock().unwrap();
+            a.content_rating = rating;
+            Ok(())
+        }).unwrap()).unwrap();
+
+        let av7 = avatar.clone();
+        janus.set("set_child_mode", lua.create_function(move |_, enabled: bool| {
+            let mut a = av7.lock().unwrap();
+            a.child_mode = enabled;
+            if enabled {
+                a.content_rating = "SAFE".to_string();
+            }
             Ok(())
         }).unwrap()).unwrap();
 
@@ -408,13 +429,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .split(size);
 
             // ── Tab bar ───────────────────────────────────────────────────────
+            // Rating badge: color + label
+            let (rating_color, rating_label) = if av_snap.child_mode {
+                (Color::Cyan,   " 🔒 CHILD SAFE ")
+            } else {
+                match av_snap.content_rating.as_str() {
+                    "OPERATOR" => (Color::Red,            " ⚡ OPERATOR "),
+                    "TEEN"     => (Color::Yellow,         " [13+] "),
+                    "SAFE"     => (Color::Cyan,           " [SAFE] "),
+                    _          => (Color::Rgb(157,0,255), " [18+] "),
+                }
+            };
+            let bar_title = Line::from(vec![
+                Span::styled(" ★ JANUS OMEGA OS ★ ", Style::default()
+                    .fg(Color::Rgb(157, 0, 255)).add_modifier(Modifier::BOLD)),
+                Span::styled(rating_label, Style::default()
+                    .fg(rating_color).add_modifier(Modifier::BOLD)),
+            ]);
             let tabs = Tabs::new(tab_names.iter().map(|t| {
                 Line::from(Span::styled(*t, Style::default().fg(Color::Rgb(0, 255, 65))))
             }).collect::<Vec<_>>())
-                .block(Block::default().borders(Borders::ALL)
-                    .title(Span::styled(" ★ JANUS OMEGA OS ★ ", Style::default()
-                        .fg(Color::Rgb(157, 0, 255))
-                        .add_modifier(Modifier::BOLD))))
+                .block(Block::default().borders(Borders::ALL).title(bar_title))
                 .select(current_tab)
                 .highlight_style(Style::default()
                     .fg(Color::Rgb(157, 0, 255))
@@ -466,6 +501,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             Span::styled("  ARIA LAST: ", Style::default().fg(Color::Rgb(157, 0, 255))),
                             Span::styled(format!("\"{}\"", av_snap.last_words), Style::default().fg(Color::Rgb(157, 0, 255)).add_modifier(Modifier::ITALIC)),
                         ]),
+                        Line::from(""),
+                        {
+                            let (s_color, s_label) = if av_snap.child_mode {
+                                (Color::Cyan, "🔒 CHILD SAFETY MODE ACTIVE — Restricted content only")
+                            } else {
+                                match av_snap.content_rating.as_str() {
+                                    "OPERATOR" => (Color::Red,    "⚡ OPERATOR MODE — All modules unlocked"),
+                                    "TEEN"     => (Color::Yellow, "[13+] TEEN MODE — Offensive modules restricted"),
+                                    "SAFE"     => (Color::Cyan,   "[SAFE] SAFE MODE — Educational content only"),
+                                    _          => (Color::Rgb(157,0,255), "[18+] ADULT MODE — Full platform access"),
+                                }
+                            };
+                            Line::from(vec![
+                                Span::styled("  CONTENT: ", Style::default().fg(Color::Rgb(157, 0, 255))),
+                                Span::styled(s_label, Style::default().fg(s_color).add_modifier(Modifier::BOLD)),
+                            ])
+                        },
                         Line::from(""),
                         Line::from(Span::styled("  [→] OPS  [←] PREV  [Q] QUIT  [G] GLITCH", Style::default().fg(Color::Rgb(80, 80, 80)))),
                     ];
