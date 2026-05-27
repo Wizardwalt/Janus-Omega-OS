@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>JanusOS — Pandora Titan</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ═══ BOOT SCREEN ═══════════════════════════════════════════════════════════ -->
+<div id="boot-screen">
+  <div class="boot-scanlines"></div>
+  <div class="boot-content">
+    <div class="boot-logo">
+      <div class="boot-logo-text">JANUS<span>OS</span></div>
+      <div class="boot-logo-sub">PANDORA TITAN  ·  FIELD INTELLIGENCE PLATFORM</div>
+    </div>
+    <div class="boot-bar-wrap">
+      <div class="boot-bar"><div id="boot-progress" class="boot-bar-fill"></div></div>
+      <div id="boot-label" class="boot-bar-label">Initialising kernel...</div>
+    </div>
+    <div id="boot-log" class="boot-log"></div>
+    <div class="boot-aria-init">
+      <span class="aria-dot"></span>
+      <span id="aria-boot-msg">ARIA — standing by</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MAIN LAUNCHER ════════════════════════════════════════════════════════ -->
+<div id="launcher" class="hidden">
+
+  <!-- Status Bar -->
+  <div id="status-bar">
+    <div class="status-left">
+      <span class="status-icon">◈</span>
+      <span id="status-time">00:00</span>
+      <span class="status-sep">·</span>
+      <span id="status-date">--</span>
+    </div>
+    <div class="status-center">
+      <span class="janos-title">JANUS<span>OS</span></span>
+    </div>
+    <div class="status-right">
+      <span class="aria-indicator" id="aria-indicator">
+        <span class="aria-dot pulse"></span> ARIA
+      </span>
+      <span class="status-sep">·</span>
+      <span id="ops-count">0 ops</span>
+      <span class="status-sep">·</span>
+      <span class="status-icon signal-icon">▲▲▲</span>
+    </div>
+  </div>
+
+  <!-- Wallpaper grid -->
+  <div class="wallpaper-grid"></div>
+
+  <!-- App Grid -->
+  <div id="app-grid">
+    <div class="app-tile" data-category="forensics" data-label="Forensics">
+      <div class="tile-icon">🔬</div>
+      <div class="tile-label">FORENSICS</div>
+      <div class="tile-sub">WAL · Carving · Timeline</div>
+    </div>
+    <div class="app-tile" data-category="sigint" data-label="SIGINT">
+      <div class="tile-icon">📡</div>
+      <div class="tile-label">SIGINT</div>
+      <div class="tile-sub">RF · Scanner · Signals</div>
+    </div>
+    <div class="app-tile" data-category="network_warfare" data-label="Network">
+      <div class="tile-icon">🌐</div>
+      <div class="tile-label">NETWORK</div>
+      <div class="tile-sub">Nmap · MITM · Warfare</div>
+    </div>
+    <div class="app-tile" data-category="mobile_offense" data-label="Mobile">
+      <div class="tile-icon">📱</div>
+      <div class="tile-label">MOBILE</div>
+      <div class="tile-sub">ADB · FRP · iOS</div>
+    </div>
+    <div class="app-tile" data-category="cyber_warfare" data-label="Cyber">
+      <div class="tile-icon">⚔️</div>
+      <div class="tile-label">CYBER</div>
+      <div class="tile-sub">Exploits · Payloads</div>
+    </div>
+    <div class="app-tile" data-category="osint_oracle" data-label="OSINT">
+      <div class="tile-icon">🕵️</div>
+      <div class="tile-label">OSINT</div>
+      <div class="tile-sub">Intel · Profiling · HUMINT</div>
+    </div>
+    <div class="app-tile" data-category="hardware_glitch" data-label="Hardware">
+      <div class="tile-icon">🔧</div>
+      <div class="tile-label">HARDWARE</div>
+      <div class="tile-sub">JTAG · UART · Glitch</div>
+    </div>
+    <div class="app-tile" data-category="titan_exclusive" data-label="Titan">
+      <div class="tile-icon">🛡️</div>
+      <div class="tile-label">TITAN</div>
+      <div class="tile-sub">AR-HUD · Neural · CBRN</div>
+    </div>
+    <div class="app-tile" data-category="tactical_defensive" data-label="Tactical">
+      <div class="tile-icon">🎯</div>
+      <div class="tile-label">TACTICAL</div>
+      <div class="tile-sub">Evasion · Counter · Ghost</div>
+    </div>
+    <div class="app-tile" data-category="apocalypse" data-label="Apocalypse">
+      <div class="tile-icon">☢️</div>
+      <div class="tile-label">APOCALYPSE</div>
+      <div class="tile-sub">Extreme Engineering</div>
+    </div>
+    <div class="app-tile" data-category="god_tier" data-label="God Tier">
+      <div class="tile-icon">👁️</div>
+      <div class="tile-label">GOD TIER</div>
+      <div class="tile-sub">Supreme · Mythic · Dominion</div>
+    </div>
+    <div class="app-tile aria-app-tile" data-category="aria_chat" data-label="ARIA">
+      <div class="tile-icon aria-icon-anim">◈</div>
+      <div class="tile-label">ARIA</div>
+      <div class="tile-sub">AI Companion · Always On</div>
+    </div>
+  </div>
+
+  <!-- Dock -->
+  <div id="dock">
+    <div class="dock-item" data-category="forensics_recovery">
+      <div class="dock-icon">💾</div><span>Recovery</span>
+    </div>
+    <div class="dock-item" data-category="legendary">
+      <div class="dock-icon">⭐</div><span>Legendary</span>
+    </div>
+    <div class="dock-item" data-category="core">
+      <div class="dock-icon">🧠</div><span>Core</span>
+    </div>
+    <div class="dock-item" id="dock-aria" data-category="aria_chat">
+      <div class="dock-icon aria-icon-anim">◈</div><span>ARIA</span>
+    </div>
+  </div>
+
+  <!-- ARIA Bar (always visible) -->
+  <div id="aria-bar">
+    <div class="aria-bar-avatar">
+      <div class="aria-avatar-ring">
+        <div class="aria-avatar-core">◈</div>
+      </div>
+    </div>
+    <div class="aria-bar-content">
+      <div class="aria-bar-name">ARIA <span class="aria-online">● ONLINE</span></div>
+      <div id="aria-bar-thought" class="aria-bar-thought">Initialising...</div>
+    </div>
+    <div class="aria-bar-actions">
+      <button class="aria-btn" id="aria-chat-btn">CHAT</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ APP VIEW (module runner) ═════════════════════════════════════════════ -->
+<div id="app-view" class="hidden">
+  <div id="app-header">
+    <button id="app-back-btn" class="back-btn">◀ HOME</button>
+    <div id="app-title">MODULE RUNNER</div>
+    <div id="app-status" class="app-status-badge">READY</div>
+  </div>
+
+  <!-- Module list panel -->
+  <div id="module-list-panel">
+    <div id="module-list-header">SELECT MODULE</div>
+    <div id="module-list" class="module-list"></div>
+  </div>
+
+  <!-- Terminal output panel -->
+  <div id="terminal-panel">
+    <div id="terminal-header">
+      <span id="terminal-title">// terminal output</span>
+      <button id="clear-btn" class="clear-btn">CLEAR</button>
+    </div>
+    <div id="terminal-output" class="terminal-output">
+      <div class="term-line aria-line">[ARIA] Terminal ready. Select a module to execute.</div>
+    </div>
+    <div id="terminal-input-row">
+      <span class="term-prompt">JANUS ❯</span>
+      <input id="terminal-input" type="text" placeholder="Type a command or select a module above..." autocomplete="off" spellcheck="false">
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ARIA CHAT OVERLAY ═════════════════════════════════════════════════════ -->
+<div id="aria-chat-overlay" class="hidden">
+  <div id="aria-chat-panel">
+    <div id="aria-chat-header">
+      <div class="aria-chat-title">
+        <div class="aria-avatar-ring small">
+          <div class="aria-avatar-core">◈</div>
+        </div>
+        ARIA — AI COMPANION
+      </div>
+      <button id="aria-chat-close">✕</button>
+    </div>
+    <div id="aria-chat-messages" class="aria-chat-messages">
+      <div class="chat-msg aria-msg">
+        <span class="chat-from">ARIA</span>
+        <span class="chat-text">Hello, Operator. I'm here. I'm always here. What do you need?</span>
+      </div>
+    </div>
+    <div id="aria-chat-input-row">
+      <input id="aria-input" type="text" placeholder="Speak to ARIA..." autocomplete="off" spellcheck="false">
+      <button id="aria-send-btn">SEND</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

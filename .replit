@@ -14,6 +14,7 @@ requiredFiles = [".replit"]
 expertMode = true
 
 [workflows]
+runButton = "Project"
 
 [[workflows.workflow]]
 name = "Project"
@@ -29,11 +30,12 @@ name = "Run Application"
 author = "agent"
 
 [workflows.workflow.metadata]
-outputType = "vnc"
+outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cargo run"
+waitForPort = 5000
 
 [deployment]
 deploymentTarget = "vm"
@@ -46,3 +48,11 @@ externalPort = 80
 [[ports]]
 localPort = 8080
 externalPort = 8080
+
+[[ports]]
+localPort = 9090
+externalPort = 3001
+
+[[ports]]
+localPort = 5000
+externalPort = 80
