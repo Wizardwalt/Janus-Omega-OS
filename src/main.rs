@@ -868,7 +868,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         if i > 0 { list_state.select(Some(i - 1)); }
                     },
                     KeyCode::Enter => {
-                        let (active_scripts, prefix) = if current_tab == 4 {
+                        let (_active_scripts, prefix) = if current_tab == 4 {
                             (&core_scripts, "CORE")
                         } else if current_tab == 1 || current_tab == 2 || current_tab == 3 {
                             (&scripts, "PLUGIN")

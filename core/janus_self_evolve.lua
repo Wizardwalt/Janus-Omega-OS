@@ -144,7 +144,7 @@ function evolve.learn_from_op(op_name, op_type, success, notes)
     evolve.state.auto_grow_ops = evolve.state.auto_grow_ops + 1
 
     janus.log(string.format("[EVOLVE] Pattern encoded from op: %s (%s) — %s",
-        op_name, op_type, success and "SUCCESS" and "PARTIAL"))
+        op_name, op_type, success and "SUCCESS" or "PARTIAL"))
 
     -- Auto-apply learnings if autonomous
     if evolve.state.permission_level >= evolve.PERMISSION.AUTONOMOUS then
