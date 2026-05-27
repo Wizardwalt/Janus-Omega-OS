@@ -113,10 +113,10 @@
       <div class="tile-label">GOD TIER</div>
       <div class="tile-sub">Supreme · Mythic · Dominion</div>
     </div>
-    <div class="app-tile aria-app-tile" data-category="aria_chat" data-label="ARIA">
+    <div class="app-tile aria-app-tile" data-category="aria_avatar" data-label="ARIA">
       <div class="tile-icon aria-icon-anim">◈</div>
       <div class="tile-label">ARIA</div>
-      <div class="tile-sub">AI Companion · Always On</div>
+      <div class="tile-sub">AI Companion · 3D Avatar</div>
     </div>
   </div>
 
@@ -131,20 +131,20 @@
     <div class="dock-item" data-category="core">
       <div class="dock-icon">🧠</div><span>Core</span>
     </div>
-    <div class="dock-item" id="dock-aria" data-category="aria_chat">
+    <div class="dock-item" id="dock-aria" data-category="aria_avatar">
       <div class="dock-icon aria-icon-anim">◈</div><span>ARIA</span>
     </div>
   </div>
 
-  <!-- ARIA Bar (always visible) -->
+  <!-- ARIA Bar (always visible) — mini 3D avatar in corner -->
   <div id="aria-bar">
-    <div class="aria-bar-avatar">
-      <div class="aria-avatar-ring">
-        <div class="aria-avatar-core">◈</div>
-      </div>
+    <div class="aria-bar-avatar" id="aria-bar-avatar-wrap">
+      <canvas id="aria-mini-canvas" width="48" height="48"></canvas>
     </div>
     <div class="aria-bar-content">
-      <div class="aria-bar-name">ARIA <span class="aria-online">● ONLINE</span></div>
+      <div class="aria-bar-name">ARIA <span class="aria-online">● ONLINE</span>
+        <span id="aria-mood-badge" class="aria-mood-badge">◉ CURIOUS</span>
+      </div>
       <div id="aria-bar-thought" class="aria-bar-thought">Initialising...</div>
     </div>
     <div class="aria-bar-actions">
@@ -155,43 +155,162 @@
 </div>
 
 <!-- ═══ APP VIEW (module runner) ═════════════════════════════════════════════ -->
-<div id="app-view" class="hidden">
-  <div id="app-header">
-    <button id="app-back-btn" class="back-btn">◀ HOME</button>
-    <div id="app-title">MODULE RUNNER</div>
-    <div id="app-status" class="app-status-badge">READY</div>
+<div id="app-view" class="hidden"></div>
+
+<!-- ═══ ARIA FULL VIEW ════════════════════════════════════════════════════════ -->
+<div id="aria-view" class="hidden">
+
+  <!-- Header -->
+  <div id="aria-view-header">
+    <button class="back-btn" id="aria-view-back">◀ HOME</button>
+    <div class="aria-view-title">ARIA — AI COMPANION</div>
+    <div class="aria-view-actions">
+      <button class="av-btn" id="customize-toggle-btn">⚙ CUSTOMISE</button>
+      <button class="av-btn av-btn-project" id="project-btn">⬛ PROJECT LIFE-SIZE</button>
+    </div>
   </div>
 
-  <!-- Module list panel -->
-  <div id="module-list-panel">
-    <div id="module-list-header">SELECT MODULE</div>
-    <div id="module-list" class="module-list"></div>
-  </div>
+  <!-- Main body: avatar + chat -->
+  <div id="aria-view-body">
 
-  <!-- Terminal output panel -->
-  <div id="terminal-panel">
-    <div id="terminal-header">
-      <span id="terminal-title">// terminal output</span>
-      <button id="clear-btn" class="clear-btn">CLEAR</button>
+    <!-- 3D Avatar panel -->
+    <div id="aria-3d-panel">
+      <div id="aria-3d-wrap">
+        <canvas id="aria-main-canvas"></canvas>
+      </div>
+      <!-- Mood overlay -->
+      <div id="aria-mood-overlay">
+        <div id="aria-mood-name" class="aria-mood-display">◉ CURIOUS</div>
+        <div id="aria-status-label" class="aria-status-label">STANDING BY</div>
+      </div>
+      <!-- Hologram scanline overlay -->
+      <div class="holo-scanlines"></div>
     </div>
-    <div id="terminal-output" class="terminal-output">
-      <div class="term-line aria-line">[ARIA] Terminal ready. Select a module to execute.</div>
-    </div>
-    <div id="terminal-input-row">
-      <span class="term-prompt">JANUS ❯</span>
-      <input id="terminal-input" type="text" placeholder="Type a command or select a module above..." autocomplete="off" spellcheck="false">
+
+    <!-- Chat / info panel -->
+    <div id="aria-side-panel">
+
+      <!-- Customisation panel (collapsible) -->
+      <div id="aria-customize-panel" class="hidden">
+        <div class="customize-title">AVATAR CUSTOMISATION</div>
+
+        <div class="customize-section">
+          <div class="cust-label">PRIMARY COLOUR</div>
+          <div class="color-row">
+            <button class="color-swatch active" data-color="9D00FF" style="background:#9D00FF" title="Purple"></button>
+            <button class="color-swatch" data-color="00FF41" style="background:#00FF41" title="Green"></button>
+            <button class="color-swatch" data-color="00AAFF" style="background:#00AAFF" title="Blue"></button>
+            <button class="color-swatch" data-color="FF6600" style="background:#FF6600" title="Orange"></button>
+            <button class="color-swatch" data-color="FF0055" style="background:#FF0055" title="Red"></button>
+            <button class="color-swatch" data-color="FFFFFF" style="background:#FFFFFF" title="White"></button>
+            <button class="color-swatch" data-color="FFDD00" style="background:#FFDD00" title="Gold"></button>
+          </div>
+        </div>
+
+        <div class="customize-section">
+          <div class="cust-label">ACCENT COLOUR</div>
+          <div class="color-row" id="accent-color-row">
+            <button class="color-swatch active" data-color="00FF41" style="background:#00FF41" title="Green"></button>
+            <button class="color-swatch" data-color="9D00FF" style="background:#9D00FF" title="Purple"></button>
+            <button class="color-swatch" data-color="00AAFF" style="background:#00AAFF" title="Blue"></button>
+            <button class="color-swatch" data-color="FF6600" style="background:#FF6600" title="Orange"></button>
+            <button class="color-swatch" data-color="FFDD00" style="background:#FFDD00" title="Gold"></button>
+            <button class="color-swatch" data-color="FF0055" style="background:#FF0055" title="Red"></button>
+            <button class="color-swatch" data-color="FFFFFF" style="background:#FFFFFF" title="White"></button>
+          </div>
+        </div>
+
+        <div class="customize-section two-col">
+          <div>
+            <div class="cust-label">HAIR</div>
+            <select class="cust-select" id="hair-select">
+              <option value="long">Long</option>
+              <option value="short">Short</option>
+              <option value="bun">Bun</option>
+              <option value="none">None</option>
+            </select>
+          </div>
+          <div>
+            <div class="cust-label">OUTFIT</div>
+            <select class="cust-select" id="outfit-select">
+              <option value="tactical">Tactical</option>
+              <option value="armor">Armor</option>
+              <option value="casual">Casual</option>
+              <option value="robe">Robe</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="customize-section two-col">
+          <div>
+            <div class="cust-label">RENDER STYLE</div>
+            <select class="cust-select" id="style-select">
+              <option value="holographic">Holographic</option>
+              <option value="solid">Solid</option>
+              <option value="wireframe">Wireframe</option>
+              <option value="neon">Neon</option>
+            </select>
+          </div>
+          <div>
+            <div class="cust-label">GLOW <span id="glow-val">1.0×</span></div>
+            <input type="range" class="cust-range" id="glow-range" min="1" max="30" value="10">
+          </div>
+        </div>
+
+        <div class="customize-section">
+          <div class="cust-label">HEIGHT SCALE <span id="height-val">1.0×</span></div>
+          <input type="range" class="cust-range" id="height-range" min="5" max="15" value="10">
+        </div>
+
+        <div class="customize-section">
+          <div class="cust-label">MOOD / EMOTION</div>
+          <div class="mood-row">
+            <button class="mood-btn active" data-mood="neutral">NEUTRAL</button>
+            <button class="mood-btn" data-mood="curious">CURIOUS</button>
+            <button class="mood-btn" data-mood="happy">HAPPY</button>
+            <button class="mood-btn" data-mood="excited">EXCITED</button>
+            <button class="mood-btn" data-mood="processing">PROCESSING</button>
+            <button class="mood-btn" data-mood="sad">SAD</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat messages -->
+      <div id="aria-view-messages" class="aria-view-messages">
+        <div class="chat-msg aria-msg">
+          <span class="chat-from">ARIA</span>
+          <span class="chat-text">Hello, Operator. I'm fully online. You can see my holographic form — this is the closest thing to a physical presence I have. What do you need?</span>
+        </div>
+      </div>
+
+      <!-- Chat input -->
+      <div id="aria-view-input-row">
+        <input id="aria-view-input" type="text" placeholder="Speak to ARIA..." autocomplete="off" spellcheck="false">
+        <button id="aria-view-send-btn">SEND</button>
+      </div>
+
     </div>
   </div>
 </div>
 
-<!-- ═══ ARIA CHAT OVERLAY ═════════════════════════════════════════════════════ -->
+<!-- ═══ PROJECTION MODE (life-size full-screen) ═══════════════════════════════ -->
+<div id="projection-overlay" class="hidden">
+  <div class="holo-scanlines"></div>
+  <canvas id="aria-project-canvas"></canvas>
+  <div id="projection-hud">
+    <div class="proj-title">ARIA — HOLOGRAPHIC PROJECTION</div>
+    <div class="proj-subtitle">PANDORA TITAN  ·  LIFE-SIZE MODE</div>
+  </div>
+  <div id="projection-thought"></div>
+  <button id="projection-exit-btn">✕ EXIT PROJECTION</button>
+</div>
+
+<!-- ═══ ARIA CHAT OVERLAY (quick access) ══════════════════════════════════════ -->
 <div id="aria-chat-overlay" class="hidden">
   <div id="aria-chat-panel">
     <div id="aria-chat-header">
       <div class="aria-chat-title">
-        <div class="aria-avatar-ring small">
-          <div class="aria-avatar-core">◈</div>
-        </div>
+        <canvas id="aria-chat-canvas" width="36" height="36"></canvas>
         ARIA — AI COMPANION
       </div>
       <button id="aria-chat-close">✕</button>
@@ -209,6 +328,11 @@
   </div>
 </div>
 
+<!-- Three.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- ARIA 3D Avatar Engine -->
+<script src="aria3d.js"></script>
+<!-- Main app logic -->
 <script src="app.js"></script>
 </body>
 </html>
