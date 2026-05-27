@@ -1,3 +1,5 @@
+mod gui_server;
+
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
@@ -231,9 +233,9 @@ fn run_script(
 
 // ─── WEB SERVER ───────────────────────────────────────────────────────────────
 fn run_web_server() -> Result<(), Box<dyn std::error::Error>> {
-    let port = std::env::var("PORT").unwrap_or_else(|_| "8080".to_string());
+    let port = 9090u16;
     let listener = TcpListener::bind(format!("0.0.0.0:{}", port))?;
-    println!("JANUS OMEGA :: WEB STATUS SERVER :: 0.0.0.0:{}", port);
+    println!("JANUS OMEGA :: STATUS SERVER (fallback) :: 0.0.0.0:{}", port);
 
     let module_count = {
         let mut count = 0;
@@ -359,11 +361,28 @@ fn emotion_icon(emotion: &str) -> &'static str {
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Spawn the full GUI launcher (axum HTTP + WebSocket) on port 8080
+    let gui_port: u16 = std::env::var("PORT")
+        .unwrap_or_else(|_| "5000".to_string())
+        .parse()
+        .unwrap_or(5000);
+
+    std::thread::spawn(move || {
+        let rt = tokio::runtime::Runtime::new().expect("tokio runtime");
+        rt.block_on(async move {
+            if let Err(e) = gui_server::start_gui_server(gui_port).await {
+                eprintln!("[GUI] Server error: {}", e);
+            }
+        });
+    });
+
+    // Keep the legacy status server as fallback on port 9090
     std::thread::spawn(|| { let _ = run_web_server(); });
-    std::thread::sleep(Duration::from_millis(200));
+    std::thread::sleep(Duration::from_millis(300));
 
     if !atty::is(atty::Stream::Stdin) {
-        println!("JANUS OMEGA :: DEPLOYED MODE :: WEB SERVER ACTIVE");
+        println!("JANUS OMEGA :: DEPLOYED MODE");
+        println!("GUI LAUNCHER  → http://0.0.0.0:{}", gui_port);
         loop { std::thread::sleep(Duration::from_secs(60)); }
     }
 
