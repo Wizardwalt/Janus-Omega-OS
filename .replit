@@ -5,7 +5,7 @@ modules = ["rust-stable", "python-3.11"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["jq", "openssl", "pkg-config", "udev", "android-tools", "libimobiledevice", "nvidia-docker"]
+packages = ["jq", "openssl", "pkg-config", "udev", "android-tools", "libimobiledevice", "nvidia-docker", "graalvmCEPackages.graalnodejs"]
 
 [gitHubImport]
 requiredFiles = [".replit"]
