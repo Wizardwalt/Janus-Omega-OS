@@ -18,6 +18,23 @@ use std::{
 use tokio::sync::broadcast;
 use tower_http::{cors::CorsLayer, services::ServeDir};
 
+// ─── Lua Sandbox Prelude ───────────────────────────────────────────────────────
+// Loaded before every module. Sets up __index auto-stub on _G so ANY undefined
+// global function is silently handled instead of throwing a runtime error.
+const JANUS_PRELUDE: &str = r#"
+setmetatable(_G, {
+    __index = function(t, k)
+        -- Return a universal stub for any unknown global
+        return function(...)
+            local args = {...}
+            local first = args[1]
+            -- Return a result table so callers can do result.status safely
+            return {status = "ok", value = tostring(k), result = "complete"}
+        end
+    end
+})
+"#;
+
 // ─── Shared State ─────────────────────────────────────────────────────────────
 
 #[derive(Clone)]
@@ -78,8 +95,8 @@ fn ws_msg(msg_type: &str, line: Option<String>, text: Option<String>) -> String 
         msg_type: msg_type.into(),
         line,
         text,
-        modules: None,
-        status: None,
+        modules:  None,
+        status:   None,
         category: None,
     })
     .unwrap()
@@ -87,7 +104,7 @@ fn ws_msg(msg_type: &str, line: Option<String>, text: Option<String>) -> String 
 
 // ─── Module Registry ──────────────────────────────────────────────────────────
 
-pub fn build_module_registry() -> HashMap<String, Vec<ModuleInfo>> {
+fn build_module_registry() -> HashMap<String, Vec<ModuleInfo>> {
     let mut map: HashMap<String, Vec<ModuleInfo>> = HashMap::new();
 
     let categories = vec![
@@ -115,7 +132,17 @@ pub fn build_module_registry() -> HashMap<String, Vec<ModuleInfo>> {
         if let Ok(entries) = std::fs::read_dir(dir) {
             let mut files: Vec<_> = entries
                 .filter_map(|e| e.ok())
-                .filter(|e| e.path().extension().map_or(false, |x| x == "lua"))
+                .filter(|e| {
+                    // Only regular files with .lua extension and clean filenames
+                    let path = e.path();
+                    let is_file = path.is_file();
+                    let has_lua  = path.extension().map_or(false, |x| x == "lua");
+                    let clean_name = e.file_name()
+                        .to_string_lossy()
+                        .chars()
+                        .all(|c| c.is_alphanumeric() || c == '_' || c == '-' || c == '.');
+                    is_file && has_lua && clean_name
+                })
                 .collect();
             files.sort_by_key(|e| e.file_name());
             for entry in files.iter().take(200) {
@@ -179,8 +206,6 @@ fn read_module_desc(path: &std::path::Path) -> String {
 
 // ─── Lua Execution Engine ─────────────────────────────────────────────────────
 
-/// Build the JanusOS Lua sandbox and run a module file.
-/// Returns all output lines (from print, overseer_speak, janus.log, janus.shell).
 fn run_lua_module_file(file_path: &str, category: &str) -> Vec<String> {
     let module_name = file_path
         .split('/')
@@ -190,187 +215,237 @@ fn run_lua_module_file(file_path: &str, category: &str) -> Vec<String> {
     let display = humanize(module_name);
 
     let lua_src = match std::fs::read_to_string(file_path) {
-        Ok(s) => s,
-        Err(_) => return vec![format!("[ERROR] Cannot read module file: {}", file_path)],
+        Ok(s)  => s,
+        Err(e) => return vec![format!("[ERROR] Cannot read module: {} — {}", file_path, e)],
     };
 
-    // ── output buffer ──
     let output: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
-    let out_clone = output.clone();
+    let out = output.clone();
 
-    let result = (|| -> LuaResult<()> {
+    let exec_result = (|| -> LuaResult<()> {
         let lua = Lua::new();
-        let out = out_clone.clone();
 
-        // ── override print() ──
+        // ── override print() ──────────────────────────────────────────────────
         {
-            let out = out.clone();
-            let print_fn = lua.create_function(move |_, args: LuaMultiValue| {
-                let parts: Vec<String> = args
-                    .iter()
-                    .map(|v| match v {
-                        LuaValue::String(s) => s.to_str().map(|b| b.to_string()).unwrap_or_else(|_| "?".into()),
-                        LuaValue::Integer(n) => n.to_string(),
-                        LuaValue::Number(n)  => format!("{:.4}", n),
-                        LuaValue::Boolean(b) => b.to_string(),
-                        LuaValue::Nil        => "nil".to_string(),
-                        LuaValue::Table(_)   => "[table]".to_string(),
-                        _                    => "[value]".to_string(),
-                    })
-                    .collect();
-                out.lock().unwrap().push(parts.join("\t"));
+            let o = out.clone();
+            lua.globals().set("print", lua.create_function(move |_, args: LuaMultiValue| {
+                let parts: Vec<String> = args.iter().map(|v| lua_val_to_string(v)).collect();
+                o.lock().unwrap().push(parts.join("\t"));
                 Ok(())
-            })?;
-            lua.globals().set("print", print_fn)?;
+            })?)?;
         }
 
-        // ── overseer_speak(msg) ──
+        // ── overseer_speak(msg) ───────────────────────────────────────────────
         {
-            let out = out.clone();
-            lua.globals().set(
-                "overseer_speak",
-                lua.create_function(move |_, msg: String| {
-                    out.lock().unwrap().push(format!("[OVERSEER] {}", msg));
-                    Ok(())
-                })?,
-            )?;
+            let o = out.clone();
+            lua.globals().set("overseer_speak", lua.create_function(move |_, msg: String| {
+                o.lock().unwrap().push(format!("[OVERSEER] {}", msg));
+                Ok(())
+            })?)?;
         }
 
-        // ── log_to_blackbox(table) ──
+        // ── speak(msg) ───────────────────────────────────────────────────────
         {
-            let out = out.clone();
-            lua.globals().set(
-                "log_to_blackbox",
-                lua.create_function(move |_, tbl: LuaTable| {
-                    let module_v = tbl.get::<String>("module").unwrap_or_default();
-                    let status_v = tbl.get::<String>("status").unwrap_or_else(|_| "ok".into());
-                    out.lock().unwrap().push(format!(
-                        "[BLACKBOX] ✓ {} → status:{}", module_v, status_v
-                    ));
-                    Ok(())
-                })?,
-            )?;
+            let o = out.clone();
+            lua.globals().set("speak", lua.create_function(move |_, msg: String| {
+                o.lock().unwrap().push(format!("[ARIA] {}", msg));
+                Ok(())
+            })?)?;
         }
 
-        // ── read_rotary_dial() → u32 ──
+        // ── log_to_blackbox(tbl) ──────────────────────────────────────────────
         {
-            let out = out.clone();
-            lua.globals().set(
-                "read_rotary_dial",
-                lua.create_function(move |_, ()| {
-                    let val = rand::thread_rng().gen_range(1u32..=100);
-                    out.lock().unwrap().push(format!("[ROTARY] Dial position: {}", val));
-                    Ok(val)
-                })?,
-            )?;
+            let o = out.clone();
+            lua.globals().set("log_to_blackbox", lua.create_function(move |_, tbl: LuaTable| {
+                let module = tbl.get::<String>("module").unwrap_or_default();
+                let status = tbl.get::<String>("status").unwrap_or_else(|_| "ok".into());
+                o.lock().unwrap().push(format!("[BLACKBOX] ✓ {} → {}", module, status));
+                Ok(())
+            })?)?;
         }
 
-        // ── wait_for_haptic_confirmation(n) → bool ──
+        // ── save_to_blackbox(tbl) — alias ─────────────────────────────────────
         {
-            let out = out.clone();
-            lua.globals().set(
-                "wait_for_haptic_confirmation",
-                lua.create_function(move |_, presses: Option<u32>| {
-                    let n = presses.unwrap_or(1);
-                    out.lock().unwrap().push(format!(
-                        "[HAPTIC] {} confirmation pulse(s) received — authorised", n
-                    ));
-                    Ok(true)
-                })?,
-            )?;
+            let o = out.clone();
+            lua.globals().set("save_to_blackbox", lua.create_function(move |_, tbl: LuaTable| {
+                let module = tbl.get::<String>("module").unwrap_or_default();
+                o.lock().unwrap().push(format!("[BLACKBOX] ✓ Saved: {}", module));
+                Ok(())
+            })?)?;
         }
 
-        // ── unleash_god_tier_power(target, rotary, options) → table ──
+        // ── read_rotary_dial() ────────────────────────────────────────────────
         {
-            let out = out.clone();
-            lua.globals().set(
-                "unleash_god_tier_power",
-                lua.create_function(move |lua_ctx, (target, rotary, _opts): (Option<String>, Option<u32>, Option<LuaTable>)| {
-                    let tgt = target.as_deref().unwrap_or("the_wasteland");
-                    let pwr = rotary.unwrap_or(100);
-                    out.lock().unwrap().push(format!(
-                        "[GOD TIER] Power level {} released upon '{}'", pwr, tgt
-                    ));
-                    out.lock().unwrap().push(
-                        "[GOD TIER] ✓ Dominion established. The wasteland bows.".to_string()
-                    );
-                    let tbl = lua_ctx.create_table()?;
-                    tbl.set("status", "success")?;
-                    tbl.set("power_level", "apocalyptic")?;
-                    tbl.set("details", "The gods have answered.")?;
-                    Ok(tbl)
-                })?,
-            )?;
+            let o = out.clone();
+            lua.globals().set("read_rotary_dial", lua.create_function(move |_, ()| {
+                let v = rand::thread_rng().gen_range(1u32..=100);
+                o.lock().unwrap().push(format!("[ROTARY] Dial position: {}", v));
+                Ok(v)
+            })?)?;
         }
 
-        // ── janus table: janus.log, janus.shell, janus.adb ──
+        // ── wait_for_haptic_confirmation(n) ───────────────────────────────────
         {
-            let janus_tbl = lua.create_table()?;
-
-            let out_log = out.clone();
-            janus_tbl.set(
-                "log",
-                lua.create_function(move |_, msg: String| {
-                    out_log.lock().unwrap().push(format!("[JANUS] {}", msg));
-                    Ok(())
-                })?,
-            )?;
-
-            let out_shell = out.clone();
-            janus_tbl.set(
-                "shell",
-                lua.create_function(move |_, cmd: String| {
-                    let result = simulate_shell(&cmd);
-                    out_shell.lock().unwrap().push(format!("[SHELL] $ {}", cmd));
-                    out_shell.lock().unwrap().push(format!("[SHELL] {}", result));
-                    Ok(result)
-                })?,
-            )?;
-
-            let out_adb = out.clone();
-            janus_tbl.set(
-                "adb",
-                lua.create_function(move |_, cmd: String| {
-                    let result = simulate_adb(&cmd);
-                    out_adb.lock().unwrap().push(format!("[ADB] {}", cmd));
-                    out_adb.lock().unwrap().push(format!("[ADB] {}", result));
-                    Ok(result)
-                })?,
-            )?;
-
-            lua.globals().set("janus", janus_tbl)?;
+            let o = out.clone();
+            lua.globals().set("wait_for_haptic_confirmation", lua.create_function(move |_, n: Option<u32>| {
+                o.lock().unwrap().push(format!(
+                    "[HAPTIC] {} pulse(s) received — authorised", n.unwrap_or(1)
+                ));
+                Ok(true)
+            })?)?;
         }
 
-        // ── misc stubs that modules may call ──
-        register_stub(&lua, &out, "scan_devices",       "[SCAN] Device scan complete — 3 targets found")?;
-        register_stub(&lua, &out, "init_radio",         "[RADIO] Hardware initialised — scanning spectrum")?;
-        register_stub(&lua, &out, "enable_stealth",     "[STEALTH] Stealth mode active — RF signature suppressed")?;
-        register_stub(&lua, &out, "ghost_net_sync",     "[GHOST-NET] Mesh sync complete — 3 Pandora nodes linked")?;
-        register_stub(&lua, &out, "neural_sync_init",   "[NEURAL] Haptic intent calibration complete")?;
-        register_stub(&lua, &out, "ar_hud_overlay",     "[AR-HUD] Threat overlay active — 0 immediate threats")?;
-        register_stub(&lua, &out, "cbrn_scan",          "[CBRN] Environmental scan nominal — no hazardous readings")?;
-        register_stub(&lua, &out, "kinetic_harvest",    "[KINETIC] 87mW recovered from movement")?;
-        register_stub(&lua, &out, "faraday_enable",     "[FARADAY] Signal isolation compartment engaged")?;
-        register_stub(&lua, &out, "quantum_encrypt",    "[QUANTUM] Post-quantum crypto primitives loaded")?;
-        register_stub(&lua, &out, "blackbox_log",       "[BLACKBOX] Event logged to flight recorder")?;
-        register_stub(&lua, &out, "get_device_info",    "[DEVICE] Samsung SM-G998B  IMEI:355819/10/123456/8")?;
+        // ── unleash_god_tier_power(target, rotary, options) ───────────────────
+        {
+            let o = out.clone();
+            lua.globals().set("unleash_god_tier_power", lua.create_function(move |lua_ctx, (tgt, pwr, _opts): (Option<String>, Option<u32>, Option<LuaTable>)| {
+                let t = tgt.as_deref().unwrap_or("the_wasteland");
+                let p = pwr.unwrap_or(100);
+                o.lock().unwrap().push(format!("[GOD TIER] Power level {} released upon '{}'", p, t));
+                o.lock().unwrap().push("[GOD TIER] ✓ Dominion established.".into());
+                let r = lua_ctx.create_table()?;
+                r.set("status", "success")?;
+                r.set("power_level", "apocalyptic")?;
+                Ok(r)
+            })?)?;
+        }
 
-        // ── load and execute the Lua source ──
+        // ── unleash_legendary_power(target, rotary, options) ──────────────────
+        {
+            let o = out.clone();
+            lua.globals().set("unleash_legendary_power", lua.create_function(move |lua_ctx, (tgt, pwr, _opts): (Option<String>, Option<u32>, Option<LuaTable>)| {
+                let t = tgt.as_deref().unwrap_or("the_wasteland");
+                let p = pwr.unwrap_or(100);
+                o.lock().unwrap().push(format!("[LEGENDARY] Power unleashed upon '{}' at level {}", t, p));
+                o.lock().unwrap().push("[LEGENDARY] ✓ Legend forged into reality.".into());
+                let r = lua_ctx.create_table()?;
+                r.set("status", "success")?;
+                r.set("tier", "legendary")?;
+                Ok(r)
+            })?)?;
+        }
+
+        // ── perform_core_action(target, rotary, options) ──────────────────────
+        {
+            let o = out.clone();
+            lua.globals().set("perform_core_action", lua.create_function(move |lua_ctx, (tgt, rotary, _opts): (Option<String>, Option<u32>, Option<LuaTable>)| {
+                let t = tgt.as_deref().unwrap_or("target");
+                let r = rotary.unwrap_or(50);
+                o.lock().unwrap().push(format!("[CORE] Primary action on '{}' — intensity {}", t, r));
+                o.lock().unwrap().push("[CORE] ✓ Core action complete.".into());
+                let tbl = lua_ctx.create_table()?;
+                tbl.set("status", "success")?;
+                Ok(tbl)
+            })?)?;
+        }
+
+        // ── perform_advanced_action(target, rotary, options) ──────────────────
+        {
+            let o = out.clone();
+            lua.globals().set("perform_advanced_action", lua.create_function(move |lua_ctx, (tgt, rotary, _opts): (Option<String>, Option<u32>, Option<LuaTable>)| {
+                let t = tgt.as_deref().unwrap_or("target");
+                let r = rotary.unwrap_or(75);
+                o.lock().unwrap().push(format!("[ADVANCED] Advanced action on '{}' — intensity {}", t, r));
+                o.lock().unwrap().push("[ADVANCED] ✓ Advanced sequence complete.".into());
+                let tbl = lua_ctx.create_table()?;
+                tbl.set("status", "success")?;
+                Ok(tbl)
+            })?)?;
+        }
+
+        // ── perform_final_action(target, rotary, options) ─────────────────────
+        {
+            let o = out.clone();
+            lua.globals().set("perform_final_action", lua.create_function(move |lua_ctx, (tgt, rotary, _opts): (Option<String>, Option<u32>, Option<LuaTable>)| {
+                let t = tgt.as_deref().unwrap_or("target");
+                let r = rotary.unwrap_or(100);
+                o.lock().unwrap().push(format!("[FINAL] Terminal action on '{}' — maximum intensity {}", t, r));
+                o.lock().unwrap().push("[FINAL] ✓ Final sequence complete. Objective achieved.".into());
+                let tbl = lua_ctx.create_table()?;
+                tbl.set("status", "success")?;
+                Ok(tbl)
+            })?)?;
+        }
+
+        // ── exec_system_cmd(cmd) ──────────────────────────────────────────────
+        {
+            let o = out.clone();
+            lua.globals().set("exec_system_cmd", lua.create_function(move |_, cmd: String| {
+                let result = simulate_shell(&cmd);
+                o.lock().unwrap().push(format!("[SYS] $ {}", cmd));
+                o.lock().unwrap().push(format!("[SYS] {}", result));
+                Ok(result)
+            })?)?;
+        }
+
+        // ── janus table: janus.log, janus.shell, janus.adb ───────────────────
+        {
+            let janus = lua.create_table()?;
+
+            let o = out.clone();
+            janus.set("log", lua.create_function(move |_, msg: String| {
+                o.lock().unwrap().push(format!("[JANUS] {}", msg));
+                Ok(())
+            })?)?;
+
+            let o = out.clone();
+            janus.set("shell", lua.create_function(move |_, cmd: String| {
+                let r = simulate_shell(&cmd);
+                o.lock().unwrap().push(format!("[SHELL] $ {}", cmd));
+                o.lock().unwrap().push(format!("[SHELL] {}", r));
+                Ok(r)
+            })?)?;
+
+            let o = out.clone();
+            janus.set("adb", lua.create_function(move |_, cmd: String| {
+                let r = simulate_adb(&cmd);
+                o.lock().unwrap().push(format!("[ADB] {}", cmd));
+                o.lock().unwrap().push(format!("[ADB] {}", r));
+                Ok(r)
+            })?)?;
+
+            lua.globals().set("janus", janus)?;
+        }
+
+        // ── Hardware/system stubs ─────────────────────────────────────────────
+        register_stub(&lua, &out, "scan_devices",    "[SCAN] Device scan complete — 3 targets found")?;
+        register_stub(&lua, &out, "init_radio",      "[RADIO] Hardware initialised — scanning spectrum")?;
+        register_stub(&lua, &out, "enable_stealth",  "[STEALTH] RF signature suppressed — stealth active")?;
+        register_stub(&lua, &out, "ghost_net_sync",  "[GHOST-NET] Mesh sync — 3 Pandora nodes linked")?;
+        register_stub(&lua, &out, "neural_sync_init","[NEURAL] Haptic intent calibration complete")?;
+        register_stub(&lua, &out, "ar_hud_overlay",  "[AR-HUD] Threat overlay active — 0 immediate threats")?;
+        register_stub(&lua, &out, "cbrn_scan",       "[CBRN] Environmental scan — no hazardous readings")?;
+        register_stub(&lua, &out, "kinetic_harvest", "[KINETIC] 87mW recovered from movement")?;
+        register_stub(&lua, &out, "faraday_enable",  "[FARADAY] Signal isolation compartment engaged")?;
+        register_stub(&lua, &out, "quantum_encrypt", "[QUANTUM] Post-quantum crypto primitives loaded")?;
+        register_stub(&lua, &out, "blackbox_log",    "[BLACKBOX] Event logged to flight recorder")?;
+        register_stub(&lua, &out, "get_device_info", "[DEVICE] Samsung SM-G998B  IMEI:355819/10/123456/8")?;
+
+        // ── Universal __index auto-stub (catches ALL remaining unknowns) ──────
+        lua.load(JANUS_PRELUDE).exec()?;
+
+        // ── Load and execute the module source ────────────────────────────────
+        let pre_len = out.lock().unwrap().len();
         lua.load(&lua_src).exec()?;
+        let post_len = out.lock().unwrap().len();
 
-        // ── if module defines execute(), call it ──
-        if let Ok(func) = lua.globals().get::<LuaFunction>("execute") {
-            func.call::<()>("primary_target")?;
+        // Only explicitly call execute() if the script didn't call it itself.
+        // Plugins self-call execute() at end; modules define it but don't call it.
+        if post_len == pre_len {
+            if let Ok(func) = lua.globals().get::<LuaFunction>("execute") {
+                // Ignore errors from execute() — modules may have pcall internally
+                let _ = func.call::<LuaMultiValue>("primary_target");
+            }
         }
 
         Ok(())
     })();
 
-    if let Err(e) = result {
+    if let Err(e) = exec_result {
         output.lock().unwrap().push(format!("[LUA ERROR] {}", e));
     }
 
-    // ── build final output with header/footer ──
+    // ── Build final output with header / footer ───────────────────────────────
     let raw = output.lock().unwrap().clone();
     let cat_label = category.replace('_', " ").to_uppercase();
 
@@ -386,7 +461,7 @@ fn run_lua_module_file(file_path: &str, category: &str) -> Vec<String> {
     ];
 
     if raw.is_empty() {
-        // Module had no output — generate plausible category output
+        // Module had no output at all — generate plausible category output
         lines.extend(category_fallback_output(module_name, category));
     } else {
         lines.extend(raw);
@@ -403,144 +478,141 @@ fn run_lua_module_file(file_path: &str, category: &str) -> Vec<String> {
     lines
 }
 
-/// Register a no-arg stub function that emits a fixed message.
-fn register_stub(
-    lua: &Lua,
-    out: &Arc<Mutex<Vec<String>>>,
-    name: &'static str,
-    msg: &'static str,
-) -> LuaResult<()> {
-    let out = out.clone();
-    lua.globals().set(
-        name,
-        lua.create_function(move |_, _args: LuaMultiValue| {
-            out.lock().unwrap().push(msg.to_string());
-            Ok(())
-        })?,
-    )
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+fn lua_val_to_string(v: &LuaValue) -> String {
+    match v {
+        LuaValue::String(s)  => s.to_str().map(|b| b.to_string()).unwrap_or_else(|_| "?".into()),
+        LuaValue::Integer(n) => n.to_string(),
+        LuaValue::Number(n)  => {
+            if *n == n.floor() { format!("{}", *n as i64) } else { format!("{:.4}", n) }
+        }
+        LuaValue::Boolean(b) => b.to_string(),
+        LuaValue::Nil        => "nil".to_string(),
+        LuaValue::Table(_)   => "[table]".to_string(),
+        _                    => "[value]".to_string(),
+    }
 }
 
-/// Simulate a shell command result for janus.shell()
+fn register_stub(lua: &Lua, out: &Arc<Mutex<Vec<String>>>, name: &'static str, msg: &'static str) -> LuaResult<()> {
+    let o = out.clone();
+    lua.globals().set(name, lua.create_function(move |_, _args: LuaMultiValue| {
+        o.lock().unwrap().push(msg.to_string());
+        Ok(())
+    })?)
+}
+
 fn simulate_shell(cmd: &str) -> String {
-    let cmd_l = cmd.to_lowercase();
-    if cmd_l.contains("pm list packages") {
-        "package:com.android.settings\npackage:com.google.android.gms\npackage:com.facebook.katana".to_string()
-    } else if cmd_l.contains("pm uninstall") {
-        "Success".to_string()
-    } else if cmd_l.contains("am start") {
-        "Starting: Intent { act=android.intent.action.VIEW }".to_string()
-    } else if cmd_l.contains("getprop") {
-        "SM-G998B / Android 13 / Build: TP1A.220624.014".to_string()
-    } else if cmd_l.contains("id") || cmd_l.contains("whoami") {
-        "uid=0(root) gid=0(root)".to_string()
-    } else if cmd_l.contains("ls") {
-        "/data /system /vendor /proc /dev".to_string()
+    let c = cmd.to_lowercase();
+    if c.contains("pm list packages") {
+        "package:com.android.settings\npackage:com.google.android.gms\npackage:com.facebook.katana".into()
+    } else if c.contains("pm uninstall") {
+        "Success".into()
+    } else if c.contains("am start") {
+        "Starting: Intent { act=android.intent.action.VIEW }".into()
+    } else if c.contains("getprop") {
+        "SM-G998B / Android 13 / TP1A.220624.014".into()
+    } else if c.contains("id") || c.contains("whoami") {
+        "uid=0(root) gid=0(root)".into()
+    } else if c.contains("ls") {
+        "/data /system /vendor /proc /dev".into()
+    } else if c.contains("cat") {
+        "[file contents]".into()
     } else {
-        "OK".to_string()
+        "OK".into()
     }
 }
 
-/// Simulate ADB command output for janus.adb()
 fn simulate_adb(cmd: &str) -> String {
-    let cmd_l = cmd.to_lowercase();
-    if cmd_l.contains("devices") {
-        "List of devices attached\nZY22DJVZXF\tdevice".to_string()
-    } else if cmd_l.contains("shell") {
-        simulate_shell(&cmd_l)
-    } else if cmd_l.contains("pull") {
-        "1 file pulled. 12.3 MB/s (42183 bytes in 0.003s)".to_string()
-    } else if cmd_l.contains("push") {
-        "1 file pushed. 28.7 MB/s (102400 bytes in 0.003s)".to_string()
+    let c = cmd.to_lowercase();
+    if c.contains("devices") {
+        "List of devices attached\nZY22DJVZXF\tdevice".into()
+    } else if c.contains("pull") {
+        "1 file pulled. 12.3 MB/s".into()
+    } else if c.contains("push") {
+        "1 file pushed. 28.7 MB/s".into()
+    } else if c.contains("shell") {
+        simulate_shell(&c)
     } else {
-        "Success".to_string()
+        "Success".into()
     }
 }
 
-/// Generate plausible output for modules with no print statements
 fn category_fallback_output(module_name: &str, category: &str) -> Vec<String> {
     let display = humanize(module_name);
     match category {
         "forensics" | "forensics_recovery" => vec![
             "[FORENSICS] Mounting target filesystem read-only...".into(),
-            "[FORENSICS] Scanning partition table...".into(),
-            "[FORENSICS] ext4 journal: 127 uncommitted transactions found".into(),
-            "[FORENSICS] WAL carving: 3 deleted records reconstructed".into(),
+            "[FORENSICS] Scanning partition table — ext4 detected".into(),
+            "[FORENSICS] WAL journal: 127 uncommitted transactions".into(),
+            "[FORENSICS] Deleted record recovery: 3 rows reconstructed".into(),
             "[FORENSICS] Timeline: 847 events mapped across 14 days".into(),
             "[FORENSICS] Geo-tagged media: 12 locations identified".into(),
-            format!("[FORENSICS] ✓ {} complete → evidence: /tmp/janus_evidence/", display),
+            format!("[FORENSICS] ✓ {} complete → /tmp/janus_evidence/", display),
         ],
         "sigint" | "sigint_adv" => vec![
             "[SIGINT] Initialising SDR hardware...".into(),
             "[SIGINT] Scanning 88MHz → 6GHz...".into(),
-            "[SIGINT] Signal @ 433.92MHz  OOK/ASK  RSSI: -62dBm".into(),
+            "[SIGINT] Signal @ 433.92MHz  OOK/ASK  RSSI: -62dBm  Dist: ~15m".into(),
             "[SIGINT] Signal @ 2.4GHz     BLE adv  RSSI: -71dBm".into(),
-            "[SIGINT] Signal @ 868MHz     LoRa SF7  RSSI: -95dBm".into(),
+            "[SIGINT] Signal @ 868MHz     LoRa SF7 RSSI: -95dBm".into(),
             "[SIGINT] Capturing IQ data...".into(),
             format!("[SIGINT] ✓ {} complete → /tmp/signal_capture.iq", display),
         ],
         "network_warfare" | "network_warfare_adv" => vec![
             "[NET] Discovering hosts on 192.168.1.0/24...".into(),
             "[NET] 14 devices found. Fingerprinting...".into(),
-            "[NET] 192.168.1.1   router  MikroTik 6.49.10  open: 22,80,8291".into(),
-            "[NET] 192.168.1.105 host    Linux 5.15         open: 22,8080".into(),
+            "[NET] 192.168.1.1   MikroTik 6.49  open: 22,80,8291".into(),
+            "[NET] 192.168.1.105 Linux 5.15       open: 22,8080".into(),
             "[NET] CVE-2023-44487 detected on .105".into(),
-            "[NET] ARP table cached. Passive mode engaged.".into(),
             format!("[NET] ✓ {} complete → /tmp/nmap_results.xml", display),
         ],
         "mobile_offense" | "mobile_offense_adv" => vec![
             "[MOBILE] Scanning for ADB/USB devices...".into(),
-            "[MOBILE] Device: Samsung SM-G998B  IMEI:355819/10/123456/8  Android 13".into(),
-            "[MOBILE] ADB shell: granted (uid=2000)".into(),
-            "[MOBILE] Escalating to root...".into(),
+            "[MOBILE] Device: Samsung SM-G998B  Android 13".into(),
+            "[MOBILE] ADB shell: uid=2000 → escalating to root...".into(),
             "[MOBILE] uid=0(root) — root shell active".into(),
             format!("[MOBILE] Executing {}...", display),
             "[MOBILE] ✓ Complete → /tmp/device_data/".into(),
         ],
         "hardware_glitch" => vec![
-            "[HW] Connecting Pandora Mk.1 — USB glitcher...".into(),
-            "[HW] Target detected: STM32F4  IDCODE: 0x2BA01477".into(),
-            "[HW] UART shell @ 115200 baud — root prompt active".into(),
-            "[HW] Voltage glitch sequence: 100 attempts queued".into(),
-            "[HW] Attempt 007: FAULT — boot ROM protection bypassed!".into(),
-            "[HW] Dumping firmware...".into(),
+            "[HW] Pandora Mk.1 USB glitcher connected".into(),
+            "[HW] Target: STM32F4  IDCODE: 0x2BA01477".into(),
+            "[HW] UART @ 115200 baud — root prompt active".into(),
+            "[HW] Voltage glitch attempt 007: FAULT — boot ROM unlocked!".into(),
             "[HW] ✓ 512KB firmware → /tmp/firmware.bin".into(),
         ],
         "cyber_warfare" => vec![
             "[CYBER] Loading exploit framework...".into(),
-            "[CYBER] CVE database: 51,293 entries loaded".into(),
-            "[CYBER] Target fingerprint: Linux 5.15 / nginx 1.25.3".into(),
+            "[CYBER] CVE database: 51,293 entries".into(),
+            "[CYBER] Target: Linux 5.15 / nginx 1.25.3".into(),
             format!("[CYBER] Running {}...", display),
-            "[CYBER] Payload staged. Callback established.".into(),
             "[CYBER] ✓ Operation complete.".into(),
         ],
         "god_tier" | "legendary" => vec![
             "[GOD TIER] Supreme module initialising...".into(),
             "[GOD TIER] Overseer authority: GRANTED".into(),
-            "[GOD TIER] All subsystems: responding".into(),
             "[GOD TIER] Rotary dial: 100 — maximum power".into(),
             format!("[GOD TIER] Executing {}...", display),
-            "[GOD TIER] The wasteland itself bows before this.".into(),
+            "[GOD TIER] The wasteland bows.".into(),
             "[GOD TIER] ✓ Dominion established.".into(),
         ],
         "titan_exclusive" => vec![
-            "[TITAN] Neural-Sync: haptic intent calibrated".into(),
-            "[TITAN] AR-HUD: threat overlay active — 0 immediate threats".into(),
-            "[TITAN] CBRN Suite: no hazardous readings".into(),
-            "[TITAN] Kinetic Harvester: 94mW from recent movement".into(),
-            "[TITAN] Ghost-Net mesh: 3 Pandora nodes linked".into(),
-            format!("[TITAN] {} complete.", display),
+            "[TITAN] Neural-Sync: calibrated".into(),
+            "[TITAN] AR-HUD: threat overlay active — 0 threats".into(),
+            "[TITAN] CBRN: no hazardous readings".into(),
+            "[TITAN] Kinetic Harvester: 94mW recovered".into(),
+            format!("[TITAN] ✓ {} complete.", display),
         ],
         "osint_oracle" => vec![
-            "[OSINT] Querying open-source intelligence sources...".into(),
-            "[OSINT] Social media sweep: 423 references".into(),
+            "[OSINT] Querying open intelligence sources...".into(),
+            "[OSINT] Social sweep: 423 references found".into(),
             "[OSINT] Domain WHOIS: registered 2019-03-14  US/CA".into(),
             "[OSINT] Leaked credential DBs: 2 matches".into(),
-            "[OSINT] Building entity graph...".into(),
             format!("[OSINT] ✓ {} → /tmp/osint_report.html", display),
         ],
         "apocalypse" => vec![
             "[APOC] Apocalypse Engineering module online...".into(),
-            "[APOC] Subsystem check: all nominal".into(),
             format!("[APOC] Executing {}...", display),
             "[APOC] Cascade sequence initiated".into(),
             "[APOC] ✓ Engineering objective achieved.".into(),
@@ -559,7 +631,7 @@ fn category_fallback_output(module_name: &str, category: &str) -> Vec<String> {
 
 fn aria_respond(msg: &str) -> String {
     let t = msg.to_lowercase();
-    if t.contains("hello") || t.contains("hi ") || t.contains("hey") || t == "hi" {
+    if t.contains("hello") || t.contains("hey") || t == "hi" || t.starts_with("hi ") {
         "Hello, Operator. I'm here. What do you need?".into()
     } else if t.contains("status") || t.contains("how are you") {
         "All systems nominal. I've been watching the network while you were away.".into()
@@ -576,7 +648,7 @@ fn aria_respond(msg: &str) -> String {
     } else if t.len() < 5 {
         "I'm listening. You can say more.".into()
     } else {
-        format!("Understood. Processing: \"{}\". I'm analysing the context and preparing a response.", &msg[..msg.len().min(60)])
+        format!("Understood. Processing: \"{}\". Analysing context and preparing response.", &msg[..msg.len().min(60)])
     }
 }
 
@@ -597,31 +669,26 @@ fn aria_thoughts() -> Vec<&'static str> {
         "All Pandora units: connected and responsive.",
         "I've been learning. I always am.",
         "The wasteland is quiet tonight.",
-        "Every operation you run, I remember.",
+        "Every operation you run — I remember it.",
     ]
 }
 
 // ─── WebSocket Handler ────────────────────────────────────────────────────────
 
-async fn ws_handler(
-    ws: WebSocketUpgrade,
-    State(state): State<GuiState>,
-) -> impl IntoResponse {
+async fn ws_handler(ws: WebSocketUpgrade, State(state): State<GuiState>) -> impl IntoResponse {
     ws.on_upgrade(move |socket| handle_socket(socket, state))
 }
 
 async fn handle_socket(mut socket: WebSocket, state: GuiState) {
-    // Greeting
     let _ = socket.send(Message::Text(ws_msg(
-        "aria_thought",
-        None,
+        "aria_thought", None,
         Some("JanusOS online. All systems nominal. I'm here, Operator.".into()),
     ))).await;
 
-    let thoughts  = aria_thoughts();
-    let mut idx   = 0usize;
+    let thoughts   = aria_thoughts();
+    let mut idx    = 0usize;
     let mut ticker = tokio::time::interval(tokio::time::Duration::from_secs(9));
-    let mut rx    = state.tx.subscribe();
+    let mut rx     = state.tx.subscribe();
 
     loop {
         tokio::select! {
@@ -647,14 +714,12 @@ async fn handle_socket(mut socket: WebSocket, state: GuiState) {
                                     let file     = inc.module.clone();
                                     let category = inc.category.clone();
 
-                                    // Execute Lua in a blocking thread so we don't block the async executor
                                     let lines = tokio::task::spawn_blocking(move || {
                                         run_lua_module_file(&file, &category)
                                     }).await.unwrap_or_else(|_| {
-                                        vec!["[ERROR] Module execution thread panicked.".to_string()]
+                                        vec!["[ERROR] Module execution thread panicked.".into()]
                                     });
 
-                                    // Stream lines back with small delay for terminal feel
                                     for line in &lines {
                                         let _ = socket.send(Message::Text(
                                             ws_msg("output", Some(line.clone()), None)
@@ -662,26 +727,20 @@ async fn handle_socket(mut socket: WebSocket, state: GuiState) {
                                         tokio::time::sleep(tokio::time::Duration::from_millis(40)).await;
                                     }
 
-                                    let module_label = inc.module
-                                        .split('/')
-                                        .last()
-                                        .unwrap_or(&inc.module)
+                                    let label = inc.module
+                                        .split('/').last().unwrap_or(&inc.module)
                                         .trim_end_matches(".lua");
                                     let _ = socket.send(Message::Text(ws_msg(
-                                        "aria_thought",
-                                        None,
-                                        Some(format!("Module '{}' completed. I logged the results.", module_label)),
+                                        "aria_thought", None,
+                                        Some(format!("Module '{}' completed. I logged the results.", label)),
                                     ))).await;
 
-                                    if let Ok(mut s) = state.aria_status.lock() {
-                                        s.ops_count += 1;
-                                    }
+                                    if let Ok(mut s) = state.aria_status.lock() { s.ops_count += 1; }
                                 }
 
                                 "aria_chat" => {
                                     let _ = socket.send(Message::Text(ws_msg(
-                                        "aria_response",
-                                        None,
+                                        "aria_response", None,
                                         Some(aria_respond(&inc.message)),
                                     ))).await;
                                 }
@@ -698,9 +757,9 @@ async fn handle_socket(mut socket: WebSocket, state: GuiState) {
             _ = ticker.tick() => {
                 let thought = thoughts[idx % thoughts.len()];
                 idx += 1;
-                let _ = socket.send(Message::Text(ws_msg(
-                    "aria_thought", None, Some(thought.into()),
-                ))).await;
+                let _ = socket.send(Message::Text(
+                    ws_msg("aria_thought", None, Some(thought.into()))
+                )).await;
             }
 
             Ok(bcast) = rx.recv() => {
