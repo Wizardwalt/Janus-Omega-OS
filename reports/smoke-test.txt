@@ -1,0 +1,64 @@
+==== JANUS SMOKE TEST ====
+Fri Jun 26 07:48:40 PM UTC 2026
+
+## HEALTH
+ok
+
+## STATUS
+{"product_name":"Janus Omega","mode":"launcher","modules_loaded":9,"assistant_enabled":true,"hardware_profile":"Titan-Dev"}
+
+## MODULES
+[{"id":"core.battery_thermal","name":"Battery and Thermal","version":"0.1.0","description":"Reports battery and thermal health.","category":"diagnostics","implementation_status":"Stub"},{"id":"core.bluetooth_inventory","name":"Bluetooth Inventory","version":"0.1.0","description":"Lists visible Bluetooth devices in range when supported.","category":"survey","implementation_status":"Stub"},{"id":"core.connectivity_summary","name":"Connectivity Summary","version":"0.1.0","description":"Summarizes available local connectivity state.","category":"diagnostics","implementation_status":"Stub"},{"id":"core.device_log_summary","name":"Device Log Summary","version":"0.1.0","description":"Summarizes local runtime and device logs.","category":"diagnostics","implementation_status":"Stub"},{"id":"core.encrypted_notes","name":"Encrypted Notes","version":"0.1.0","description":"Stores secure field notes and operator annotations.","category":"evidence","implementation_status":"Stub"},{"id":"core.evidence_index","name":"Evidence Index","version":"0.1.0","description":"Indexes evidence metadata for review and export.","category":"evidence","implementation_status":"Stub"},{"id":"core.system_status","name":"System Status","version":"0.1.0","description":"Provides runtime and system overview information.","category":"core","implementation_status":"Implemented"},{"id":"core.update_manager","name":"Update Manager","version":"0.1.0","description":"Handles runtime, plugin, and platform update workflows.","category":"maintenance","implementation_status":"Stub"},{"id":"core.wifi_environment_survey","name":"WiFi Environment Survey","version":"0.1.0","description":"Summarizes local WiFi environment visibility when supported.","category":"survey","implementation_status":"Stub"}]
+
+## ASSISTANT
+{"enabled":true,"persona":"ARIA","last_message":"Hello operator. Systems are online and ready."}
+
+## AUDIT
+[{"time":"2026-06-26T19:47:09.636059282+00:00","action":"module_run","target":"core.evidence_index","outcome":"ok"},{"time":"2026-06-26T19:47:06.927241075+00:00","action":"module_run","target":"core.encrypted_notes","outcome":"ok"},{"time":"2026-06-26T19:47:06.796638291+00:00","action":"module_run","target":"core.system_status","outcome":"ok"},{"time":"2026-06-26T19:46:40.020032113+00:00","action":"export_bundle","target":"exports/janus-export-20260626-194640.json","outcome":"success"},{"time":"2026-06-26T19:46:33.352512534+00:00","action":"evidence_create","target":"Test Evidence","outcome":"success"},{"time":"2026-06-26T19:46:33.308290286+00:00","action":"note_create","target":"Field Note","outcome":"success"},{"time":"2026-06-26T19:46:33.246156251+00:00","action":"assistant_chat","target":"assistant","outcome":"success"},{"time":"2026-06-26T19:44:34.019332055+00:00","action":"runtime_start","target":"janus-runtime","outcome":"success"},{"time":"2026-06-26T17:48:20.324252401+00:00","action":"runtime_start","target":"janus-runtime","outcome":"success"},{"time":"2026-06-26T17:43:49.644623890+00:00","action":"runtime_start","target":"janus-runtime","outcome":"success"}]
+
+## MEMORY
+[{"id":2,"role":"assistant","message":"Hello operator. Systems are online and ready.","created_at":"2026-06-26T19:46:33.228128659+00:00"},{"id":1,"role":"user","message":"hello janus","created_at":"2026-06-26T19:46:33.195247200+00:00"}]
+
+## CHAT TEST
+{"reply":"Hello operator. Systems are online and ready.","recommended_modules":["core.battery_thermal","core.bluetooth_inventory","core.connectivity_summary"],"remembered_messages":4}
+
+## CREATE NOTE
+{"id":3,"title":"Smoke Test Note","body":"Created during automated runtime smoke test.","created_at":"2026-06-26T19:48:41.360075216+00:00"}
+
+## LIST NOTES
+[{"id":3,"title":"Smoke Test Note","body":"Created during automated runtime smoke test.","created_at":"2026-06-26T19:48:41.360075216+00:00"},{"id":2,"title":"Operator Note","body":"Placeholder secure note created by encrypted_notes module.","created_at":"2026-06-26T19:47:06.903837226+00:00"},{"id":1,"title":"Field Note","body":"Runtime test note.","created_at":"2026-06-26T19:46:33.294436052+00:00"}]
+
+## CREATE EVIDENCE
+{"id":0,"label":"Smoke Test Evidence","details":"Created during automated smoke test.","attachment_path":"attachments/smoke-test.txt","created_at":"2026-06-26T19:48:41.874990998+00:00"}
+
+## LIST EVIDENCE
+[]
+
+## EXPORT BUNDLE
+{"export_file":"exports/janus-export-20260626-194841.json","notes_count":3,"evidence_count":0,"audit_count":13}
+
+## EXPORTS
+["exports/janus-export-20260626-194841.json","exports/janus-export-20260626-194640.json"]
+
+## MODE GET
+"launcher"
+
+## MODE SWITCH -> operator
+{"product_name":"Janus Omega","mode":"operator","modules_loaded":9,"assistant_enabled":true,"hardware_profile":"Titan-Dev"}
+
+## MODE GET AFTER SWITCH
+"operator"
+
+## RUN MODULE core.system_status
+{"module_id":"core.system_status","status":"ok","message":"System status collected","data":{"db_path":"data/janus.db","runtime":"online","storage":"available"}}
+
+## RUN MODULE core.encrypted_notes
+{"module_id":"core.encrypted_notes","status":"ok","message":"Note created","data":{"notes_total":4}}
+
+## RUN MODULE core.evidence_index
+{"module_id":"core.evidence_index","status":"ok","message":"Evidence indexed","data":{"evidence_total":0}}
+
+## FINAL AUDIT
+[{"time":"2026-06-26T19:48:42.030339929+00:00","action":"module_run","target":"core.evidence_index","outcome":"ok"},{"time":"2026-06-26T19:48:42.000798718+00:00","action":"module_run","target":"core.encrypted_notes","outcome":"ok"},{"time":"2026-06-26T19:48:41.968701558+00:00","action":"module_run","target":"core.system_status","outcome":"ok"},{"time":"2026-06-26T19:48:41.942003463+00:00","action":"mode_change","target":"operator","outcome":"success"},{"time":"2026-06-26T19:48:41.897567978+00:00","action":"export_bundle","target":"exports/janus-export-20260626-194841.json","outcome":"success"},{"time":"2026-06-26T19:48:41.707970407+00:00","action":"evidence_create","target":"Smoke Test Evidence","outcome":"success"},{"time":"2026-06-26T19:48:41.476322705+00:00","action":"note_create","target":"Smoke Test Note","outcome":"success"},{"time":"2026-06-26T19:48:41.334637526+00:00","action":"assistant_chat","target":"assistant","outcome":"success"},{"time":"2026-06-26T19:47:09.636059282+00:00","action":"module_run","target":"core.evidence_index","outcome":"ok"},{"time":"2026-06-26T19:47:06.927241075+00:00","action":"module_run","target":"core.encrypted_notes","outcome":"ok"},{"time":"2026-06-26T19:47:06.796638291+00:00","action":"module_run","target":"core.system_status","outcome":"ok"},{"time":"2026-06-26T19:46:40.020032113+00:00","action":"export_bundle","target":"exports/janus-export-20260626-194640.json","outcome":"success"},{"time":"2026-06-26T19:46:33.352512534+00:00","action":"evidence_create","target":"Test Evidence","outcome":"success"},{"time":"2026-06-26T19:46:33.308290286+00:00","action":"note_create","target":"Field Note","outcome":"success"},{"time":"2026-06-26T19:46:33.246156251+00:00","action":"assistant_chat","target":"assistant","outcome":"success"},{"time":"2026-06-26T19:44:34.019332055+00:00","action":"runtime_start","target":"janus-runtime","outcome":"success"},{"time":"2026-06-26T17:48:20.324252401+00:00","action":"runtime_start","target":"janus-runtime","outcome":"success"},{"time":"2026-06-26T17:43:49.644623890+00:00","action":"runtime_start","target":"janus-runtime","outcome":"success"}]
+
+==== END SMOKE TEST ====
