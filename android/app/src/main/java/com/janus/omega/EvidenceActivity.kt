@@ -16,7 +16,7 @@ class EvidenceActivity : AppCompatActivity() {
         thread {
             val result = RuntimeClient.get("/api/evidence")
             runOnUiThread {
-                contentText.text = result
+                contentText.text = result + "\n\nOpen CreateEvidenceActivity from code/menu next."
             }
         }
     }

@@ -32,7 +32,7 @@ class HomeActivity : AppCompatActivity() {
         }
 
         assistantButton.setOnClickListener {
-            startActivity(Intent(this, AssistantActivity::class.java))
+            startActivity(Intent(this, ChatActivity::class.java))
         }
 
         diagnosticsButton.setOnClickListener {
@@ -54,7 +54,7 @@ class HomeActivity : AppCompatActivity() {
         thread {
             val result = RuntimeClient.get("/api/status")
             runOnUiThread {
-                statusText.text = "Runtime status: $result"
+                statusText.text = "Runtime status:\n$result"
             }
         }
     }

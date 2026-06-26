@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/janus_bg"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/labelInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Evidence label"
+        android:textColor="@color/janus_text"
+        android:textColorHint="@color/janus_text" />
+
+    <EditText
+        android:id="@+id/detailsInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:hint="Evidence details"
+        android:minLines="4"
+        android:textColor="@color/janus_text"
+        android:textColorHint="@color/janus_text" />
+
+    <EditText
+        android:id="@+id/pathInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:hint="Attachment path (optional)"
+        android:textColor="@color/janus_text"
+        android:textColorHint="@color/janus_text" />
+
+    <Button
+        android:id="@+id/createEvidenceButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="Create Evidence" />
+
+    <TextView
+        android:id="@+id/evidenceResult"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:textColor="@color/janus_text" />
+</LinearLayout>

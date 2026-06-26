@@ -1,5 +1,6 @@
 package com.janus.omega
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -16,7 +17,7 @@ class NotesActivity : AppCompatActivity() {
         thread {
             val result = RuntimeClient.get("/api/notes")
             runOnUiThread {
-                contentText.text = result
+                contentText.text = result + "\n\nOpen CreateNoteActivity from code/menu next."
             }
         }
     }

@@ -11,6 +11,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.JanusOmega">
 
+        <activity android:name=".ModeControlActivity" android:exported="false" />
+        <activity android:name=".CreateEvidenceActivity" android:exported="false" />
+        <activity android:name=".CreateNoteActivity" android:exported="false" />
+        <activity android:name=".ChatActivity" android:exported="false" />
         <activity android:name=".NotesActivity" android:exported="false" />
         <activity android:name=".EvidenceActivity" android:exported="false" />
         <activity android:name=".OperatorActivity" android:exported="false" />

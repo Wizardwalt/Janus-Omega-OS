@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/janus_bg"
+    android:padding="16dp">
+
+    <Button
+        android:id="@+id/launcherModeButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Switch to Launcher Mode" />
+
+    <Button
+        android:id="@+id/operatorModeButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="Switch to Operator Mode" />
+
+    <Button
+        android:id="@+id/diagnosticsModeButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="Switch to Diagnostics Mode" />
+
+    <TextView
+        android:id="@+id/modeResult"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:textColor="@color/janus_text"
+        android:text="Mode response" />
+</LinearLayout>

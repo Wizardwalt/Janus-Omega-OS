@@ -7,9 +7,13 @@ This Android project is a scaffold for the Titan-facing Janus launcher UI.
 - OperatorActivity
 - ModulesActivity
 - AssistantActivity
+- ChatActivity
 - DiagnosticsActivity
 - NotesActivity
+- CreateNoteActivity
 - EvidenceActivity
+- CreateEvidenceActivity
+- ModeControlActivity
 - SettingsActivity
 
 ## Services
@@ -17,13 +21,21 @@ This Android project is a scaffold for the Titan-facing Janus launcher UI.
 - BootReceiver
 
 ## Runtime Integration
-The app currently expects the Janus runtime to be reachable at:
+Expected runtime endpoint:
 
 http://10.0.2.2:8080
 
+## Working Android-side scaffold features
+- runtime GET support
+- runtime POST support
+- assistant chat POST
+- note create POST
+- evidence create POST
+- runtime mode switching POST
+
 ## Next Steps
-- add real JSON parsing
-- add assistant chat UI
-- add module run buttons
-- add evidence create UI
-- add default-home launcher mode for Titan builds
+- proper JSON parsing into models
+- recycler/list-based UI
+- button navigation to create screens
+- default-home launcher mode
+- Titan-style immersive operator UI
