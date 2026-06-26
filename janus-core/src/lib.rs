@@ -108,6 +108,26 @@ pub struct ExportBundleResult {
     pub audit_count: usize,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChatRequest {
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ChatResponse {
+    pub reply: String,
+    pub recommended_modules: Vec<String>,
+    pub remembered_messages: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MemoryRecord {
+    pub id: i64,
+    pub role: String,
+    pub message: String,
+    pub created_at: String,
+}
+
 impl Default for RuntimeStatus {
     fn default() -> Self {
         Self {
