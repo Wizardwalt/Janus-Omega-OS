@@ -1,0 +1,7 @@
+<resources>
+    <color name="janus_bg">#08110B</color>
+    <color name="janus_panel">#102018</color>
+    <color name="janus_green">#62FF8F</color>
+    <color name="janus_text">#D7FFE2</color>
+    <color name="janus_accent">#9D00FF</color>
+</resources>
