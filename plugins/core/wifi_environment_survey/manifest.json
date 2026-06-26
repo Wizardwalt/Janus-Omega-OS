@@ -1,0 +1,8 @@
+{
+  "id": "core.wifi_environment_survey",
+  "name": "WiFi Environment Survey",
+  "version": "0.1.0",
+  "description": "Summarizes local WiFi environment visibility when supported.",
+  "category": "survey",
+  "implementation_status": "Stub"
+}

@@ -1,0 +1,8 @@
+{
+  "id": "core.bluetooth_inventory",
+  "name": "Bluetooth Inventory",
+  "version": "0.1.0",
+  "description": "Lists visible Bluetooth devices in range when supported.",
+  "category": "survey",
+  "implementation_status": "Stub"
+}

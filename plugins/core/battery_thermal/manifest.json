@@ -1,0 +1,8 @@
+{
+  "id": "core.battery_thermal",
+  "name": "Battery and Thermal",
+  "version": "0.1.0",
+  "description": "Reports battery and thermal health.",
+  "category": "diagnostics",
+  "implementation_status": "Stub"
+}

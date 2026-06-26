@@ -1,0 +1,8 @@
+{
+  "id": "core.connectivity_summary",
+  "name": "Connectivity Summary",
+  "version": "0.1.0",
+  "description": "Summarizes available local connectivity state.",
+  "category": "diagnostics",
+  "implementation_status": "Stub"
+}

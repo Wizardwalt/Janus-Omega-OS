@@ -34,7 +34,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cargo run"
+args = "cargo run --bin janus-web"
 waitForPort = 5000
 
 [deployment]
@@ -43,10 +43,6 @@ run = ["cargo", "run", "--release"]
 
 [[ports]]
 localPort = 5000
-externalPort = 80
-
-[[ports]]
-localPort = 5904
 externalPort = 80
 
 [[ports]]

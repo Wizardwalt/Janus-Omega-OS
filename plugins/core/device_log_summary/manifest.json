@@ -1,0 +1,8 @@
+{
+  "id": "core.device_log_summary",
+  "name": "Device Log Summary",
+  "version": "0.1.0",
+  "description": "Summarizes local runtime and device logs.",
+  "category": "diagnostics",
+  "implementation_status": "Stub"
+}

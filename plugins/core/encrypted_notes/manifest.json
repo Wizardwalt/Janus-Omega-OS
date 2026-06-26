@@ -1,0 +1,8 @@
+{
+  "id": "core.encrypted_notes",
+  "name": "Encrypted Notes",
+  "version": "0.1.0",
+  "description": "Stores secure field notes and operator annotations.",
+  "category": "evidence",
+  "implementation_status": "Stub"
+}

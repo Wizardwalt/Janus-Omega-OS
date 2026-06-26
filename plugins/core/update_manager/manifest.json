@@ -1,0 +1,8 @@
+{
+  "id": "core.update_manager",
+  "name": "Update Manager",
+  "version": "0.1.0",
+  "description": "Handles runtime, plugin, and platform update workflows.",
+  "category": "maintenance",
+  "implementation_status": "Stub"
+}

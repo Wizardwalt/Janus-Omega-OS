@@ -1,0 +1,8 @@
+{
+  "id": "core.evidence_index",
+  "name": "Evidence Index",
+  "version": "0.1.0",
+  "description": "Indexes evidence metadata for review and export.",
+  "category": "evidence",
+  "implementation_status": "Stub"
+}

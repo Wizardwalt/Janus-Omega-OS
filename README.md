@@ -1,11 +1,27 @@
-# JANUS OMEGA OS + PANDORA TITAN
+# Janus Omega OS
 
-**The Forearm-Mounted 500-Module Tactical Singularity**
+Janus Omega is a Titan-targeted Android-first operator platform under active development.
 
-A RAM-only immutable Linux OS with authentic Pip-Boy CRT aesthetic, sentient local Overseer AI, Ghost Network mesh, and complete open hardware.
+## Architecture
+- `janus-core` — shared runtime types and manifests
+- `janus-runtime` — local Rust runtime with HTTP API and audit logging
+- `janus-tui` — maintenance shell
+- `janus-web` — web/dashboard placeholder
+- `plugins/` — manifest-based module system
+- `android/` — Android launcher/client scaffolding
+- `recovery/` — maintenance environment scaffolding
 
-**[Live Website & Demo](https://wizardwalt.github.io/Janus-Omega-OS)**
+## Current Working Features
+- Rust workspace builds
+- Runtime API serves:
+  - `/health`
+  - `/api/status`
+  - `/api/modules`
+  - `/api/assistant`
+  - `/api/audit`
+  - `/api/mode`
+- Module manifests are discovered from `plugins/`
+- Audit records are persisted to SQLite
 
-500 Modules • Local AI • Physical Controls • Apotheosis Protocol
-
-Built for the wasteland.
+## Run
+cargo run -p janus-runtime

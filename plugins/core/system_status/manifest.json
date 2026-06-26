@@ -1,0 +1,8 @@
+{
+  "id": "core.system_status",
+  "name": "System Status",
+  "version": "0.1.0",
+  "description": "Provides runtime and system overview information.",
+  "category": "core",
+  "implementation_status": "Implemented"
+}
