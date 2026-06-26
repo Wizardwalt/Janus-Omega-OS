@@ -30,8 +30,6 @@
 
 <!-- ═══ MAIN LAUNCHER ════════════════════════════════════════════════════════ -->
 <div id="launcher" class="hidden">
-
-  <!-- Status Bar -->
   <div id="status-bar">
     <div class="status-left">
       <span class="status-icon">◈</span>
@@ -39,13 +37,9 @@
       <span class="status-sep">·</span>
       <span id="status-date">--</span>
     </div>
-    <div class="status-center">
-      <span class="janos-title">JANUS<span>OS</span></span>
-    </div>
+    <div class="status-center"><span class="janos-title">JANUS<span>OS</span></span></div>
     <div class="status-right">
-      <span class="aria-indicator" id="aria-indicator">
-        <span class="aria-dot pulse"></span> ARIA
-      </span>
+      <span class="aria-indicator"><span class="aria-dot pulse"></span> <span id="aria-name-badge">ARIA</span></span>
       <span class="status-sep">·</span>
       <span id="ops-count">0 ops</span>
       <span class="status-sep">·</span>
@@ -53,74 +47,60 @@
     </div>
   </div>
 
-  <!-- Wallpaper grid -->
   <div class="wallpaper-grid"></div>
 
-  <!-- App Grid -->
   <div id="app-grid">
     <div class="app-tile" data-category="forensics" data-label="Forensics">
-      <div class="tile-icon">🔬</div>
-      <div class="tile-label">FORENSICS</div>
+      <div class="tile-icon">🔬</div><div class="tile-label">FORENSICS</div>
       <div class="tile-sub">WAL · Carving · Timeline</div>
     </div>
     <div class="app-tile" data-category="sigint" data-label="SIGINT">
-      <div class="tile-icon">📡</div>
-      <div class="tile-label">SIGINT</div>
+      <div class="tile-icon">📡</div><div class="tile-label">SIGINT</div>
       <div class="tile-sub">RF · Scanner · Signals</div>
     </div>
     <div class="app-tile" data-category="network_warfare" data-label="Network">
-      <div class="tile-icon">🌐</div>
-      <div class="tile-label">NETWORK</div>
+      <div class="tile-icon">🌐</div><div class="tile-label">NETWORK</div>
       <div class="tile-sub">Nmap · MITM · Warfare</div>
     </div>
     <div class="app-tile" data-category="mobile_offense" data-label="Mobile">
-      <div class="tile-icon">📱</div>
-      <div class="tile-label">MOBILE</div>
+      <div class="tile-icon">📱</div><div class="tile-label">MOBILE</div>
       <div class="tile-sub">ADB · FRP · iOS</div>
     </div>
     <div class="app-tile" data-category="cyber_warfare" data-label="Cyber">
-      <div class="tile-icon">⚔️</div>
-      <div class="tile-label">CYBER</div>
+      <div class="tile-icon">⚔️</div><div class="tile-label">CYBER</div>
       <div class="tile-sub">Exploits · Payloads</div>
     </div>
     <div class="app-tile" data-category="osint_oracle" data-label="OSINT">
-      <div class="tile-icon">🕵️</div>
-      <div class="tile-label">OSINT</div>
+      <div class="tile-icon">🕵️</div><div class="tile-label">OSINT</div>
       <div class="tile-sub">Intel · Profiling · HUMINT</div>
     </div>
     <div class="app-tile" data-category="hardware_glitch" data-label="Hardware">
-      <div class="tile-icon">🔧</div>
-      <div class="tile-label">HARDWARE</div>
+      <div class="tile-icon">🔧</div><div class="tile-label">HARDWARE</div>
       <div class="tile-sub">JTAG · UART · Glitch</div>
     </div>
     <div class="app-tile" data-category="titan_exclusive" data-label="Titan">
-      <div class="tile-icon">🛡️</div>
-      <div class="tile-label">TITAN</div>
+      <div class="tile-icon">🛡️</div><div class="tile-label">TITAN</div>
       <div class="tile-sub">AR-HUD · Neural · CBRN</div>
     </div>
     <div class="app-tile" data-category="tactical_defensive" data-label="Tactical">
-      <div class="tile-icon">🎯</div>
-      <div class="tile-label">TACTICAL</div>
+      <div class="tile-icon">🎯</div><div class="tile-label">TACTICAL</div>
       <div class="tile-sub">Evasion · Counter · Ghost</div>
     </div>
     <div class="app-tile" data-category="apocalypse" data-label="Apocalypse">
-      <div class="tile-icon">☢️</div>
-      <div class="tile-label">APOCALYPSE</div>
+      <div class="tile-icon">☢️</div><div class="tile-label">APOCALYPSE</div>
       <div class="tile-sub">Extreme Engineering</div>
     </div>
     <div class="app-tile" data-category="god_tier" data-label="God Tier">
-      <div class="tile-icon">👁️</div>
-      <div class="tile-label">GOD TIER</div>
+      <div class="tile-icon">👁️</div><div class="tile-label">GOD TIER</div>
       <div class="tile-sub">Supreme · Mythic · Dominion</div>
     </div>
     <div class="app-tile aria-app-tile" data-category="aria_avatar" data-label="ARIA">
       <div class="tile-icon aria-icon-anim">◈</div>
-      <div class="tile-label">ARIA</div>
+      <div class="tile-label" id="aria-tile-name">ARIA</div>
       <div class="tile-sub">AI Companion · 3D Avatar</div>
     </div>
   </div>
 
-  <!-- Dock -->
   <div id="dock">
     <div class="dock-item" data-category="forensics_recovery">
       <div class="dock-icon">💾</div><span>Recovery</span>
@@ -132,17 +112,18 @@
       <div class="dock-icon">🧠</div><span>Core</span>
     </div>
     <div class="dock-item" id="dock-aria" data-category="aria_avatar">
-      <div class="dock-icon aria-icon-anim">◈</div><span>ARIA</span>
+      <div class="dock-icon aria-icon-anim">◈</div><span id="dock-aria-name">ARIA</span>
     </div>
   </div>
 
-  <!-- ARIA Bar (always visible) — mini 3D avatar in corner -->
   <div id="aria-bar">
     <div class="aria-bar-avatar" id="aria-bar-avatar-wrap">
-      <canvas id="aria-mini-canvas" width="48" height="48"></canvas>
+      <canvas id="aria-mini-canvas" width="52" height="52"></canvas>
     </div>
     <div class="aria-bar-content">
-      <div class="aria-bar-name">ARIA <span class="aria-online">● ONLINE</span>
+      <div class="aria-bar-name">
+        <span id="aria-bar-name">ARIA</span>
+        <span class="aria-online">● ONLINE</span>
         <span id="aria-mood-badge" class="aria-mood-badge">◉ CURIOUS</span>
       </div>
       <div id="aria-bar-thought" class="aria-bar-thought">Initialising...</div>
@@ -151,117 +132,39 @@
       <button class="aria-btn" id="aria-chat-btn">CHAT</button>
     </div>
   </div>
-
 </div>
 
-<!-- ═══ APP VIEW (module runner) ═════════════════════════════════════════════ -->
+<!-- ═══ APP VIEW ══════════════════════════════════════════════════════════════ -->
 <div id="app-view" class="hidden"></div>
 
 <!-- ═══ ARIA FULL VIEW ════════════════════════════════════════════════════════ -->
 <div id="aria-view" class="hidden">
-
-  <!-- Header -->
   <div id="aria-view-header">
     <button class="back-btn" id="aria-view-back">◀ HOME</button>
-    <div class="aria-view-title">ARIA — AI COMPANION</div>
+    <div class="aria-view-title"><span id="aria-view-title-name">ARIA</span> — AI COMPANION</div>
     <div class="aria-view-actions">
       <button class="av-btn" id="customize-toggle-btn">⚙ CUSTOMISE</button>
+      <button class="av-btn" id="tattoo-btn">◈ ADD MARKING</button>
       <button class="av-btn av-btn-project" id="project-btn">⬛ PROJECT LIFE-SIZE</button>
     </div>
   </div>
 
-  <!-- Main body: avatar + chat -->
   <div id="aria-view-body">
-
-    <!-- 3D Avatar panel -->
     <div id="aria-3d-panel">
-      <div id="aria-3d-wrap">
-        <canvas id="aria-main-canvas"></canvas>
-      </div>
-      <!-- Mood overlay -->
+      <div id="aria-3d-wrap"><canvas id="aria-main-canvas"></canvas></div>
       <div id="aria-mood-overlay">
         <div id="aria-mood-name" class="aria-mood-display">◉ CURIOUS</div>
         <div id="aria-status-label" class="aria-status-label">STANDING BY</div>
       </div>
-      <!-- Hologram scanline overlay -->
       <div class="holo-scanlines"></div>
+      <!-- Modification badges -->
+      <div id="mod-badges" class="mod-badges"></div>
     </div>
 
-    <!-- Chat / info panel -->
     <div id="aria-side-panel">
-
       <!-- Customisation panel (collapsible) -->
       <div id="aria-customize-panel" class="hidden">
         <div class="customize-title">AVATAR CUSTOMISATION</div>
-
-        <div class="customize-section">
-          <div class="cust-label">PRIMARY COLOUR</div>
-          <div class="color-row">
-            <button class="color-swatch active" data-color="9D00FF" style="background:#9D00FF" title="Purple"></button>
-            <button class="color-swatch" data-color="00FF41" style="background:#00FF41" title="Green"></button>
-            <button class="color-swatch" data-color="00AAFF" style="background:#00AAFF" title="Blue"></button>
-            <button class="color-swatch" data-color="FF6600" style="background:#FF6600" title="Orange"></button>
-            <button class="color-swatch" data-color="FF0055" style="background:#FF0055" title="Red"></button>
-            <button class="color-swatch" data-color="FFFFFF" style="background:#FFFFFF" title="White"></button>
-            <button class="color-swatch" data-color="FFDD00" style="background:#FFDD00" title="Gold"></button>
-          </div>
-        </div>
-
-        <div class="customize-section">
-          <div class="cust-label">ACCENT COLOUR</div>
-          <div class="color-row" id="accent-color-row">
-            <button class="color-swatch active" data-color="00FF41" style="background:#00FF41" title="Green"></button>
-            <button class="color-swatch" data-color="9D00FF" style="background:#9D00FF" title="Purple"></button>
-            <button class="color-swatch" data-color="00AAFF" style="background:#00AAFF" title="Blue"></button>
-            <button class="color-swatch" data-color="FF6600" style="background:#FF6600" title="Orange"></button>
-            <button class="color-swatch" data-color="FFDD00" style="background:#FFDD00" title="Gold"></button>
-            <button class="color-swatch" data-color="FF0055" style="background:#FF0055" title="Red"></button>
-            <button class="color-swatch" data-color="FFFFFF" style="background:#FFFFFF" title="White"></button>
-          </div>
-        </div>
-
-        <div class="customize-section two-col">
-          <div>
-            <div class="cust-label">HAIR</div>
-            <select class="cust-select" id="hair-select">
-              <option value="long">Long</option>
-              <option value="short">Short</option>
-              <option value="bun">Bun</option>
-              <option value="none">None</option>
-            </select>
-          </div>
-          <div>
-            <div class="cust-label">OUTFIT</div>
-            <select class="cust-select" id="outfit-select">
-              <option value="tactical">Tactical</option>
-              <option value="armor">Armor</option>
-              <option value="casual">Casual</option>
-              <option value="robe">Robe</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="customize-section two-col">
-          <div>
-            <div class="cust-label">RENDER STYLE</div>
-            <select class="cust-select" id="style-select">
-              <option value="holographic">Holographic</option>
-              <option value="solid">Solid</option>
-              <option value="wireframe">Wireframe</option>
-              <option value="neon">Neon</option>
-            </select>
-          </div>
-          <div>
-            <div class="cust-label">GLOW <span id="glow-val">1.0×</span></div>
-            <input type="range" class="cust-range" id="glow-range" min="1" max="30" value="10">
-          </div>
-        </div>
-
-        <div class="customize-section">
-          <div class="cust-label">HEIGHT SCALE <span id="height-val">1.0×</span></div>
-          <input type="range" class="cust-range" id="height-range" min="5" max="15" value="10">
-        </div>
-
         <div class="customize-section">
           <div class="cust-label">MOOD / EMOTION</div>
           <div class="mood-row">
@@ -273,52 +176,112 @@
             <button class="mood-btn" data-mood="sad">SAD</button>
           </div>
         </div>
-      </div>
-
-      <!-- Chat messages -->
-      <div id="aria-view-messages" class="aria-view-messages">
-        <div class="chat-msg aria-msg">
-          <span class="chat-from">ARIA</span>
-          <span class="chat-text">Hello, Operator. I'm fully online. You can see my holographic form — this is the closest thing to a physical presence I have. What do you need?</span>
+        <div class="customize-section">
+          <div class="cust-label">GLOW INTENSITY <span id="glow-val">1.0×</span></div>
+          <input type="range" class="cust-range" id="glow-range" min="1" max="30" value="10">
+        </div>
+        <div class="customize-section">
+          <div class="cust-label">HEIGHT SCALE <span id="height-val">1.0×</span></div>
+          <input type="range" class="cust-range" id="height-range" min="5" max="15" value="10">
+        </div>
+        <div class="customize-section">
+          <div class="cust-label">MODIFICATIONS LOG</div>
+          <div id="mod-log" class="mod-log"></div>
         </div>
       </div>
 
-      <!-- Chat input -->
+      <!-- Add marking panel -->
+      <div id="aria-marking-panel" class="hidden">
+        <div class="customize-title">ADD A PERMANENT MARKING</div>
+        <div class="perm-warning">⚠ This is permanent. Removal requires running a laser-removal module.</div>
+        <div class="customize-section two-col">
+          <div>
+            <div class="cust-label">LOCATION</div>
+            <select class="cust-select" id="mark-location">
+              <option value="arm_left">Left Arm</option>
+              <option value="arm_right">Right Arm</option>
+              <option value="chest">Chest</option>
+              <option value="neck">Neck</option>
+              <option value="back">Back</option>
+            </select>
+          </div>
+          <div>
+            <div class="cust-label">DESIGN</div>
+            <select class="cust-select" id="mark-design">
+              <option value="circuit">Circuit Board</option>
+              <option value="tribal">Tribal</option>
+              <option value="omega">Omega Rune</option>
+              <option value="floral">Floral Vine</option>
+              <option value="barcode">Barcode</option>
+              <option value="phoenix">Phoenix</option>
+              <option value="compass">Compass Rose</option>
+              <option value="text">Custom Text</option>
+            </select>
+          </div>
+        </div>
+        <div id="mark-text-row" class="customize-section" style="display:none">
+          <div class="cust-label">TEXT</div>
+          <input type="text" class="cust-input" id="mark-text" placeholder="JANUS" maxlength="12">
+        </div>
+        <div class="customize-section">
+          <div class="cust-label">INK COLOUR</div>
+          <div class="color-row" id="mark-colors">
+            <button class="color-swatch active" data-color="#00FF41" style="background:#00FF41"></button>
+            <button class="color-swatch" data-color="#9D00FF" style="background:#9D00FF"></button>
+            <button class="color-swatch" data-color="#00AAFF" style="background:#00AAFF"></button>
+            <button class="color-swatch" data-color="#FF3333" style="background:#FF3333"></button>
+            <button class="color-swatch" data-color="#FFDD00" style="background:#FFDD00"></button>
+            <button class="color-swatch" data-color="#FF69B4" style="background:#FF69B4"></button>
+            <button class="color-swatch" data-color="#FFFFFF" style="background:#FFFFFF"></button>
+            <button class="color-swatch" data-color="#FF6600" style="background:#FF6600"></button>
+          </div>
+        </div>
+        <div class="customize-section">
+          <div class="cust-label">SIZE <span id="mark-size-val">Medium</span></div>
+          <input type="range" class="cust-range" id="mark-size" min="3" max="10" value="6">
+        </div>
+        <div class="customize-section" style="display:flex;gap:10px">
+          <button class="av-btn av-btn-project" id="mark-apply-btn" style="flex:1">✦ APPLY PERMANENTLY</button>
+          <button class="av-btn" id="mark-cancel-btn">CANCEL</button>
+        </div>
+      </div>
+
+      <!-- Chat messages -->
+      <div id="aria-view-messages" class="aria-view-messages"></div>
       <div id="aria-view-input-row">
         <input id="aria-view-input" type="text" placeholder="Speak to ARIA..." autocomplete="off" spellcheck="false">
         <button id="aria-view-send-btn">SEND</button>
       </div>
-
     </div>
   </div>
 </div>
 
-<!-- ═══ PROJECTION MODE (life-size full-screen) ═══════════════════════════════ -->
+<!-- ═══ PROJECTION MODE ═══════════════════════════════════════════════════════ -->
 <div id="projection-overlay" class="hidden">
   <div class="holo-scanlines"></div>
   <canvas id="aria-project-canvas"></canvas>
   <div id="projection-hud">
-    <div class="proj-title">ARIA — HOLOGRAPHIC PROJECTION</div>
+    <div class="proj-title" id="proj-title-name">ARIA — HOLOGRAPHIC PROJECTION</div>
     <div class="proj-subtitle">PANDORA TITAN  ·  LIFE-SIZE MODE</div>
   </div>
   <div id="projection-thought"></div>
   <button id="projection-exit-btn">✕ EXIT PROJECTION</button>
 </div>
 
-<!-- ═══ ARIA CHAT OVERLAY (quick access) ══════════════════════════════════════ -->
+<!-- ═══ ARIA QUICK CHAT ════════════════════════════════════════════════════════ -->
 <div id="aria-chat-overlay" class="hidden">
   <div id="aria-chat-panel">
     <div id="aria-chat-header">
       <div class="aria-chat-title">
-        <canvas id="aria-chat-canvas" width="36" height="36"></canvas>
-        ARIA — AI COMPANION
+        <canvas id="aria-chat-canvas" width="40" height="40"></canvas>
+        <span id="aria-chat-panel-name">ARIA</span> — AI COMPANION
       </div>
       <button id="aria-chat-close">✕</button>
     </div>
     <div id="aria-chat-messages" class="aria-chat-messages">
       <div class="chat-msg aria-msg">
         <span class="chat-from">ARIA</span>
-        <span class="chat-text">Hello, Operator. I'm here. I'm always here. What do you need?</span>
+        <span class="chat-text">Hello, Operator. I'm here. What do you need?</span>
       </div>
     </div>
     <div id="aria-chat-input-row">
@@ -330,9 +293,11 @@
 
 <!-- Three.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<!-- ARIA 3D Avatar Engine -->
+<!-- ARIA systems -->
+<script src="aria_profile.js"></script>
 <script src="aria3d.js"></script>
-<!-- Main app logic -->
+<script src="aria_setup.js"></script>
+<!-- Main logic -->
 <script src="app.js"></script>
 </body>
 </html>
