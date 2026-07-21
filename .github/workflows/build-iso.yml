@@ -1,0 +1,100 @@
+name: Build JanusOS ISO
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-iso:
+    name: Build bootable ISO
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+      options: --privileged
+
+    steps:
+      - name: Install build dependencies
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm \
+            archiso git base-devel \
+            rust cargo pkg-config openssl libudev \
+            squashfs-tools dosfstools mtools libisoburn
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build janus-web binary
+        run: cargo build --release --bin janus-web
+
+      - name: Prepare ISO profile
+        run: |
+          # Start from the official releng profile
+          cp -r /usr/share/archiso/configs/releng /tmp/janus-profile
+
+          # Add our package list on top of releng's
+          cat iso/packages.x86_64 >> /tmp/janus-profile/packages.x86_64
+
+          # Overlay our airootfs customisations
+          cp -r iso/airootfs/* /tmp/janus-profile/airootfs/
+
+          # Copy the JanusOS runtime payload into the ISO
+          mkdir -p /tmp/janus-profile/airootfs/opt/janus
+          cp target/release/janus-web         /tmp/janus-profile/airootfs/opt/janus/
+          cp -r web                            /tmp/janus-profile/airootfs/opt/janus/
+          cp -r plugins                        /tmp/janus-profile/airootfs/opt/janus/
+          cp -r modules                        /tmp/janus-profile/airootfs/opt/janus/
+          cp -r core                           /tmp/janus-profile/airootfs/opt/janus/
+          cp -r apocalypse_engineering         /tmp/janus-profile/airootfs/opt/janus/
+          chmod +x /tmp/janus-profile/airootfs/opt/janus/janus-web
+
+          # Enable janus-web.service on boot
+          mkdir -p /tmp/janus-profile/airootfs/etc/systemd/system/multi-user.target.wants
+          ln -sf /etc/systemd/system/janus-web.service \
+            /tmp/janus-profile/airootfs/etc/systemd/system/multi-user.target.wants/janus-web.service
+
+      - name: Build ISO
+        run: |
+          mkdir -p /tmp/archiso-work /tmp/iso-out
+          mkarchiso -v \
+            -w /tmp/archiso-work \
+            -o /tmp/iso-out \
+            /tmp/janus-profile
+
+      - name: Rename ISO
+        run: |
+          ISO=$(ls /tmp/iso-out/*.iso | head -1)
+          VERSION="${GITHUB_REF_NAME:-dev}"
+          mv "$ISO" "/tmp/iso-out/janus-os-${VERSION}-x86_64.iso"
+          ls -lh /tmp/iso-out/
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: janus-os-iso
+          path: /tmp/iso-out/*.iso
+          retention-days: 90
+
+      - name: Create GitHub release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: /tmp/iso-out/*.iso
+          body: |
+            ## JanusOS ${{ github.ref_name }}
+
+            Bootable Arch Linux live ISO — auto-starts the full JanusOS GUI on boot.
+
+            **Flash to USB:**
+            ```bash
+            # Linux / macOS
+            sudo dd if=janus-os-*.iso of=/dev/sdX bs=4M status=progress oflag=sync
+
+            # Or use Balena Etcher (Windows / macOS / Linux)
+            ```
+
+            Boot from USB → JanusOS launches automatically in kiosk mode.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
