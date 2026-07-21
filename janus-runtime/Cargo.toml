@@ -29,5 +29,6 @@ tracing-subscriber.workspace = true
 uuid.workspace = true
 reqwest.workspace = true
 serialport.workspace = true
+sha2.workspace = true
 machine-uid.workspace = true
 clap.workspace = true

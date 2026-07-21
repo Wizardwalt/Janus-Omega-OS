@@ -37,6 +37,21 @@ struct BootstrapRequest {
     password: String,
 }
 
+#[derive(Deserialize)]
+struct LoginRequest {
+    email: String,
+    password: String,
+}
+
+#[derive(Serialize)]
+struct LoginResponse {
+    session_token: String,
+    expires_at: String,
+    user_id: String,
+    organization_id: String,
+    role: String,
+}
+
 #[derive(Serialize)]
 struct BootstrapResponse {
     organization_id: String,
@@ -98,6 +113,7 @@ impl ApiServer {
         let app = Router::new()
             .route("/health", get(health))
             .route("/auth/bootstrap", post(bootstrap))
+            .route("/auth/login", post(login))
             .route("/execute", post(execute))
             .route("/plugins", get(list_plugins))
             .route("/state/:namespace/:key", get(get_state).post(set_state))
@@ -120,6 +136,36 @@ async fn health(AxumState(state): AxumState<ApiState>) -> Json<HealthResponse> {
         version: janus_core::VERSION.to_string(),
         plugins: state.executor.plugin_count(),
     })
+}
+
+async fn login(
+    AxumState(state): AxumState<ApiState>,
+    Json(request): Json<LoginRequest>,
+) -> (StatusCode, Json<ApiResponse<LoginResponse>>) {
+    match state.state_manager.login(request.email, request.password).await {
+        Ok(session) => (
+            StatusCode::OK,
+            Json(ApiResponse {
+                status: "success".to_string(),
+                data: Some(LoginResponse {
+                    session_token: session.token,
+                    expires_at: session.expires_at.to_rfc3339(),
+                    user_id: session.account.id,
+                    organization_id: session.account.organization_id,
+                    role: session.account.role.as_str().to_string(),
+                }),
+                error: None,
+            }),
+        ),
+        Err(error) => (
+            StatusCode::UNAUTHORIZED,
+            Json(ApiResponse {
+                status: "error".to_string(),
+                data: None,
+                error: Some(error.to_string()),
+            }),
+        ),
+    }
 }
 
 async fn bootstrap(

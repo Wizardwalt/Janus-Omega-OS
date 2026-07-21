@@ -108,6 +108,15 @@ impl Database {
                 FOREIGN KEY (engagement_id) REFERENCES engagements(id)
             );
 
+            CREATE TABLE IF NOT EXISTS sessions (
+                token_hash TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES user_accounts(id)
+            );
+            CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id);
+
             CREATE TABLE IF NOT EXISTS operation_approvals (
                 id TEXT PRIMARY KEY,
                 engagement_id TEXT NOT NULL,
@@ -214,6 +223,43 @@ impl Database {
                 })
             },
         ).optional().map_err(Into::into)
+    }
+
+    /// Clear failed-login state after a successful authentication.
+    pub fn reset_login_failures(&self, user_id: &str) -> Result<()> {
+        self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute(
+            "UPDATE user_accounts SET failed_login_count = 0, locked_until = NULL WHERE id = ?1",
+            params![user_id],
+        )?;
+        Ok(())
+    }
+
+    /// Record a failed authentication. Five failures produce a fifteen-minute lockout.
+    pub fn record_login_failure(&self, user_id: &str, now: chrono::DateTime<Utc>) -> Result<()> {
+        let conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
+        let attempts: i64 = conn.query_row(
+            "SELECT failed_login_count FROM user_accounts WHERE id = ?1", params![user_id], |row| row.get(0),
+        )?;
+        let next_attempt = attempts + 1;
+        let locked_until = if next_attempt >= 5 {
+            Some((now + chrono::Duration::minutes(15)).to_rfc3339())
+        } else {
+            None
+        };
+        conn.execute(
+            "UPDATE user_accounts SET failed_login_count = ?1, locked_until = ?2 WHERE id = ?3",
+            params![next_attempt, locked_until, user_id],
+        )?;
+        Ok(())
+    }
+
+    /// Persist a hashed opaque session token.
+    pub fn create_session(&self, token_hash: &str, user_id: &str, expires_at: chrono::DateTime<Utc>) -> Result<()> {
+        self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute(
+            "INSERT INTO sessions (token_hash, user_id, expires_at, created_at) VALUES (?1, ?2, ?3, ?4)",
+            params![token_hash, user_id, expires_at.to_rfc3339(), Utc::now().to_rfc3339()],
+        )?;
+        Ok(())
     }
 
     /// Store state value

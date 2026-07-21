@@ -3,9 +3,17 @@
 use crate::database::Database;
 use anyhow::Result;
 use janus_core::{hash_password, AuditEntry, AuditLog, Config, Organization, StateKey, SystemState, UserAccount, UserRole};
+use sha2::{Digest, Sha256};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::debug;
+
+/// Authenticated session returned only after password verification.
+pub struct LoginSession {
+    pub token: String,
+    pub expires_at: chrono::DateTime<chrono::Utc>,
+    pub account: janus_core::UserAccount,
+}
 
 /// State manager with persistence layer.
 pub struct StateManager {
@@ -67,6 +75,48 @@ impl StateManager {
                 .with_metadata(serde_json::json!({"organization_id": organization.id, "email": account.email})),
         )?;
         Ok((organization, account))
+    }
+
+    /// Authenticate an active account and return an opaque, expiring session token.
+    pub async fn login(&self, email: String, password: String) -> Result<LoginSession> {
+        let email = email.trim().to_ascii_lowercase();
+        let now = chrono::Utc::now();
+        let stored = self
+            .db
+            .find_user_by_email(&email)?
+            .ok_or_else(|| anyhow::anyhow!("invalid email or password"))?;
+
+        if !stored.account.active {
+            return Err(anyhow::anyhow!("account is inactive"));
+        }
+        if stored.account.locked_until.is_some_and(|until| until > now) {
+            return Err(anyhow::anyhow!("account is temporarily locked"));
+        }
+
+        if !janus_core::verify_password(&password, &stored.password_hash)? {
+            self.db.record_login_failure(&stored.account.id, now)?;
+            self.db.record(
+                AuditEntry::new(&stored.account.id, "LOGIN_FAILURE", "authentication")
+                    .failed("invalid password"),
+            )?;
+            return Err(anyhow::anyhow!("invalid email or password"));
+        }
+
+        self.db.reset_login_failures(&stored.account.id)?;
+        let token = format!("janus_{}", uuid::Uuid::new_v4());
+        let token_hash = format!("{:x}", Sha256::digest(token.as_bytes()));
+        let expires_at = now + chrono::Duration::hours(12);
+        self.db.create_session(&token_hash, &stored.account.id, expires_at)?;
+        self.db.record(
+            AuditEntry::new(&stored.account.id, "LOGIN_SUCCESS", "authentication")
+                .success(),
+        )?;
+
+        Ok(LoginSession {
+            token,
+            expires_at,
+            account: stored.account,
+        })
     }
 
     /// Get current state
