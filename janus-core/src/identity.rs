@@ -130,3 +130,24 @@ mod tests {
         assert!(hash_password("too-short").is_err());
     }
 }
+
+#[cfg(test)]
+mod role_tests {
+    use super::UserRole;
+
+    #[test]
+    fn role_permissions_keep_execution_and_administration_separate() {
+        assert!(UserRole::OrganizationAdmin.may_request_execution());
+        assert!(UserRole::Operator.may_request_execution());
+        assert!(!UserRole::Reviewer.may_request_execution());
+        assert!(!UserRole::CustomerReadOnly.may_request_execution());
+
+        assert!(UserRole::OrganizationAdmin.may_administer_organization());
+        assert!(!UserRole::Operator.may_administer_organization());
+        assert!(UserRole::Reviewer.may_certify_modules());
+        assert!(!UserRole::OrganizationAdmin.may_certify_modules());
+        assert!(UserRole::OrganizationAdmin.may_view_audit_logs());
+        assert!(UserRole::Reviewer.may_view_audit_logs());
+        assert!(!UserRole::Operator.may_view_audit_logs());
+    }
+}
