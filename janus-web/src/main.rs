@@ -42,6 +42,8 @@ struct GuiState {
     tx: broadcast::Sender<String>,
     aria_status: Arc<Mutex<AriaStatus>>,
     module_registry: Arc<HashMap<String, Vec<ModuleInfo>>>,
+    /// The legacy Lua runner is available only when demo mode is explicitly enabled.
+    demo_mode: bool,
 }
 
 #[derive(Clone, Serialize)]
@@ -865,6 +867,13 @@ async fn handle_socket(mut socket: WebSocket, state: GuiState) {
                                 }
 
                                 "run_module" => {
+                                    if !state.demo_mode {
+                                        let _ = socket.send(Message::Text(ws_msg(
+                                            "module_error", None,
+                                            Some("Legacy demo execution is disabled in production. Use the authorized runtime execution panel.".into()),
+                                        ))).await;
+                                        continue;
+                                    }
                                     let Some(module) = state.module_registry
                                         .get(&inc.category)
                                         .and_then(|modules| modules.iter().find(|module| module.file == inc.module))
@@ -958,16 +967,19 @@ async fn main() -> anyhow::Result<()> {
 
     let module_registry = Arc::new(build_module_registry());
     let total: usize = module_registry.values().map(|v| v.len()).sum();
+    let demo_mode = matches!(std::env::var("JANUS_DEMO_MODE").as_deref(), Ok("1") | Ok("true") | Ok("TRUE"));
     println!(
         "[GUI] Module registry: {} modules across {} categories",
         total,
         module_registry.len()
     );
+    println!("[GUI] Legacy simulated module execution: {}", if demo_mode { "DEMO ENABLED" } else { "DISABLED" });
 
     let state = GuiState {
         tx,
         aria_status,
         module_registry,
+        demo_mode,
     };
 
     let app = Router::new()
