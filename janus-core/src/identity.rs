@@ -32,6 +32,11 @@ impl UserRole {
         matches!(self, Self::Reviewer)
     }
 
+    /// Whether this role may view organization audit events.
+    pub fn may_view_audit_logs(self) -> bool {
+        matches!(self, Self::OrganizationAdmin | Self::Reviewer)
+    }
+
     /// Whether this role may manage organization licenses and engagements.
     pub fn may_administer_organization(self) -> bool {
         matches!(self, Self::OrganizationAdmin)

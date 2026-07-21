@@ -243,6 +243,26 @@ impl Database {
         ).optional().map_err(Into::into)
     }
 
+    /// Query audit records created by accounts in one organization.
+    pub fn query_audit_for_organization(&self, organization_id: &str, limit: usize) -> Result<Vec<AuditEntry>> {
+        let conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
+        let mut statement = conn.prepare(
+            "SELECT a.id, a.timestamp, a.level, a.actor, a.action, a.resource, a.result, a.error, a.metadata FROM audit_log a JOIN user_accounts u ON u.id = a.actor WHERE u.organization_id = ?1 ORDER BY a.timestamp DESC LIMIT ?2",
+        )?;
+        let rows = statement.query_map(params![organization_id, limit as i64], |row| {
+            let timestamp: String = row.get(1)?;
+            let level: String = row.get(2)?;
+            Ok(AuditEntry {
+                id: row.get(0)?,
+                timestamp: chrono::DateTime::parse_from_rfc3339(&timestamp).map_err(|_| rusqlite::Error::InvalidQuery)?.with_timezone(&Utc),
+                level: match level.as_str() { "WARN" => AuditLevel::Warn, "ERROR" => AuditLevel::Error, "CRITICAL" => AuditLevel::Critical, _ => AuditLevel::Info },
+                actor: row.get(3)?, action: row.get(4)?, resource: row.get(5)?, result: row.get(6)?, error: row.get(7)?,
+                metadata: row.get::<_, Option<String>>(8)?.and_then(|value| serde_json::from_str(&value).ok()).unwrap_or_else(|| serde_json::json!({})),
+            })
+        })?;
+        Ok(rows.collect::<std::result::Result<Vec<_>, _>>()?)
+    }
+
     /// Clear failed-login state after a successful authentication.
     pub fn reset_login_failures(&self, user_id: &str) -> Result<()> {
         self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute(

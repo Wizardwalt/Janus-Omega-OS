@@ -119,6 +119,18 @@ impl StateManager {
         })
     }
 
+    /// Return audit events that belong to the requesting organization.
+    pub async fn audit_logs(
+        &self,
+        account: &janus_core::UserAccount,
+        limit: usize,
+    ) -> Result<Vec<AuditEntry>> {
+        if !account.role.may_view_audit_logs() {
+            return Err(anyhow::anyhow!("role is not allowed to view audit logs"));
+        }
+        self.db.query_audit_for_organization(&account.organization_id, limit.min(500))
+    }
+
     /// Create a user inside the administrator's organization.
     pub async fn create_user(
         &self,
