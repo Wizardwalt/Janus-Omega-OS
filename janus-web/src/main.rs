@@ -108,6 +108,7 @@ fn build_module_registry() -> HashMap<String, Vec<ModuleInfo>> {
     let mut map: HashMap<String, Vec<ModuleInfo>> = HashMap::new();
 
     let categories = vec![
+        // plugins/
         ("forensics",           "plugins/forensics"),
         ("cyber_warfare",       "plugins/cyber_warfare"),
         ("network_warfare",     "plugins/network_warfare"),
@@ -116,6 +117,11 @@ fn build_module_registry() -> HashMap<String, Vec<ModuleInfo>> {
         ("osint_oracle",        "plugins/osint_oracle"),
         ("hardware_glitch",     "plugins/hardware_glitch"),
         ("titan_exclusive",     "plugins/titan_exclusive"),
+        ("advanced_mobile",     "plugins/advanced_mobile"),
+        ("expansion",           "plugins/expansion"),
+        ("offensive",           "plugins/offensive"),
+        ("tactical",            "plugins/tactical"),
+        // modules/
         ("god_tier",            "modules/god_tier"),
         ("legendary",           "modules/legendary"),
         ("mobile_offense_adv",  "modules/mobile_offense"),
@@ -123,6 +129,12 @@ fn build_module_registry() -> HashMap<String, Vec<ModuleInfo>> {
         ("forensics_recovery",  "modules/forensics_recovery"),
         ("sigint_adv",          "modules/sigint"),
         ("tactical_defensive",  "modules/tactical_defensive"),
+        ("creative_psych",      "modules/creative_psych"),
+        ("god_protocols",       "modules/god_protocols"),
+        ("legacy_vault",        "modules/legacy_vault"),
+        ("vault_engineering",   "modules/vault_engineering"),
+        ("signature",           "modules/signature"),
+        // root
         ("apocalypse",          "apocalypse_engineering"),
         ("core",                "core"),
     ];
@@ -713,12 +725,18 @@ async fn handle_socket(mut socket: WebSocket, state: GuiState) {
                                 "run_module" => {
                                     let file     = inc.module.clone();
                                     let category = inc.category.clone();
+                                    let label    = inc.module
+                                        .split('/').last().unwrap_or(&inc.module)
+                                        .trim_end_matches(".lua")
+                                        .to_string();
 
                                     let lines = tokio::task::spawn_blocking(move || {
                                         run_lua_module_file(&file, &category)
                                     }).await.unwrap_or_else(|_| {
                                         vec!["[ERROR] Module execution thread panicked.".into()]
                                     });
+
+                                    let had_error = lines.iter().any(|l| l.starts_with("[ERROR]"));
 
                                     for line in &lines {
                                         let _ = socket.send(Message::Text(
@@ -727,13 +745,21 @@ async fn handle_socket(mut socket: WebSocket, state: GuiState) {
                                         tokio::time::sleep(tokio::time::Duration::from_millis(40)).await;
                                     }
 
-                                    let label = inc.module
-                                        .split('/').last().unwrap_or(&inc.module)
-                                        .trim_end_matches(".lua");
-                                    let _ = socket.send(Message::Text(ws_msg(
-                                        "aria_thought", None,
-                                        Some(format!("Module '{}' completed. I logged the results.", label)),
-                                    ))).await;
+                                    if had_error {
+                                        let _ = socket.send(Message::Text(ws_msg(
+                                            "module_error", None,
+                                            Some(label.clone()),
+                                        ))).await;
+                                    } else {
+                                        let _ = socket.send(Message::Text(ws_msg(
+                                            "module_complete", None,
+                                            Some(label.clone()),
+                                        ))).await;
+                                        let _ = socket.send(Message::Text(ws_msg(
+                                            "aria_thought", None,
+                                            Some(format!("Module '{}' completed. I logged the results.", label)),
+                                        ))).await;
+                                    }
 
                                     if let Ok(mut s) = state.aria_status.lock() { s.ops_count += 1; }
                                 }
