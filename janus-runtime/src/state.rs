@@ -251,6 +251,16 @@ impl StateManager {
         Ok(engagement)
     }
 
+    /// Return the active entitlement claims without exposing the signed document.
+    pub async fn license_claims(&self, account: &janus_core::UserAccount) -> Result<janus_core::LicenseClaims> {
+        if !account.role.may_administer_organization() {
+            return Err(anyhow::anyhow!("role is not allowed to view license status"));
+        }
+        self.db.find_active_license(&account.organization_id)?
+            .map(|license| license.claims)
+            .ok_or_else(|| anyhow::anyhow!("organization has no active license"))
+    }
+
     /// Import a verified license for the authenticated organization.
     pub async fn import_license(
         &self,

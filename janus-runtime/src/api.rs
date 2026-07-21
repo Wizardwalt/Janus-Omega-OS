@@ -190,6 +190,7 @@ impl ApiServer {
             .route("/auth/logout", post(logout))
             .route("/auth/users", post(create_user))
             .route("/licenses/import", post(import_license))
+            .route("/licenses/status", get(license_status))
             .route("/engagements", get(list_engagements).post(create_engagement))
             .route("/modules/certifications", post(certify_module))
             .route("/execute", post(execute))
@@ -274,6 +275,20 @@ async fn create_engagement(
             error: None,
         })),
         Err(error) => (StatusCode::BAD_REQUEST, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
+    }
+}
+
+async fn license_status(
+    AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
+) -> (StatusCode, Json<ApiResponse<janus_core::LicenseClaims>>) {
+    let account = match authenticated_account(&state.state_manager, &headers).await {
+        Ok(account) => account,
+        Err(error) => return unauthorized_response(error),
+    };
+    match state.state_manager.license_claims(&account).await {
+        Ok(claims) => (StatusCode::OK, Json(ApiResponse { status: "success".into(), data: Some(claims), error: None })),
+        Err(error) => (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
     }
 }
 
