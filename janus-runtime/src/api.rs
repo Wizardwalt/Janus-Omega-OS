@@ -534,14 +534,15 @@ async fn set_state(
 }
 
 async fn get_audit_logs(
-    AxumState(_state): AxumState<ApiState>,
-) -> (StatusCode, Json<ApiResponse<Vec<String>>>) {
-    (
-        StatusCode::OK,
-        Json(ApiResponse {
-            status: "success".to_string(),
-            data: Some(vec![]),
-            error: None,
-        }),
-    )
+    AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
+) -> (StatusCode, Json<ApiResponse<Vec<AuditEntry>>>) {
+    let account = match authenticated_account(&state.state_manager, &headers).await {
+        Ok(account) => account,
+        Err(error) => return unauthorized_response(error),
+    };
+    match state.state_manager.audit_logs(&account, 100).await {
+        Ok(entries) => (StatusCode::OK, Json(ApiResponse { status: "success".into(), data: Some(entries), error: None })),
+        Err(error) => (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
+    }
 }
