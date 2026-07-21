@@ -25,6 +25,7 @@ pub use capabilities::{Capability, CapabilityRegistry, CapabilitySet};
 pub use config::{Config, ConfigError};
 pub use engagement::{Engagement, EngagementScope};
 pub use error::{JanusError, Result};
+pub use identity::{hash_password, verify_password, Organization, UserAccount, UserRole};
 pub use license::{LicenseClaims, LicensedFeature, SignedLicense};
 pub use modes::{ExecutionMode, SystemMode};
 pub use module_registry::{CertificationStatus, ModuleCertification};
