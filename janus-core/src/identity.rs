@@ -27,6 +27,11 @@ impl UserRole {
         }
     }
 
+    /// Whether this role may manage organization licenses and engagements.
+    pub fn may_administer_organization(self) -> bool {
+        matches!(self, Self::OrganizationAdmin)
+    }
+
     /// Whether this role may submit an execution request. This does not bypass
     /// engagement, license, target, or module-certification checks.
     pub fn may_request_execution(self) -> bool {

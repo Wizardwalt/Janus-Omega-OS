@@ -9,7 +9,7 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use janus_core::{AuditEntry, Config, StateKey};
+use janus_core::{AuditEntry, Config, SignedLicense, StateKey};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tower_http::cors::CorsLayer;
@@ -41,6 +41,11 @@ struct BootstrapRequest {
 struct LoginRequest {
     email: String,
     password: String,
+}
+
+#[derive(Deserialize)]
+struct LicenseImportRequest {
+    license: SignedLicense,
 }
 
 #[derive(Serialize)]
@@ -129,6 +134,7 @@ impl ApiServer {
             .route("/auth/login", post(login))
             .route("/auth/me", get(current_user))
             .route("/auth/logout", post(logout))
+            .route("/licenses/import", post(import_license))
             .route("/execute", post(execute))
             .route("/plugins", get(list_plugins))
             .route("/state/:namespace/:key", get(get_state).post(set_state))
@@ -151,6 +157,21 @@ async fn health(AxumState(state): AxumState<ApiState>) -> Json<HealthResponse> {
         version: janus_core::VERSION.to_string(),
         plugins: state.executor.plugin_count(),
     })
+}
+
+async fn import_license(
+    AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
+    Json(request): Json<LicenseImportRequest>,
+) -> (StatusCode, Json<ApiResponse<()>>) {
+    let account = match authenticated_account(&state.state_manager, &headers).await {
+        Ok(account) => account,
+        Err(error) => return unauthorized_response(error),
+    };
+    match state.state_manager.import_license(&account, request.license).await {
+        Ok(()) => (StatusCode::CREATED, Json(ApiResponse { status: "success".into(), data: Some(()), error: None })),
+        Err(error) => (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
+    }
 }
 
 async fn current_user(

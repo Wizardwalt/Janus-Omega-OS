@@ -119,6 +119,29 @@ impl StateManager {
         })
     }
 
+    /// Import a verified license for the authenticated organization.
+    pub async fn import_license(
+        &self,
+        account: &janus_core::UserAccount,
+        license: janus_core::SignedLicense,
+    ) -> Result<()> {
+        if !account.role.may_administer_organization() {
+            return Err(anyhow::anyhow!("role is not allowed to import licenses"));
+        }
+        if license.claims.organization_id != account.organization_id {
+            return Err(anyhow::anyhow!("license belongs to a different organization"));
+        }
+        let public_key = self.config.license_public_key.as_deref()
+            .ok_or_else(|| anyhow::anyhow!("JANUS_LICENSE_PUBLIC_KEY is not configured"))?;
+        self.db.store_license(&license, public_key)?;
+        self.db.record(
+            AuditEntry::new(&account.id, "LICENSE_IMPORTED", &license.claims.license_id)
+                .success()
+                .with_metadata(serde_json::json!({"organization_id": account.organization_id})),
+        )?;
+        Ok(())
+    }
+
     /// Apply the complete license, engagement, target, and module certification gate.
     pub async fn authorize_production_execution(
         &self,
