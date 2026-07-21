@@ -38,7 +38,7 @@ async function loadProductionExecutionPanel() {
       } catch (error) { result.textContent = `DENIED OR FAILED: ${error.message}`; }
       finally { execute.disabled = false; }
     });
-    [engagement, asset, plugin, execute, result].forEach(node => content.appendChild(node));
+    [engagement.wrapper, asset.wrapper, plugin.wrapper, execute, result].forEach(node => content.appendChild(node));
   } catch (error) { content.textContent = `Production panel unavailable: ${error.message}`; }
 }
 
@@ -46,7 +46,7 @@ function selectField(label, options) {
   const wrapper = document.createElement('label'); wrapper.style.cssText = 'display:block;margin-top:7px'; wrapper.textContent = `${label}: `;
   const select = document.createElement('select'); select.style.maxWidth = '100%';
   options.forEach(([value, text]) => select.add(new Option(text, value)));
-  wrapper.appendChild(select); return wrapper;
+  wrapper.appendChild(select); select.wrapper = wrapper; return select;
 }
 
 document.addEventListener('DOMContentLoaded', createExecutionPanel);
