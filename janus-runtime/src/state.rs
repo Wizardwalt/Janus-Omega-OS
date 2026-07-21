@@ -119,6 +119,46 @@ impl StateManager {
         })
     }
 
+    /// Create a customer-authorized engagement for the administrator's organization.
+    pub async fn create_engagement(
+        &self,
+        account: &janus_core::UserAccount,
+        authorization_reference: String,
+        starts_at: chrono::DateTime<chrono::Utc>,
+        ends_at: chrono::DateTime<chrono::Utc>,
+        scope: janus_core::EngagementScope,
+        active: bool,
+    ) -> Result<janus_core::Engagement> {
+        if !account.role.may_administer_organization() {
+            return Err(anyhow::anyhow!("role is not allowed to create engagements"));
+        }
+        if authorization_reference.trim().is_empty() || ends_at <= starts_at {
+            return Err(anyhow::anyhow!("valid authorization reference and date range are required"));
+        }
+        if scope.approved_assets.is_empty() && scope.approved_evidence_paths.is_empty() {
+            return Err(anyhow::anyhow!("an engagement requires at least one approved asset or evidence path"));
+        }
+        if scope.approved_features.is_empty() {
+            return Err(anyhow::anyhow!("an engagement requires at least one approved feature"));
+        }
+        let engagement = janus_core::Engagement {
+            id: format!("eng_{}", uuid::Uuid::new_v4()),
+            organization_id: account.organization_id.clone(),
+            authorization_reference: authorization_reference.trim().to_string(),
+            starts_at,
+            ends_at,
+            scope,
+            active,
+        };
+        self.db.create_engagement(&engagement)?;
+        self.db.record(
+            AuditEntry::new(&account.id, "ENGAGEMENT_CREATED", &engagement.id)
+                .success()
+                .with_metadata(serde_json::json!({"authorization_reference": engagement.authorization_reference})),
+        )?;
+        Ok(engagement)
+    }
+
     /// Import a verified license for the authenticated organization.
     pub async fn import_license(
         &self,

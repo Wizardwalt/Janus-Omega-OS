@@ -101,6 +101,13 @@ impl Database {
                 FOREIGN KEY (engagement_id) REFERENCES engagements(id)
             );
 
+            CREATE TABLE IF NOT EXISTS engagement_evidence_paths (
+                engagement_id TEXT NOT NULL,
+                evidence_path TEXT NOT NULL,
+                PRIMARY KEY (engagement_id, evidence_path),
+                FOREIGN KEY (engagement_id) REFERENCES engagements(id)
+            );
+
             CREATE TABLE IF NOT EXISTS engagement_features (
                 engagement_id TEXT NOT NULL,
                 feature TEXT NOT NULL,
@@ -328,6 +335,27 @@ impl Database {
         document.map(|value| serde_json::from_str(&value).map_err(Into::into)).transpose()
     }
 
+    /// Persist an engagement and its explicit approved scope in one transaction.
+    pub fn create_engagement(&self, engagement: &Engagement) -> Result<()> {
+        let mut conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
+        let transaction = conn.transaction()?;
+        transaction.execute(
+            "INSERT INTO engagements (id, organization_id, authorization_reference, starts_at, ends_at, active, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            params![engagement.id, engagement.organization_id, engagement.authorization_reference, engagement.starts_at.to_rfc3339(), engagement.ends_at.to_rfc3339(), engagement.active, Utc::now().to_rfc3339()],
+        )?;
+        for asset in &engagement.scope.approved_assets {
+            transaction.execute("INSERT INTO engagement_assets (engagement_id, asset) VALUES (?1, ?2)", params![engagement.id, asset])?;
+        }
+        for path in &engagement.scope.approved_evidence_paths {
+            transaction.execute("INSERT INTO engagement_evidence_paths (engagement_id, evidence_path) VALUES (?1, ?2)", params![engagement.id, path])?;
+        }
+        for feature in &engagement.scope.approved_features {
+            transaction.execute("INSERT INTO engagement_features (engagement_id, feature) VALUES (?1, ?2)", params![engagement.id, feature.as_str()])?;
+        }
+        transaction.commit()?;
+        Ok(())
+    }
+
     /// Load an engagement and its explicit asset/feature scope.
     pub fn find_engagement(&self, id: &str) -> Result<Option<Engagement>> {
         let conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
@@ -339,6 +367,8 @@ impl Database {
         let Some((id, organization_id, authorization_reference, starts_at, ends_at, active)) = record else { return Ok(None); };
         let approved_assets = conn.prepare("SELECT asset FROM engagement_assets WHERE engagement_id = ?1")?
             .query_map(params![&id], |row| row.get(0))?.collect::<std::result::Result<Vec<String>, _>>()?;
+        let approved_evidence_paths = conn.prepare("SELECT evidence_path FROM engagement_evidence_paths WHERE engagement_id = ?1")?
+            .query_map(params![&id], |row| row.get(0))?.collect::<std::result::Result<Vec<String>, _>>()?;
         let feature_values = conn.prepare("SELECT feature FROM engagement_features WHERE engagement_id = ?1")?
             .query_map(params![&id], |row| row.get::<_, String>(0))?.collect::<std::result::Result<Vec<String>, _>>()?;
         let approved_features = feature_values.into_iter().filter_map(|value| LicensedFeature::from_str(&value)).collect();
@@ -347,7 +377,7 @@ impl Database {
             starts_at: chrono::DateTime::parse_from_rfc3339(&starts_at)?.with_timezone(&Utc),
             ends_at: chrono::DateTime::parse_from_rfc3339(&ends_at)?.with_timezone(&Utc),
             active,
-            scope: EngagementScope { approved_assets, approved_evidence_paths: vec![], approved_features },
+            scope: EngagementScope { approved_assets, approved_evidence_paths, approved_features },
         }))
     }
 

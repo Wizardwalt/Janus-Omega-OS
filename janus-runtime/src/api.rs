@@ -9,7 +9,7 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use janus_core::{AuditEntry, Config, SignedLicense, StateKey};
+use janus_core::{AuditEntry, Config, EngagementScope, LicensedFeature, SignedLicense, StateKey};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tower_http::cors::CorsLayer;
@@ -42,6 +42,28 @@ struct LoginRequest {
     email: String,
     password: String,
 }
+
+#[derive(Deserialize)]
+struct EngagementCreateRequest {
+    authorization_reference: String,
+    starts_at: chrono::DateTime<chrono::Utc>,
+    ends_at: chrono::DateTime<chrono::Utc>,
+    approved_assets: Vec<String>,
+    #[serde(default)]
+    approved_evidence_paths: Vec<String>,
+    approved_features: Vec<LicensedFeature>,
+    #[serde(default = "default_active")]
+    active: bool,
+}
+
+#[derive(Serialize)]
+struct EngagementResponse {
+    engagement_id: String,
+    organization_id: String,
+    active: bool,
+}
+
+fn default_active() -> bool { true }
 
 #[derive(Deserialize)]
 struct LicenseImportRequest {
@@ -135,6 +157,7 @@ impl ApiServer {
             .route("/auth/me", get(current_user))
             .route("/auth/logout", post(logout))
             .route("/licenses/import", post(import_license))
+            .route("/engagements", post(create_engagement))
             .route("/execute", post(execute))
             .route("/plugins", get(list_plugins))
             .route("/state/:namespace/:key", get(get_state).post(set_state))
@@ -157,6 +180,32 @@ async fn health(AxumState(state): AxumState<ApiState>) -> Json<HealthResponse> {
         version: janus_core::VERSION.to_string(),
         plugins: state.executor.plugin_count(),
     })
+}
+
+async fn create_engagement(
+    AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
+    Json(request): Json<EngagementCreateRequest>,
+) -> (StatusCode, Json<ApiResponse<EngagementResponse>>) {
+    let account = match authenticated_account(&state.state_manager, &headers).await {
+        Ok(account) => account,
+        Err(error) => return unauthorized_response(error),
+    };
+    let scope = EngagementScope {
+        approved_assets: request.approved_assets,
+        approved_evidence_paths: request.approved_evidence_paths,
+        approved_features: request.approved_features,
+    };
+    match state.state_manager.create_engagement(
+        &account, request.authorization_reference, request.starts_at, request.ends_at, scope, request.active,
+    ).await {
+        Ok(engagement) => (StatusCode::CREATED, Json(ApiResponse {
+            status: "success".into(),
+            data: Some(EngagementResponse { engagement_id: engagement.id, organization_id: engagement.organization_id, active: engagement.active }),
+            error: None,
+        })),
+        Err(error) => (StatusCode::BAD_REQUEST, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
+    }
 }
 
 async fn import_license(
