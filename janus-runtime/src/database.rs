@@ -53,6 +53,68 @@ impl Database {
             CREATE INDEX IF NOT EXISTS idx_audit_level ON audit_log(level);
             CREATE INDEX IF NOT EXISTS idx_state_key ON state(key);
 
+            CREATE TABLE IF NOT EXISTS organizations (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                active INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS user_accounts (
+                id TEXT PRIMARY KEY,
+                organization_id TEXT NOT NULL,
+                email TEXT NOT NULL UNIQUE,
+                password_hash TEXT NOT NULL,
+                role TEXT NOT NULL,
+                active INTEGER NOT NULL DEFAULT 1,
+                failed_login_count INTEGER NOT NULL DEFAULT 0,
+                locked_until TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (organization_id) REFERENCES organizations(id)
+            );
+            CREATE INDEX IF NOT EXISTS idx_user_accounts_organization
+                ON user_accounts(organization_id);
+
+            CREATE TABLE IF NOT EXISTS engagements (
+                id TEXT PRIMARY KEY,
+                organization_id TEXT NOT NULL,
+                authorization_reference TEXT NOT NULL,
+                starts_at TEXT NOT NULL,
+                ends_at TEXT NOT NULL,
+                active INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (organization_id) REFERENCES organizations(id)
+            );
+
+            CREATE TABLE IF NOT EXISTS engagement_assets (
+                engagement_id TEXT NOT NULL,
+                asset TEXT NOT NULL,
+                PRIMARY KEY (engagement_id, asset),
+                FOREIGN KEY (engagement_id) REFERENCES engagements(id)
+            );
+
+            CREATE TABLE IF NOT EXISTS engagement_features (
+                engagement_id TEXT NOT NULL,
+                feature TEXT NOT NULL,
+                PRIMARY KEY (engagement_id, feature),
+                FOREIGN KEY (engagement_id) REFERENCES engagements(id)
+            );
+
+            CREATE TABLE IF NOT EXISTS operation_approvals (
+                id TEXT PRIMARY KEY,
+                engagement_id TEXT NOT NULL,
+                requested_by TEXT NOT NULL,
+                reviewed_by TEXT,
+                module_id TEXT NOT NULL,
+                target_asset TEXT NOT NULL,
+                status TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY (engagement_id) REFERENCES engagements(id)
+            );
+            CREATE INDEX IF NOT EXISTS idx_operation_approvals_engagement
+                ON operation_approvals(engagement_id);
+
             CREATE TABLE IF NOT EXISTS module_certifications (
                 module_id TEXT PRIMARY KEY,
                 module_sha256 TEXT NOT NULL,

@@ -13,6 +13,7 @@ pub mod config;
 pub mod engagement;
 pub mod error;
 pub mod license;
+pub mod identity;
 pub mod modes;
 pub mod module_registry;
 pub mod plugin;
