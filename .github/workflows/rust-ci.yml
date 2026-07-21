@@ -1,0 +1,72 @@
+name: JanusOS CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  build:
+    name: Build & Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y pkg-config libssl-dev libudev-dev build-essential
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Cargo check (janus-web)
+        run: cargo check --bin janus-web
+
+      - name: Cargo check (full workspace)
+        run: cargo check --workspace
+
+      - name: Verify web frontend files exist
+        run: |
+          echo "Checking required web assets..."
+          for f in web/index.html web/app.js web/style.css web/aria3d.js web/aria_profile.js web/aria_setup.js; do
+            if [ -f "$f" ]; then
+              echo "  OK: $f ($(wc -c < $f) bytes)"
+            else
+              echo "  MISSING: $f" && exit 1
+            fi
+          done
+
+      - name: Count modules
+        run: |
+          LUA=$(find plugins/ modules/ core/ apocalypse_engineering/ -name "*.lua" 2>/dev/null | wc -l)
+          echo "Lua modules found: $LUA"
+          [ "$LUA" -gt 2000 ] || { echo "Module count too low"; exit 1; }
+
+      - name: Release build
+        run: cargo build --release --bin janus-web
+
+      - name: Confirm binary exists
+        run: |
+          ls -lh target/release/janus-web
+          file target/release/janus-web
