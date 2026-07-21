@@ -110,7 +110,7 @@ fn lua_value_to_json(value: &LuaValue<'_>) -> Result<serde_json::Value> {
         LuaValue::String(value) => serde_json::Value::String(value.to_str()?.to_owned()),
         LuaValue::Table(table) => {
             let mut result = serde_json::Map::new();
-            for pair in table.pairs::<String, LuaValue>() {
+            for pair in table.clone().pairs::<String, LuaValue>() {
                 let (key, value) = pair?;
                 result.insert(key, lua_value_to_json(&value)?);
             }
