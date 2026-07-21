@@ -1,6 +1,6 @@
 //! HTTP/WebSocket API server.
 
-use crate::{executor::PluginExecutor, hardware::HardwareManager, state::StateManager};
+use crate::{executor::{PluginExecutor, PluginSummary}, hardware::HardwareManager, state::StateManager};
 use anyhow::Result;
 use axum::{
     extract::{Path, State as AxumState},
@@ -483,7 +483,7 @@ async fn execute(
 async fn list_plugins(
     AxumState(state): AxumState<ApiState>,
     headers: HeaderMap,
-) -> (StatusCode, Json<ApiResponse<Vec<String>>>) {
+) -> (StatusCode, Json<ApiResponse<Vec<PluginSummary>>>) {
     if let Err(error) = authenticated_account(&state.state_manager, &headers).await {
         return unauthorized_response(error);
     }

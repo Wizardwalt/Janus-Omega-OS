@@ -7,6 +7,17 @@ use sha2::{Digest, Sha256};
 use std::path::PathBuf;
 use tracing::debug;
 
+
+/// Safe plugin metadata returned to authenticated API clients.
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct PluginSummary {
+    pub id: String,
+    pub name: String,
+    pub category: String,
+    pub status: String,
+    pub description: String,
+}
+
 /// Plugin executor managing Lua runtime and plugin lifecycle.
 pub struct PluginExecutor {
     config: Config,
@@ -28,20 +39,15 @@ impl PluginExecutor {
         &self.config.plugin_dir
     }
 
-    /// List available plugins
-    pub async fn list_plugins(&self) -> Result<Vec<String>> {
-        let plugins = self
-            .loader
-            .list_sorted()
-            .iter()
-            .map(|(id, source)| {
-                format!(
-                    "{}: {} ({})",
-                    id, source.manifest.name, source.manifest.status
-                )
-            })
-            .collect();
-        Ok(plugins)
+    /// List available plugins with structured metadata for authenticated clients.
+    pub async fn list_plugins(&self) -> Result<Vec<PluginSummary>> {
+        Ok(self.loader.list_sorted().into_iter().map(|(id, source)| PluginSummary {
+            id: id.to_string(),
+            name: source.manifest.name.clone(),
+            category: source.manifest.category.clone(),
+            status: source.manifest.status.clone(),
+            description: source.manifest.description.clone(),
+        }).collect())
     }
 
     /// Return the current content hash for an installed plugin.
