@@ -453,7 +453,11 @@ async fn execute(
 
 async fn list_plugins(
     AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
 ) -> (StatusCode, Json<ApiResponse<Vec<String>>>) {
+    if let Err(error) = authenticated_account(&state.state_manager, &headers).await {
+        return unauthorized_response(error);
+    }
     match state.executor.list_plugins().await {
         Ok(plugins) => (
             StatusCode::OK,
@@ -476,8 +480,12 @@ async fn list_plugins(
 
 async fn get_state(
     AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
     Path((namespace, key)): Path<(String, String)>,
 ) -> (StatusCode, Json<ApiResponse<serde_json::Value>>) {
+    if let Err(error) = authenticated_account(&state.state_manager, &headers).await {
+        return unauthorized_response(error);
+    }
     let state_key = StateKey::new(namespace, key);
     match state.state_manager.get(&state_key).await {
         Ok(Some(value)) => (
@@ -509,9 +517,17 @@ async fn get_state(
 
 async fn set_state(
     AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
     Path((namespace, key)): Path<(String, String)>,
     Json(req): Json<serde_json::Value>,
 ) -> (StatusCode, Json<ApiResponse<()>>) {
+    let account = match authenticated_account(&state.state_manager, &headers).await {
+        Ok(account) => account,
+        Err(error) => return unauthorized_response(error),
+    };
+    if !account.role.may_modify_state() {
+        return (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some("role is not allowed to modify state".into()) }));
+    }
     let state_key = StateKey::new(namespace, key);
     match state.state_manager.update_state(&state_key, req).await {
         Ok(_) => (

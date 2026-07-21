@@ -32,6 +32,11 @@ impl UserRole {
         matches!(self, Self::Reviewer)
     }
 
+    /// Whether this role may modify protected organization/runtime state.
+    pub fn may_modify_state(self) -> bool {
+        matches!(self, Self::OrganizationAdmin)
+    }
+
     /// Whether this role may view organization audit events.
     pub fn may_view_audit_logs(self) -> bool {
         matches!(self, Self::OrganizationAdmin | Self::Reviewer)
