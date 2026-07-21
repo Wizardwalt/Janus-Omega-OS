@@ -1,6 +1,8 @@
 //! Organization and operator identity primitives.
 
+use argon2::{password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString}, Argon2};
 use chrono::{DateTime, Utc};
+use rand_core::OsRng;
 use serde::{Deserialize, Serialize};
 
 /// Privileges granted to an authenticated Janus operator.
@@ -47,4 +49,47 @@ pub struct UserAccount {
     pub failed_login_count: u32,
     pub locked_until: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
+}
+
+
+/// Hash a Janus-managed password with Argon2id and a cryptographically random salt.
+/// Passwords are never persisted or logged in plaintext.
+pub fn hash_password(password: &str) -> crate::Result<String> {
+    if password.len() < 12 {
+        return Err(crate::JanusError::Security(
+            "password must contain at least 12 characters".to_string(),
+        ));
+    }
+    let salt = SaltString::generate(&mut OsRng);
+    Argon2::default()
+        .hash_password(password.as_bytes(), &salt)
+        .map(|hash| hash.to_string())
+        .map_err(|error| crate::JanusError::Security(error.to_string()))
+}
+
+/// Verify a password against an Argon2id password hash.
+pub fn verify_password(password: &str, password_hash: &str) -> crate::Result<bool> {
+    let parsed_hash = PasswordHash::new(password_hash)
+        .map_err(|_| crate::JanusError::Security("stored password hash is invalid".to_string()))?;
+    Ok(Argon2::default()
+        .verify_password(password.as_bytes(), &parsed_hash)
+        .is_ok())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn password_hashing_accepts_only_the_matching_password() {
+        let hash = hash_password("correct-horse-battery-staple").unwrap();
+        assert_ne!(hash, "correct-horse-battery-staple");
+        assert!(verify_password("correct-horse-battery-staple", &hash).unwrap());
+        assert!(!verify_password("incorrect-password", &hash).unwrap());
+    }
+
+    #[test]
+    fn password_policy_rejects_short_passwords() {
+        assert!(hash_password("too-short").is_err());
+    }
 }
