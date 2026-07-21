@@ -1,30 +1,52 @@
-# Cargo
-/target/
-Cargo.lock
-**/*.rs.bk
-*.pdb
+# Rust build output
+target/
+Cargo.lock.bak
 
-# IDEs
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
-.DS_Store
-
-# Database
+# Databases
 *.db
+*.db-journal
 *.sqlite
-*.sqlite3
+*.sqlite-journal
 
-# Environment
-.env
-.env.local
+# Logs
+*.log
+logs/
+
+# Node / npm (legacy)
+node_modules/
+dist/
+out/
+build/
+.cache/
 
 # OS
+.DS_Store
 Thumbs.db
-.directory
 
-# Build artifacts
-dist/
-build/
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Replit internal
+.replit
+.upm/
+.pythonlibs/
+.agents/
+replit.nix
+attached_assets/
+exports/
+reports/
+data/
+
+# Android / Gradle (legacy)
+.gradle/
+local.properties
+*.apk
+*.aab
+
+# Secrets / env
+.env
+.env.*
+secrets/
