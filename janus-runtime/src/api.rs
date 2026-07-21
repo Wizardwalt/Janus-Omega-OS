@@ -1,15 +1,15 @@
 //! HTTP/WebSocket API server.
 
-use crate::{executor::PluginExecutor, state::StateManager};
+use crate::{executor::PluginExecutor, hardware::HardwareManager, lua::LuaEnv, state::StateManager};
 use anyhow::Result;
 use axum::{
-    extract::State as AxumState,
+    extract::{Path, State as AxumState},
     http::StatusCode,
     response::Json,
     routing::{get, post},
     Router,
 };
-use janus_core::Config;
+use janus_core::{AuditEntry, Config, StateKey};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tower_http::cors::CorsLayer;
@@ -20,18 +20,28 @@ pub struct ApiState {
     config: Config,
     state_manager: Arc<StateManager>,
     executor: Arc<PluginExecutor>,
+    hardware: Arc<HardwareManager>,
+    lua: Arc<LuaEnv>,
 }
 
 #[derive(Serialize, Deserialize)]
 struct HealthResponse {
     status: String,
     version: String,
+    plugins: usize,
 }
 
 #[derive(Serialize, Deserialize)]
 struct ExecuteRequest {
     plugin: String,
     args: serde_json::Value,
+}
+
+#[derive(Serialize, Deserialize)]
+struct StateRequest {
+    namespace: String,
+    key: String,
+    value: serde_json::Value,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -45,14 +55,24 @@ pub struct ApiServer {
     config: Config,
     state_manager: Arc<StateManager>,
     executor: Arc<PluginExecutor>,
+    hardware: Arc<HardwareManager>,
+    lua: Arc<LuaEnv>,
 }
 
 impl ApiServer {
-    pub fn new(config: Config, state_manager: StateManager, executor: PluginExecutor) -> Self {
+    pub fn new(
+        config: Config,
+        state_manager: StateManager,
+        executor: PluginExecutor,
+        hardware: Arc<HardwareManager>,
+        lua: Arc<LuaEnv>,
+    ) -> Self {
         Self {
             config,
             state_manager: Arc::new(state_manager),
             executor: Arc::new(executor),
+            hardware,
+            lua,
         }
     }
 
@@ -61,12 +81,16 @@ impl ApiServer {
             config: self.config.clone(),
             state_manager: self.state_manager,
             executor: self.executor,
+            hardware: self.hardware,
+            lua: self.lua,
         };
 
         let app = Router::new()
             .route("/health", get(health))
             .route("/execute", post(execute))
             .route("/plugins", get(list_plugins))
+            .route("/state/:namespace/:key", get(get_state).post(set_state))
+            .route("/audit/logs", get(get_audit_logs))
             .layer(CorsLayer::permissive())
             .with_state(api_state);
 
@@ -79,10 +103,13 @@ impl ApiServer {
     }
 }
 
-async fn health(AxumState(state): AxumState<ApiState>) -> Json<HealthResponse> {
+async fn health(
+    AxumState(state): AxumState<ApiState>,
+) -> Json<HealthResponse> {
     Json(HealthResponse {
         status: "ok".to_string(),
         version: janus_core::VERSION.to_string(),
+        plugins: state.executor.plugin_count(),
     })
 }
 
@@ -131,4 +158,76 @@ async fn list_plugins(
             }),
         ),
     }
+}
+
+async fn get_state(
+    AxumState(state): AxumState<ApiState>,
+    Path((namespace, key)): Path<(String, String)>,
+) -> (StatusCode, Json<ApiResponse<serde_json::Value>>) {
+    let state_key = StateKey::new(namespace, key);
+    match state.state_manager.get(&state_key).await {
+        Ok(Some(value)) => (
+            StatusCode::OK,
+            Json(ApiResponse {
+                status: "success".to_string(),
+                data: Some(value),
+                error: None,
+            }),
+        ),
+        Ok(None) => (
+            StatusCode::NOT_FOUND,
+            Json(ApiResponse {
+                status: "not_found".to_string(),
+                data: None,
+                error: None,
+            }),
+        ),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ApiResponse {
+                status: "error".to_string(),
+                data: None,
+                error: Some(e.to_string()),
+            }),
+        ),
+    }
+}
+
+async fn set_state(
+    AxumState(state): AxumState<ApiState>,
+    Path((namespace, key)): Path<(String, String)>,
+    Json(req): Json<serde_json::Value>,
+) -> (StatusCode, Json<ApiResponse<()>>) {
+    let state_key = StateKey::new(namespace, key);
+    match state.state_manager.update_state(&state_key, req).await {
+        Ok(_) => (
+            StatusCode::OK,
+            Json(ApiResponse {
+                status: "success".to_string(),
+                data: Some(()),
+                error: None,
+            }),
+        ),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ApiResponse {
+                status: "error".to_string(),
+                data: None,
+                error: Some(e.to_string()),
+            }),
+        ),
+    }
+}
+
+async fn get_audit_logs(
+    AxumState(_state): AxumState<ApiState>,
+) -> (StatusCode, Json<ApiResponse<Vec<String>>>) {
+    (
+        StatusCode::OK,
+        Json(ApiResponse {
+            status: "success".to_string(),
+            data: Some(vec![]),
+            error: None,
+        }),
+    )
 }

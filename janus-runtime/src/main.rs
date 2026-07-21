@@ -11,10 +11,15 @@ use anyhow::Result;
 use clap::Parser;
 use janus_core::Config;
 use std::path::PathBuf;
+use std::sync::Arc;
 use tracing::info;
 
 mod api;
+mod database;
 mod executor;
+mod hardware;
+mod lua;
+mod plugin;
 mod state;
 
 /// Janus Runtime CLI arguments
@@ -82,16 +87,41 @@ async fn main() -> Result<()> {
 
     info!("Configuration loaded: {:?}", config);
 
+    // Open database
+    let db = database::Database::open(&config.db_path)?;
+    info!("Database opened: {}", config.db_path.display());
+
     // Initialize state manager
-    let state_mgr = state::StateManager::new(&config).await?;
+    let state_mgr = state::StateManager::new(&config, Arc::new(db)).await?;
     info!("State manager initialized");
 
+    // Load plugins
+    let mut plugin_loader = plugin::PluginLoader::new(&config.plugin_dir);
+    let plugin_count = plugin_loader.load_all().await?;
+    info!("Loaded {} plugins", plugin_count);
+
     // Initialize plugin executor
-    let executor = executor::PluginExecutor::new(&config).await?;
+    let executor = executor::PluginExecutor::new(&config, plugin_loader).await?;
     info!("Plugin executor initialized");
 
+    // Initialize hardware manager
+    let hw_manager = hardware::HardwareManager::new(config.serial_port.clone());
+    hw_manager.initialize().await?;
+    info!("Hardware manager initialized");
+
+    // Initialize Lua environment
+    let lua_env = lua::LuaEnv::new()?;
+    lua_env.load_core_modules(&config.core_modules_dir).await?;
+    info!("Lua environment initialized with core modules");
+
     // Start API server
-    let api_server = api::ApiServer::new(config.clone(), state_mgr, executor);
+    let api_server = api::ApiServer::new(
+        config.clone(),
+        state_mgr,
+        executor,
+        Arc::new(hw_manager),
+        Arc::new(lua_env),
+    );
     api_server.start().await?;
 
     Ok(())
