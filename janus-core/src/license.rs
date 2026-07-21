@@ -83,3 +83,33 @@ fn decode_fixed<const N: usize>(value: &str, label: &str) -> crate::Result<[u8; 
         .try_into()
         .map_err(|_| crate::JanusError::License(format!("{label} has an invalid length")))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ed25519_dalek::{Signer, SigningKey};
+
+    #[test]
+    fn accepts_a_valid_signed_unexpired_license() {
+        let now = Utc::now();
+        let signing_key = SigningKey::from_bytes(&[7_u8; 32]);
+        let claims = LicenseClaims {
+            license_id: "lic_1".into(),
+            organization_id: "org_1".into(),
+            plan: "professional".into(),
+            issued_at: now - chrono::Duration::hours(1),
+            expires_at: now + chrono::Duration::hours(1),
+            max_operators: 5,
+            enabled_features: vec![LicensedFeature::Forensics],
+        };
+        let signature = signing_key.sign(&serde_json::to_vec(&claims).unwrap());
+        let license = SignedLicense {
+            claims,
+            signature: STANDARD.encode(signature.to_bytes()),
+        };
+
+        assert!(license
+            .verify(&STANDARD.encode(signing_key.verifying_key().to_bytes()), now)
+            .is_ok());
+    }
+}

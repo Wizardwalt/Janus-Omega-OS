@@ -59,3 +59,43 @@ impl Engagement {
             && self.scope.permits_asset(asset)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::Duration;
+
+    #[test]
+    fn engagement_requires_an_active_window_feature_and_exact_asset() {
+        let now = Utc::now();
+        let engagement = Engagement {
+            id: "eng_1".into(),
+            organization_id: "org_1".into(),
+            authorization_reference: "AUTH-1".into(),
+            starts_at: now - Duration::hours(1),
+            ends_at: now + Duration::hours(1),
+            active: true,
+            scope: EngagementScope {
+                approved_assets: vec!["diagnostic.example.com".into()],
+                approved_evidence_paths: vec![],
+                approved_features: vec![LicensedFeature::NetworkDiagnostics],
+            },
+        };
+
+        assert!(engagement.authorizes(
+            &LicensedFeature::NetworkDiagnostics,
+            "diagnostic.example.com",
+            now,
+        ));
+        assert!(!engagement.authorizes(
+            &LicensedFeature::NetworkDiagnostics,
+            "unapproved.example.com",
+            now,
+        ));
+        assert!(!engagement.authorizes(
+            &LicensedFeature::Forensics,
+            "diagnostic.example.com",
+            now,
+        ));
+    }
+}
