@@ -119,6 +119,47 @@ impl StateManager {
         })
     }
 
+    /// Create a user inside the administrator's organization.
+    pub async fn create_user(
+        &self,
+        account: &janus_core::UserAccount,
+        email: String,
+        password: String,
+        role: janus_core::UserRole,
+    ) -> Result<janus_core::UserAccount> {
+        if !account.role.may_administer_organization() {
+            return Err(anyhow::anyhow!("role is not allowed to create users"));
+        }
+        if role == janus_core::UserRole::PlatformBreakGlassAdmin {
+            return Err(anyhow::anyhow!("break-glass administrators cannot be created through organization administration"));
+        }
+        let email = email.trim().to_ascii_lowercase();
+        if !email.contains('@') {
+            return Err(anyhow::anyhow!("a valid email is required"));
+        }
+        if self.db.find_user_by_email(&email)?.is_some() {
+            return Err(anyhow::anyhow!("an account already exists for this email"));
+        }
+        let created = janus_core::UserAccount {
+            id: format!("usr_{}", uuid::Uuid::new_v4()),
+            organization_id: account.organization_id.clone(),
+            email,
+            role,
+            active: true,
+            failed_login_count: 0,
+            locked_until: None,
+            created_at: chrono::Utc::now(),
+        };
+        let password_hash = janus_core::hash_password(&password)?;
+        self.db.create_user(&created, &password_hash)?;
+        self.db.record(
+            AuditEntry::new(&account.id, "USER_CREATED", &created.id)
+                .success()
+                .with_metadata(serde_json::json!({"role": created.role.as_str(), "email": created.email})),
+        )?;
+        Ok(created)
+    }
+
     /// Record a reviewer decision for a module's exact content hash.
     pub async fn certify_module(
         &self,

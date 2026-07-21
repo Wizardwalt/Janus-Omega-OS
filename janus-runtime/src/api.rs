@@ -9,7 +9,7 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use janus_core::{AuditEntry, CertificationStatus, Config, EngagementScope, LicensedFeature, SignedLicense, StateKey};
+use janus_core::{AuditEntry, CertificationStatus, Config, EngagementScope, LicensedFeature, SignedLicense, StateKey, UserRole};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tower_http::cors::CorsLayer;
@@ -35,6 +35,21 @@ struct BootstrapRequest {
     organization_name: String,
     email: String,
     password: String,
+}
+
+#[derive(Deserialize)]
+struct UserCreateRequest {
+    email: String,
+    password: String,
+    role: UserRole,
+}
+
+#[derive(Serialize)]
+struct UserResponse {
+    user_id: String,
+    organization_id: String,
+    email: String,
+    role: String,
 }
 
 #[derive(Deserialize)]
@@ -173,6 +188,7 @@ impl ApiServer {
             .route("/auth/login", post(login))
             .route("/auth/me", get(current_user))
             .route("/auth/logout", post(logout))
+            .route("/auth/users", post(create_user))
             .route("/licenses/import", post(import_license))
             .route("/engagements", post(create_engagement))
             .route("/modules/certifications", post(certify_module))
@@ -259,6 +275,25 @@ async fn import_license(
     match state.state_manager.import_license(&account, request.license).await {
         Ok(()) => (StatusCode::CREATED, Json(ApiResponse { status: "success".into(), data: Some(()), error: None })),
         Err(error) => (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
+    }
+}
+
+async fn create_user(
+    AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
+    Json(request): Json<UserCreateRequest>,
+) -> (StatusCode, Json<ApiResponse<UserResponse>>) {
+    let account = match authenticated_account(&state.state_manager, &headers).await {
+        Ok(account) => account,
+        Err(error) => return unauthorized_response(error),
+    };
+    match state.state_manager.create_user(&account, request.email, request.password, request.role).await {
+        Ok(created) => (StatusCode::CREATED, Json(ApiResponse {
+            status: "success".into(),
+            data: Some(UserResponse { user_id: created.id, organization_id: created.organization_id, email: created.email, role: created.role.as_str().into() }),
+            error: None,
+        })),
+        Err(error) => (StatusCode::BAD_REQUEST, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
     }
 }
 
