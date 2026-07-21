@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# JanusOS archiso profile definition
+# Based on the Arch Linux releng profile
+
+profile_name='janus-os'
+iso_name="janus-os"
+iso_label="JANUS_OS"
+iso_publisher="Wizardwalt <https://github.com/Wizardwalt>"
+iso_application="JanusOS — Pandora Titan Field Intelligence Platform"
+iso_version="$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y.%m.%d)"
+install_dir="arch"
+buildmodes=('iso')
+bootmodes=(
+    'bios.syslinux.mbr'
+    'bios.syslinux.eltorito'
+    'uefi-x64.systemd-boot.esp'
+    'uefi-x64.systemd-boot.eltorito'
+)
+arch="x86_64"
+pacman_conf="pacman.conf"
+airootfs_image_type="squashfs"
+airootfs_image_tool_options=('-comp' 'xz' '-Xbcj' 'x86' '-b' '1M' '-Xdict-size' '1M')
+bootstrap_tarball_compression=('zst' '-T0' '--fast')
+file_permissions=(
+    ["/etc/shadow"]="0:0:400"
+    ["/root"]="0:0:750"
+    ["/opt/janus/janus-web"]="0:0:755"
+    ["/root/.xinitrc"]="0:0:755"
+    ["/root/.bash_profile"]="0:0:644"
+)
