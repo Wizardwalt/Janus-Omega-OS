@@ -44,6 +44,12 @@ function handleWsMessage(msg) {
     case 'output':
       appendTerminalLine(msg.line || '');
       break;
+    case 'module_complete':
+      finishModule(false, msg.text);
+      break;
+    case 'module_error':
+      finishModule(true, msg.text);
+      break;
   }
 }
 
@@ -120,7 +126,6 @@ function setAriaMood(mood) {
   allAvatars(av => av.setMood(mood));
   const names = { neutral:'◉ NEUTRAL', curious:'◉ CURIOUS', happy:'◉ HAPPY', excited:'⚡ EXCITED', processing:'⟳ PROCESSING', sad:'◎ REFLECTIVE' };
   const label  = names[mood] || '◉ NEUTRAL';
-  document.getElementById('aria-mood-badge')?.let?.(el => el.textContent = label);
   const badge = document.getElementById('aria-mood-badge');
   if (badge) badge.textContent = label;
   const moodN = document.getElementById('aria-mood-name');
@@ -309,18 +314,35 @@ function renderModuleList(modules, category) {
   appendTerminalLine(`[REGISTRY] ${modules.length} modules loaded.`);
 }
 
+let _moduleRunning = false;
+
 function runModule(mod, category) {
+  if (_moduleRunning) return;
+  _moduleRunning = true;
   const statusEl = document.getElementById('app-status');
   if (statusEl) { statusEl.textContent = 'RUNNING'; statusEl.className = 'app-status-badge running'; }
   appendTerminalLine('');
   appendTerminalLine(`[EXEC] Launching: ${mod.display || mod.name}`);
   wsSend({ type: 'run_module', category: category || currentCategory || '', module: mod.file || mod.name });
   setAriaMood('processing');
-  setTimeout(() => {
+}
+
+function finishModule(isError, label) {
+  _moduleRunning = false;
+  const statusEl = document.getElementById('app-status');
+  if (isError) {
+    if (statusEl) { statusEl.textContent = 'ERROR'; statusEl.className = 'app-status-badge error'; }
+    appendTerminalLine(`[ERROR] Module '${label || ''}' failed.`);
+    setAriaMood('sad');
+    setTimeout(() => {
+      if (statusEl) { statusEl.textContent = 'READY'; statusEl.className = 'app-status-badge'; }
+      setAriaMood('neutral');
+    }, 3000);
+  } else {
     if (statusEl) { statusEl.textContent = 'READY'; statusEl.className = 'app-status-badge'; }
     opsCount++; updateOpsCount(); setAriaMood('happy');
     setTimeout(() => setAriaMood('curious'), 4000);
-  }, 4000);
+  }
 }
 
 // ─── Terminal ──────────────────────────────────────────────────────────────────
