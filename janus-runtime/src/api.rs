@@ -190,7 +190,7 @@ impl ApiServer {
             .route("/auth/logout", post(logout))
             .route("/auth/users", post(create_user))
             .route("/licenses/import", post(import_license))
-            .route("/engagements", post(create_engagement))
+            .route("/engagements", get(list_engagements).post(create_engagement))
             .route("/modules/certifications", post(certify_module))
             .route("/execute", post(execute))
             .route("/plugins", get(list_plugins))
@@ -234,6 +234,20 @@ async fn certify_module(
             error: None,
         })),
         Err(error) => (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
+    }
+}
+
+async fn list_engagements(
+    AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
+) -> (StatusCode, Json<ApiResponse<Vec<janus_core::Engagement>>>) {
+    let account = match authenticated_account(&state.state_manager, &headers).await {
+        Ok(account) => account,
+        Err(error) => return unauthorized_response(error),
+    };
+    match state.state_manager.engagements(&account).await {
+        Ok(engagements) => (StatusCode::OK, Json(ApiResponse { status: "success".into(), data: Some(engagements), error: None })),
+        Err(error) => (StatusCode::INTERNAL_SERVER_ERROR, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
     }
 }
 

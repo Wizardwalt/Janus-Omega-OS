@@ -385,6 +385,17 @@ impl Database {
         Ok(())
     }
 
+    /// List all engagements belonging to one organization.
+    pub fn list_engagements(&self, organization_id: &str) -> Result<Vec<Engagement>> {
+        let ids = {
+            let conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
+            let mut statement = conn.prepare("SELECT id FROM engagements WHERE organization_id = ?1 ORDER BY starts_at DESC")?;
+            statement.query_map(params![organization_id], |row| row.get::<_, String>(0))?
+                .collect::<std::result::Result<Vec<String>, _>>()?
+        };
+        ids.into_iter().map(|id| self.find_engagement(&id)?.ok_or_else(|| anyhow::anyhow!("engagement disappeared during lookup"))).collect()
+    }
+
     /// Load an engagement and its explicit asset/feature scope.
     pub fn find_engagement(&self, id: &str) -> Result<Option<Engagement>> {
         let conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;

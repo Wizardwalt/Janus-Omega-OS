@@ -119,6 +119,11 @@ impl StateManager {
         })
     }
 
+    /// Return engagements belonging only to the authenticated organization.
+    pub async fn engagements(&self, account: &janus_core::UserAccount) -> Result<Vec<janus_core::Engagement>> {
+        self.db.list_engagements(&account.organization_id)
+    }
+
     /// Return audit events that belong to the requesting organization.
     pub async fn audit_logs(
         &self,
