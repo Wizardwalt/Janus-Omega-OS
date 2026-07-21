@@ -1,27 +1,18 @@
 [package]
 name = "janus-web"
-version.workspace = true
-edition.workspace = true
-authors.workspace = true
-license.workspace = true
-repository.workspace = true
-description = "Janus web dashboard and API frontend"
+version = "0.1.0"
+edition = "2021"
 
 [[bin]]
 name = "janus-web"
 path = "src/main.rs"
 
 [dependencies]
-janus-core = { path = "../janus-core" }
-tokio.workspace = true
-axum.workspace = true
-tower.workspace = true
-tower-http.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-chrono.workspace = true
-anyhow.workspace = true
-tracing.workspace = true
-tracing-subscriber.workspace = true
-reqwest.workspace = true
-clap.workspace = true
+anyhow     = { workspace = true }
+serde      = { workspace = true }
+serde_json = { workspace = true }
+tokio      = { workspace = true }
+axum       = { workspace = true }
+tower-http = { version = "0.5", features = ["fs", "cors"] }
+mlua       = { version = "0.10", features = ["lua54", "vendored"] }
+rand       = "0.8"
