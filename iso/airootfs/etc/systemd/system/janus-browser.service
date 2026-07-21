@@ -1,0 +1,28 @@
+[Unit]
+Description=JanusOS Chromium Kiosk Browser
+After=janus-web.service graphical-session.target
+Requires=janus-web.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+ExecStartPre=/bin/sleep 3
+ExecStart=/usr/bin/chromium \
+    --kiosk \
+    --no-sandbox \
+    --disable-gpu-sandbox \
+    --disable-web-security \
+    --no-first-run \
+    --noerrdialogs \
+    --disable-infobars \
+    --disable-session-crashed-bubble \
+    --disable-features=TranslateUI \
+    --overscroll-history-navigation=0 \
+    http://localhost:5000
+Restart=on-failure
+RestartSec=5
+Environment=DISPLAY=:0
+Environment=HOME=/root
+
+[Install]
+WantedBy=graphical-session.target
