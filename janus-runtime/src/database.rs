@@ -262,6 +262,35 @@ impl Database {
         Ok(())
     }
 
+    /// Resolve an unexpired session hash to its active user account.
+    pub fn find_session_user(&self, token_hash: &str, now: chrono::DateTime<Utc>) -> Result<Option<UserAccount>> {
+        let conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
+        conn.query_row(
+            "SELECT u.id, u.organization_id, u.email, u.role, u.active, u.failed_login_count, u.locked_until, u.created_at FROM sessions s JOIN user_accounts u ON u.id = s.user_id WHERE s.token_hash = ?1 AND s.expires_at > ?2",
+            params![token_hash, now.to_rfc3339()],
+            |row| {
+                let role_value: String = row.get(3)?;
+                let role = UserRole::from_str(&role_value).ok_or(rusqlite::Error::InvalidQuery)?;
+                let locked_until: Option<String> = row.get(6)?;
+                let created_at: String = row.get(7)?;
+                Ok(UserAccount {
+                    id: row.get(0)?, organization_id: row.get(1)?, email: row.get(2)?, role,
+                    active: row.get(4)?, failed_login_count: row.get(5)?,
+                    locked_until: locked_until.and_then(|value| chrono::DateTime::parse_from_rfc3339(&value).ok()).map(|value| value.with_timezone(&Utc)),
+                    created_at: chrono::DateTime::parse_from_rfc3339(&created_at).map_err(|_| rusqlite::Error::InvalidQuery)?.with_timezone(&Utc),
+                })
+            },
+        ).optional().map_err(Into::into)
+    }
+
+    /// Revoke an opaque session by its token hash.
+    pub fn delete_session(&self, token_hash: &str) -> Result<()> {
+        self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute(
+            "DELETE FROM sessions WHERE token_hash = ?1", params![token_hash],
+        )?;
+        Ok(())
+    }
+
     /// Store state value
     pub fn set_state(&self, key: &StateKey, value: &serde_json::Value) -> Result<()> {
         let json_str = serde_json::to_string(value)?;

@@ -119,6 +119,25 @@ impl StateManager {
         })
     }
 
+    /// Resolve an opaque session token to an active account.
+    pub async fn authenticate_session(&self, token: &str) -> Result<janus_core::UserAccount> {
+        let token_hash = format!("{:x}", Sha256::digest(token.as_bytes()));
+        let account = self
+            .db
+            .find_session_user(&token_hash, chrono::Utc::now())?
+            .ok_or_else(|| anyhow::anyhow!("session is invalid or expired"))?;
+        if !account.active {
+            return Err(anyhow::anyhow!("account is inactive"));
+        }
+        Ok(account)
+    }
+
+    /// Revoke an opaque session token.
+    pub async fn logout(&self, token: &str) -> Result<()> {
+        let token_hash = format!("{:x}", Sha256::digest(token.as_bytes()));
+        self.db.delete_session(&token_hash)
+    }
+
     /// Get current state
     pub async fn get_state(&self) -> Result<SystemState> {
         Ok(self.state.read().await.clone())

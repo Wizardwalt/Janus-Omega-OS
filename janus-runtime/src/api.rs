@@ -4,7 +4,7 @@ use crate::{executor::PluginExecutor, hardware::HardwareManager, state::StateMan
 use anyhow::Result;
 use axum::{
     extract::{Path, State as AxumState},
-    http::StatusCode,
+    http::{HeaderMap, StatusCode},
     response::Json,
     routing::{get, post},
     Router,
@@ -41,6 +41,14 @@ struct BootstrapRequest {
 struct LoginRequest {
     email: String,
     password: String,
+}
+
+#[derive(Serialize)]
+struct CurrentUserResponse {
+    user_id: String,
+    organization_id: String,
+    email: String,
+    role: String,
 }
 
 #[derive(Serialize)]
@@ -114,6 +122,8 @@ impl ApiServer {
             .route("/health", get(health))
             .route("/auth/bootstrap", post(bootstrap))
             .route("/auth/login", post(login))
+            .route("/auth/me", get(current_user))
+            .route("/auth/logout", post(logout))
             .route("/execute", post(execute))
             .route("/plugins", get(list_plugins))
             .route("/state/:namespace/:key", get(get_state).post(set_state))
@@ -136,6 +146,48 @@ async fn health(AxumState(state): AxumState<ApiState>) -> Json<HealthResponse> {
         version: janus_core::VERSION.to_string(),
         plugins: state.executor.plugin_count(),
     })
+}
+
+async fn current_user(
+    AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
+) -> (StatusCode, Json<ApiResponse<CurrentUserResponse>>) {
+    match authenticated_account(&state.state_manager, &headers).await {
+        Ok(account) => (StatusCode::OK, Json(ApiResponse {
+            status: "success".into(),
+            data: Some(CurrentUserResponse { user_id: account.id, organization_id: account.organization_id, email: account.email, role: account.role.as_str().into() }),
+            error: None,
+        })),
+        Err(error) => unauthorized_response(error),
+    }
+}
+
+async fn logout(
+    AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
+) -> (StatusCode, Json<ApiResponse<()>>) {
+    let token = match bearer_token(&headers) {
+        Ok(token) => token,
+        Err(error) => return unauthorized_response(error),
+    };
+    match state.state_manager.logout(token).await {
+        Ok(()) => (StatusCode::OK, Json(ApiResponse { status: "success".into(), data: Some(()), error: None })),
+        Err(error) => unauthorized_response(error),
+    }
+}
+
+fn bearer_token(headers: &HeaderMap) -> Result<&str, anyhow::Error> {
+    let value = headers.get("authorization").and_then(|value| value.to_str().ok())
+        .ok_or_else(|| anyhow::anyhow!("missing authorization bearer token"))?;
+    value.strip_prefix("Bearer ").ok_or_else(|| anyhow::anyhow!("invalid authorization scheme"))
+}
+
+async fn authenticated_account(state_manager: &StateManager, headers: &HeaderMap) -> Result<janus_core::UserAccount> {
+    state_manager.authenticate_session(bearer_token(headers)?).await
+}
+
+fn unauthorized_response<T>(error: anyhow::Error) -> (StatusCode, Json<ApiResponse<T>>) {
+    (StatusCode::UNAUTHORIZED, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) }))
 }
 
 async fn login(
