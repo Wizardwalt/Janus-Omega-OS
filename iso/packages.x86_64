@@ -1,0 +1,49 @@
+# ─── Base system ──────────────────────────────────────────────────────────────
+base
+linux
+linux-firmware
+syslinux
+mtools
+dosfstools
+grub
+efibootmgr
+sudo
+bash
+coreutils
+util-linux
+
+# ─── Network ──────────────────────────────────────────────────────────────────
+networkmanager
+openssh
+curl
+wget
+net-tools
+iproute2
+
+# ─── Display / X11 ────────────────────────────────────────────────────────────
+xorg-server
+xorg-xinit
+xorg-xset
+openbox
+
+# ─── JanusOS interface ────────────────────────────────────────────────────────
+alacritty
+ttf-jetbrains-mono
+noto-fonts
+chromium
+
+# ─── Device tools ─────────────────────────────────────────────────────────────
+android-tools
+libimobiledevice
+
+# ─── Scripting / runtime ──────────────────────────────────────────────────────
+lua
+python
+python-pip
+git
+
+# ─── Field tools ──────────────────────────────────────────────────────────────
+nmap
+aircrack-ng
+wireshark-cli
+tcpdump
