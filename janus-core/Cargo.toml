@@ -1,0 +1,17 @@
+[package]
+name = "janus-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Janus shared types, configuration, capabilities registry, and audit trail infrastructure"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+rusqlite.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+machine-uid.workspace = true

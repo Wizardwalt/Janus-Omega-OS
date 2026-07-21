@@ -1,27 +1,32 @@
 [package]
-name = "janus-web"
+name = "janus-runtime"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Janus web dashboard and API frontend"
+description = "Janus core runtime daemon: plugin execution, API server, state management"
 
 [[bin]]
-name = "janus-web"
+name = "janus-runtime"
 path = "src/main.rs"
 
 [dependencies]
 janus-core = { path = "../janus-core" }
 tokio.workspace = true
+tokio-tungstenite.workspace = true
+mlua.workspace = true
+rusqlite.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 axum.workspace = true
 tower.workspace = true
 tower-http.workspace = true
-serde.workspace = true
-serde_json.workspace = true
 chrono.workspace = true
 anyhow.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
 reqwest.workspace = true
+serialport.workspace = true
+machine-uid.workspace = true
 clap.workspace = true
