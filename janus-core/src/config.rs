@@ -28,6 +28,9 @@ pub struct Config {
     pub hardware_enabled: bool,
     /// Serial port configuration
     pub serial_port: Option<String>,
+    /// Base64 Ed25519 public key used to verify imported customer licenses.
+    #[serde(default)]
+    pub license_public_key: Option<String>,
 }
 
 impl Default for Config {
@@ -43,6 +46,7 @@ impl Default for Config {
             audit_retention_days: 90,
             hardware_enabled: true,
             serial_port: None,
+            license_public_key: std::env::var("JANUS_LICENSE_PUBLIC_KEY").ok(),
         }
     }
 }

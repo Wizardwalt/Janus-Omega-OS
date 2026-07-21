@@ -3,6 +3,7 @@
 use crate::plugin::PluginLoader;
 use anyhow::Result;
 use janus_core::Config;
+use sha2::{Digest, Sha256};
 use std::path::PathBuf;
 use tracing::debug;
 
@@ -41,6 +42,13 @@ impl PluginExecutor {
             })
             .collect();
         Ok(plugins)
+    }
+
+    /// Return the current content hash for an installed plugin.
+    pub fn plugin_sha256(&self, plugin_name: &str) -> Result<String> {
+        let plugin = self.loader.get(plugin_name)
+            .ok_or_else(|| anyhow::anyhow!("Plugin not found: {}", plugin_name))?;
+        Ok(format!("{:x}", Sha256::digest(plugin.code.as_bytes())))
     }
 
     /// Execute plugin by name

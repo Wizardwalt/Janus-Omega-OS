@@ -70,7 +70,12 @@ struct BootstrapResponse {
 
 #[derive(Serialize, Deserialize)]
 struct ExecuteRequest {
+    /// Certified module identifier, normally the plugin ID.
     plugin: String,
+    /// Active customer engagement authorizing this execution.
+    engagement_id: String,
+    /// Exact approved customer asset or evidence location.
+    target_asset: String,
     args: serde_json::Value,
 }
 
@@ -271,6 +276,15 @@ async fn execute(
                 error: Some("role is not allowed to request execution".to_string()),
             }),
         );
+    }
+    let module_sha256 = match state.executor.plugin_sha256(&req.plugin) {
+        Ok(hash) => hash,
+        Err(error) => return (StatusCode::NOT_FOUND, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
+    };
+    if let Err(error) = state.state_manager.authorize_production_execution(
+        &account, &req.engagement_id, &req.target_asset, &req.plugin, &module_sha256,
+    ).await {
+        return (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) }));
     }
 
     match state.executor.execute(&req.plugin, req.args).await {

@@ -119,6 +119,35 @@ impl StateManager {
         })
     }
 
+    /// Apply the complete license, engagement, target, and module certification gate.
+    pub async fn authorize_production_execution(
+        &self,
+        account: &janus_core::UserAccount,
+        engagement_id: &str,
+        target_asset: &str,
+        module_id: &str,
+        module_sha256: &str,
+    ) -> Result<()> {
+        let public_key = self.config.license_public_key.as_deref()
+            .ok_or_else(|| anyhow::anyhow!("JANUS_LICENSE_PUBLIC_KEY is not configured"))?;
+        let license = self.db.find_active_license(&account.organization_id)?
+            .ok_or_else(|| anyhow::anyhow!("organization has no active license"))?;
+        let engagement = self.db.find_engagement(engagement_id)?
+            .ok_or_else(|| anyhow::anyhow!("engagement was not found"))?;
+        let certification = self.db.find_module_certification(module_id)?
+            .ok_or_else(|| anyhow::anyhow!("module has no certification record"))?;
+        janus_core::authorize_execution(janus_core::ExecutionAuthorization {
+            license: &license,
+            license_public_key_base64: public_key,
+            engagement: &engagement,
+            certification: &certification,
+            module_sha256,
+            target_asset,
+            now: chrono::Utc::now(),
+        })?;
+        Ok(())
+    }
+
     /// Resolve an opaque session token to an active account.
     pub async fn authenticate_session(&self, token: &str) -> Result<janus_core::UserAccount> {
         let token_hash = format!("{:x}", Sha256::digest(token.as_bytes()));
