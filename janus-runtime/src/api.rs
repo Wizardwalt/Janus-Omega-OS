@@ -1,6 +1,6 @@
 //! HTTP/WebSocket API server.
 
-use crate::{executor::PluginExecutor, hardware::HardwareManager, lua::LuaEnv, state::StateManager};
+use crate::{executor::PluginExecutor, hardware::HardwareManager, state::StateManager};
 use anyhow::Result;
 use axum::{
     extract::{Path, State as AxumState},
@@ -21,7 +21,6 @@ pub struct ApiState {
     state_manager: Arc<StateManager>,
     executor: Arc<PluginExecutor>,
     hardware: Arc<HardwareManager>,
-    lua: Arc<LuaEnv>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -56,7 +55,6 @@ pub struct ApiServer {
     state_manager: Arc<StateManager>,
     executor: Arc<PluginExecutor>,
     hardware: Arc<HardwareManager>,
-    lua: Arc<LuaEnv>,
 }
 
 impl ApiServer {
@@ -65,14 +63,12 @@ impl ApiServer {
         state_manager: StateManager,
         executor: PluginExecutor,
         hardware: Arc<HardwareManager>,
-        lua: Arc<LuaEnv>,
-    ) -> Self {
+        ) -> Self {
         Self {
             config,
             state_manager: Arc::new(state_manager),
             executor: Arc::new(executor),
             hardware,
-            lua,
         }
     }
 
@@ -82,7 +78,6 @@ impl ApiServer {
             state_manager: self.state_manager,
             executor: self.executor,
             hardware: self.hardware,
-            lua: self.lua,
         };
 
         let app = Router::new()

@@ -123,7 +123,6 @@ async fn main() -> Result<()> {
         state_mgr,
         executor,
         Arc::new(hw_manager),
-        Arc::new(lua_env),
     );
     api_server.start().await?;
 

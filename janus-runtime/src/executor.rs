@@ -45,7 +45,7 @@ impl PluginExecutor {
         if let Some(plugin) = self.loader.get(plugin_name) {
             // Execute plugin code
             let sandbox = crate::lua::PluginSandbox::new()?;
-            let result = sandbox.execute(&plugin.code, args).await?;
+            let result = sandbox.execute(&plugin.code, args)?;
             Ok(result)
         } else {
             Err(anyhow::anyhow!("Plugin not found: {}", plugin_name))
