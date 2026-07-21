@@ -2,10 +2,18 @@
 
 use anyhow::Result;
 use chrono::Utc;
-use janus_core::{AuditEntry, AuditLevel, AuditLog, StateKey, SystemState};
+use janus_core::{AuditEntry, AuditLevel, AuditLog, Organization, StateKey, SystemState, UserAccount, UserRole};
 use rusqlite::{params, Connection, OptionalExtension};
 use std::{path::Path, sync::Mutex};
 use tracing::debug;
+
+/// User record including the password hash. This type must never be serialized
+/// into an API response or written to an audit event.
+#[derive(Debug, Clone)]
+pub struct StoredUserAccount {
+    pub account: UserAccount,
+    pub password_hash: String,
+}
 
 /// Database manager for persistence
 pub struct Database {
@@ -131,6 +139,49 @@ impl Database {
             )?;
         debug!("Database schema initialized");
         Ok(())
+    }
+
+    /// Persist an organization.
+    pub fn create_organization(&self, organization: &Organization) -> Result<()> {
+        self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute(
+            "INSERT INTO organizations (id, name, active, created_at) VALUES (?1, ?2, ?3, ?4)",
+            params![organization.id, organization.name, organization.active, organization.created_at.to_rfc3339()],
+        )?;
+        Ok(())
+    }
+
+    /// Persist a Janus-managed user account and its Argon2id password hash.
+    pub fn create_user(&self, account: &UserAccount, password_hash: &str) -> Result<()> {
+        self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute(
+            "INSERT INTO user_accounts (id, organization_id, email, password_hash, role, active, failed_login_count, locked_until, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+            params![account.id, account.organization_id, account.email, password_hash, account.role.as_str(), account.active, account.failed_login_count, account.locked_until.map(|value| value.to_rfc3339()), account.created_at.to_rfc3339()],
+        )?;
+        Ok(())
+    }
+
+    /// Retrieve an account for authentication. Callers must not expose the
+    /// returned password hash outside the authentication service.
+    pub fn find_user_by_email(&self, email: &str) -> Result<Option<StoredUserAccount>> {
+        let conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
+        conn.query_row(
+            "SELECT id, organization_id, email, password_hash, role, active, failed_login_count, locked_until, created_at FROM user_accounts WHERE email = ?1",
+            params![email],
+            |row| {
+                let role_value: String = row.get(4)?;
+                let role = UserRole::from_str(&role_value).ok_or(rusqlite::Error::InvalidQuery)?;
+                let locked_until: Option<String> = row.get(7)?;
+                let created_at: String = row.get(8)?;
+                Ok(StoredUserAccount {
+                    account: UserAccount {
+                        id: row.get(0)?, organization_id: row.get(1)?, email: row.get(2)?, role,
+                        active: row.get(5)?, failed_login_count: row.get(6)?,
+                        locked_until: locked_until.and_then(|value| chrono::DateTime::parse_from_rfc3339(&value).ok()).map(|value| value.with_timezone(&Utc)),
+                        created_at: chrono::DateTime::parse_from_rfc3339(&created_at).map_err(|_| rusqlite::Error::InvalidQuery)?.with_timezone(&Utc),
+                    },
+                    password_hash: row.get(3)?,
+                })
+            },
+        ).optional().map_err(Into::into)
     }
 
     /// Store state value

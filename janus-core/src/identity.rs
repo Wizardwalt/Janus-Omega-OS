@@ -26,6 +26,17 @@ impl UserRole {
             Self::CustomerReadOnly => "customer_read_only",
         }
     }
+
+    pub fn from_str(value: &str) -> Option<Self> {
+        match value {
+            "platform_break_glass_admin" => Some(Self::PlatformBreakGlassAdmin),
+            "organization_admin" => Some(Self::OrganizationAdmin),
+            "operator" => Some(Self::Operator),
+            "reviewer" => Some(Self::Reviewer),
+            "customer_read_only" => Some(Self::CustomerReadOnly),
+            _ => None,
+        }
+    }
 }
 
 /// A customer or platform organization.
