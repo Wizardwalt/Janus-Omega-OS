@@ -285,6 +285,24 @@ impl StateManager {
         Ok(())
     }
 
+    /// Record an authorization or execution decision against a customer asset.
+    pub async fn audit_execution_event(
+        &self,
+        account: &janus_core::UserAccount,
+        action: &str,
+        plugin_id: &str,
+        target_asset: &str,
+        result: std::result::Result<(), &str>,
+    ) -> Result<()> {
+        let entry = AuditEntry::new(&account.id, action, plugin_id)
+            .with_metadata(serde_json::json!({"organization_id": account.organization_id, "target_asset": target_asset}));
+        let entry = match result {
+            Ok(()) => entry.success(),
+            Err(error) => entry.failed(error),
+        };
+        self.db.record(entry)
+    }
+
     /// Apply the complete license, engagement, target, and module certification gate.
     pub async fn authorize_production_execution(
         &self,

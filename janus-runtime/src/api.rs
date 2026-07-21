@@ -473,26 +473,22 @@ async fn execute(
     if let Err(error) = state.state_manager.authorize_production_execution(
         &account, &req.engagement_id, &req.target_asset, &req.plugin, &module_sha256,
     ).await {
-        return (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) }));
+        let message = error.to_string();
+        let _ = state.state_manager.audit_execution_event(&account, "EXECUTION_DENIED", &req.plugin, &req.target_asset, Err(&message)).await;
+        return (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some(message) }));
     }
+    let _ = state.state_manager.audit_execution_event(&account, "EXECUTION_AUTHORIZED", &req.plugin, &req.target_asset, Ok(())).await;
 
     match state.executor.execute(&req.plugin, req.args).await {
-        Ok(data) => (
-            StatusCode::OK,
-            Json(ApiResponse {
-                status: "success".to_string(),
-                data: Some(data),
-                error: None,
-            }),
-        ),
-        Err(e) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(ApiResponse {
-                status: "error".to_string(),
-                data: None,
-                error: Some(e.to_string()),
-            }),
-        ),
+        Ok(data) => {
+            let _ = state.state_manager.audit_execution_event(&account, "EXECUTION_SUCCESS", &req.plugin, &req.target_asset, Ok(())).await;
+            (StatusCode::OK, Json(ApiResponse { status: "success".to_string(), data: Some(data), error: None }))
+        }
+        Err(error) => {
+            let message = error.to_string();
+            let _ = state.state_manager.audit_execution_event(&account, "EXECUTION_FAILURE", &req.plugin, &req.target_asset, Err(&message)).await;
+            (StatusCode::INTERNAL_SERVER_ERROR, Json(ApiResponse { status: "error".to_string(), data: None, error: Some(message) }))
+        },
     }
 }
 
