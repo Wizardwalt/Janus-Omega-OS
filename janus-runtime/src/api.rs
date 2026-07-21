@@ -12,7 +12,7 @@ use axum::{
 use janus_core::{AuditEntry, CertificationStatus, Config, EngagementScope, LicensedFeature, SignedLicense, StateKey, UserRole};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tower_http::cors::CorsLayer;
+use tower_http::cors::{AllowOrigin, CorsLayer};
 use tracing::info;
 
 #[derive(Clone)]
@@ -182,6 +182,13 @@ impl ApiServer {
             hardware: self.hardware,
         };
 
+        let allowed_origins = self.config.allowed_origins.iter()
+            .filter_map(|origin| origin.parse::<HeaderValue>().ok())
+            .collect::<Vec<_>>();
+        if allowed_origins.is_empty() {
+            return Err(anyhow::anyhow!("no valid allowed runtime API origins configured"));
+        }
+
         let app = Router::new()
             .route("/health", get(health))
             .route("/auth/bootstrap", post(bootstrap))
@@ -199,7 +206,7 @@ impl ApiServer {
             .route("/audit/logs", get(get_audit_logs))
             .layer(
                 CorsLayer::new()
-                    .allow_origin(HeaderValue::from_static("http://localhost:5000"))
+                    .allow_origin(AllowOrigin::list(allowed_origins))
                     .allow_methods([Method::GET, Method::POST])
                     .allow_headers([header::AUTHORIZATION, header::CONTENT_TYPE]),
             )

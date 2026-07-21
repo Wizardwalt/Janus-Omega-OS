@@ -31,6 +31,9 @@ pub struct Config {
     /// Base64 Ed25519 public key used to verify imported customer licenses.
     #[serde(default)]
     pub license_public_key: Option<String>,
+    /// Browser origins allowed to call the protected runtime API.
+    #[serde(default = "default_allowed_origins")]
+    pub allowed_origins: Vec<String>,
 }
 
 impl Default for Config {
@@ -47,8 +50,13 @@ impl Default for Config {
             hardware_enabled: true,
             serial_port: None,
             license_public_key: std::env::var("JANUS_LICENSE_PUBLIC_KEY").ok(),
+            allowed_origins: default_allowed_origins(),
         }
     }
+}
+
+fn default_allowed_origins() -> Vec<String> {
+    vec!["http://localhost:5000".to_string()]
 }
 
 impl Config {
@@ -68,6 +76,9 @@ impl Config {
     pub fn validate(&self) -> crate::Result<()> {
         if self.web_port == 0 {
             return Err(crate::JanusError::Config("Invalid port: 0".to_string()));
+        }
+        if self.allowed_origins.is_empty() {
+            return Err(crate::JanusError::Config("At least one allowed browser origin is required".to_string()));
         }
         Ok(())
     }
