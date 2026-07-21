@@ -398,8 +398,9 @@ impl Database {
         let ids = {
             let conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
             let mut statement = conn.prepare("SELECT id FROM engagements WHERE organization_id = ?1 ORDER BY starts_at DESC")?;
-            statement.query_map(params![organization_id], |row| row.get::<_, String>(0))?
-                .collect::<std::result::Result<Vec<String>, _>>()?
+            let rows = statement.query_map(params![organization_id], |row| row.get::<_, String>(0))?;
+            let ids = rows.collect::<std::result::Result<Vec<String>, _>>()?;
+            ids
         };
         ids.into_iter().map(|id| self.find_engagement(&id)?.ok_or_else(|| anyhow::anyhow!("engagement disappeared during lookup"))).collect()
     }
@@ -413,12 +414,21 @@ impl Database {
             |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?, row.get::<_, String>(3)?, row.get::<_, String>(4)?, row.get::<_, bool>(5)?)),
         ).optional()?;
         let Some((id, organization_id, authorization_reference, starts_at, ends_at, active)) = record else { return Ok(None); };
-        let approved_assets = conn.prepare("SELECT asset FROM engagement_assets WHERE engagement_id = ?1")?
-            .query_map(params![&id], |row| row.get(0))?.collect::<std::result::Result<Vec<String>, _>>()?;
-        let approved_evidence_paths = conn.prepare("SELECT evidence_path FROM engagement_evidence_paths WHERE engagement_id = ?1")?
-            .query_map(params![&id], |row| row.get(0))?.collect::<std::result::Result<Vec<String>, _>>()?;
-        let feature_values = conn.prepare("SELECT feature FROM engagement_features WHERE engagement_id = ?1")?
-            .query_map(params![&id], |row| row.get::<_, String>(0))?.collect::<std::result::Result<Vec<String>, _>>()?;
+        let approved_assets = {
+            let mut statement = conn.prepare("SELECT asset FROM engagement_assets WHERE engagement_id = ?1")?;
+            let rows = statement.query_map(params![&id], |row| row.get(0))?;
+            rows.collect::<std::result::Result<Vec<String>, _>>()?
+        };
+        let approved_evidence_paths = {
+            let mut statement = conn.prepare("SELECT evidence_path FROM engagement_evidence_paths WHERE engagement_id = ?1")?;
+            let rows = statement.query_map(params![&id], |row| row.get(0))?;
+            rows.collect::<std::result::Result<Vec<String>, _>>()?
+        };
+        let feature_values = {
+            let mut statement = conn.prepare("SELECT feature FROM engagement_features WHERE engagement_id = ?1")?;
+            let rows = statement.query_map(params![&id], |row| row.get::<_, String>(0))?;
+            rows.collect::<std::result::Result<Vec<String>, _>>()?
+        };
         let approved_features = feature_values.into_iter().filter_map(|value| LicensedFeature::from_str(&value)).collect();
         Ok(Some(Engagement {
             id, organization_id, authorization_reference,
