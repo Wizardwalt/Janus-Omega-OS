@@ -9,7 +9,7 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use janus_core::{AuditEntry, Config, EngagementScope, LicensedFeature, SignedLicense, StateKey};
+use janus_core::{AuditEntry, CertificationStatus, Config, EngagementScope, LicensedFeature, SignedLicense, StateKey};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tower_http::cors::CorsLayer;
@@ -41,6 +41,23 @@ struct BootstrapRequest {
 struct LoginRequest {
     email: String,
     password: String,
+}
+
+#[derive(Deserialize)]
+struct ModuleCertificationRequest {
+    module_id: String,
+    module_sha256: String,
+    status: CertificationStatus,
+    required_feature: LicensedFeature,
+    #[serde(default)]
+    notes: Option<String>,
+}
+
+#[derive(Serialize)]
+struct ModuleCertificationResponse {
+    module_id: String,
+    status: String,
+    module_sha256: String,
 }
 
 #[derive(Deserialize)]
@@ -158,6 +175,7 @@ impl ApiServer {
             .route("/auth/logout", post(logout))
             .route("/licenses/import", post(import_license))
             .route("/engagements", post(create_engagement))
+            .route("/modules/certifications", post(certify_module))
             .route("/execute", post(execute))
             .route("/plugins", get(list_plugins))
             .route("/state/:namespace/:key", get(get_state).post(set_state))
@@ -180,6 +198,27 @@ async fn health(AxumState(state): AxumState<ApiState>) -> Json<HealthResponse> {
         version: janus_core::VERSION.to_string(),
         plugins: state.executor.plugin_count(),
     })
+}
+
+async fn certify_module(
+    AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
+    Json(request): Json<ModuleCertificationRequest>,
+) -> (StatusCode, Json<ApiResponse<ModuleCertificationResponse>>) {
+    let account = match authenticated_account(&state.state_manager, &headers).await {
+        Ok(account) => account,
+        Err(error) => return unauthorized_response(error),
+    };
+    match state.state_manager.certify_module(
+        &account, request.module_id, request.module_sha256, request.status, request.required_feature, request.notes,
+    ).await {
+        Ok(certification) => (StatusCode::CREATED, Json(ApiResponse {
+            status: "success".into(),
+            data: Some(ModuleCertificationResponse { module_id: certification.module_id, status: certification.status.as_str().into(), module_sha256: certification.module_sha256 }),
+            error: None,
+        })),
+        Err(error) => (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
+    }
 }
 
 async fn create_engagement(

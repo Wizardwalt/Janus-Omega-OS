@@ -119,6 +119,40 @@ impl StateManager {
         })
     }
 
+    /// Record a reviewer decision for a module's exact content hash.
+    pub async fn certify_module(
+        &self,
+        account: &janus_core::UserAccount,
+        module_id: String,
+        module_sha256: String,
+        status: janus_core::CertificationStatus,
+        required_feature: janus_core::LicensedFeature,
+        notes: Option<String>,
+    ) -> Result<janus_core::ModuleCertification> {
+        if !account.role.may_certify_modules() {
+            return Err(anyhow::anyhow!("role is not allowed to certify modules"));
+        }
+        if module_id.trim().is_empty() || module_sha256.len() != 64 || !module_sha256.chars().all(|value| value.is_ascii_hexdigit()) {
+            return Err(anyhow::anyhow!("a module ID and SHA-256 hash are required"));
+        }
+        let certification = janus_core::ModuleCertification {
+            module_id: module_id.trim().to_string(),
+            module_sha256: module_sha256.to_ascii_lowercase(),
+            status,
+            required_feature,
+            reviewed_by: Some(account.id.clone()),
+            reviewed_at: Some(chrono::Utc::now()),
+            notes,
+        };
+        self.db.upsert_module_certification(&certification)?;
+        self.db.record(
+            AuditEntry::new(&account.id, "MODULE_CERTIFIED", &certification.module_id)
+                .success()
+                .with_metadata(serde_json::json!({"status": certification.status.as_str(), "sha256": certification.module_sha256})),
+        )?;
+        Ok(certification)
+    }
+
     /// Create a customer-authorized engagement for the administrator's organization.
     pub async fn create_engagement(
         &self,

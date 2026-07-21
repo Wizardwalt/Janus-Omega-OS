@@ -27,6 +27,11 @@ impl UserRole {
         }
     }
 
+    /// Whether this role may record production module certification decisions.
+    pub fn may_certify_modules(self) -> bool {
+        matches!(self, Self::Reviewer)
+    }
+
     /// Whether this role may manage organization licenses and engagements.
     pub fn may_administer_organization(self) -> bool {
         matches!(self, Self::OrganizationAdmin)

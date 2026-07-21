@@ -309,6 +309,15 @@ impl Database {
         Ok(())
     }
 
+    /// Create or update a reviewer-approved module certification record.
+    pub fn upsert_module_certification(&self, certification: &ModuleCertification) -> Result<()> {
+        self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute(
+            "INSERT INTO module_certifications (module_id, module_sha256, status, required_feature, reviewed_by, reviewed_at, notes) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7) ON CONFLICT(module_id) DO UPDATE SET module_sha256 = excluded.module_sha256, status = excluded.status, required_feature = excluded.required_feature, reviewed_by = excluded.reviewed_by, reviewed_at = excluded.reviewed_at, notes = excluded.notes, updated_at = CURRENT_TIMESTAMP",
+            params![certification.module_id, certification.module_sha256, certification.status.as_str(), certification.required_feature.as_str(), certification.reviewed_by, certification.reviewed_at.map(|value| value.to_rfc3339()), certification.notes],
+        )?;
+        Ok(())
+    }
+
     /// Verify and store a signed license document for an organization.
     pub fn store_license(
         &self,
