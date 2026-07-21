@@ -144,9 +144,12 @@ fn extract_manifest_from_lua(code: &str, path: &Path) -> Result<PluginManifest> 
         if line.trim().starts_with("--[") {
             // Try to extract JSON from block comment
             let start = code.find("--[").unwrap_or(0);
-            let end = code.find("]").unwrap_or(0);
-            if end > start {
-                let json_str = &code[start + 3..end];
+            let json_start = start + 3;
+            // Lua metadata blocks end with `}]`; searching for a bare `]`
+            // incorrectly stops at JSON arrays such as `capabilities`.
+            if let Some(relative_end) = code[json_start..].find("}]") {
+                let json_end = json_start + relative_end + 1;
+                let json_str = &code[json_start..json_end];
                 if let Ok(manifest) = serde_json::from_str::<PluginManifest>(json_str) {
                     return Ok(manifest);
                 }
