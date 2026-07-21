@@ -2,7 +2,7 @@
 
 use anyhow::Result;
 use chrono::Utc;
-use janus_core::{AuditEntry, AuditLevel, AuditLog, CertificationStatus, Engagement, EngagementScope, LicensedFeature, ModuleCertification, Organization, StateKey, SystemState, UserAccount, UserRole};
+use janus_core::{AuditEntry, AuditLevel, AuditLog, CertificationStatus, Engagement, EngagementScope, LicensedFeature, ModuleCertification, Organization, SignedLicense, StateKey, SystemState, UserAccount, UserRole};
 use rusqlite::{params, Connection, OptionalExtension};
 use std::{path::Path, sync::Mutex};
 use tracing::debug;
@@ -107,6 +107,17 @@ impl Database {
                 PRIMARY KEY (engagement_id, feature),
                 FOREIGN KEY (engagement_id) REFERENCES engagements(id)
             );
+
+            CREATE TABLE IF NOT EXISTS organization_licenses (
+                license_id TEXT PRIMARY KEY,
+                organization_id TEXT NOT NULL,
+                signed_document TEXT NOT NULL,
+                active INTEGER NOT NULL DEFAULT 1,
+                imported_at TEXT NOT NULL,
+                FOREIGN KEY (organization_id) REFERENCES organizations(id)
+            );
+            CREATE INDEX IF NOT EXISTS idx_organization_licenses_org
+                ON organization_licenses(organization_id);
 
             CREATE TABLE IF NOT EXISTS sessions (
                 token_hash TEXT PRIMARY KEY,
@@ -289,6 +300,32 @@ impl Database {
             "DELETE FROM sessions WHERE token_hash = ?1", params![token_hash],
         )?;
         Ok(())
+    }
+
+    /// Verify and store a signed license document for an organization.
+    pub fn store_license(
+        &self,
+        license: &SignedLicense,
+        license_public_key_base64: &str,
+    ) -> Result<()> {
+        license.verify(license_public_key_base64, Utc::now())?;
+        let document = serde_json::to_string(license)?;
+        self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute(
+            "INSERT OR REPLACE INTO organization_licenses (license_id, organization_id, signed_document, active, imported_at) VALUES (?1, ?2, ?3, 1, ?4)",
+            params![license.claims.license_id, license.claims.organization_id, document, Utc::now().to_rfc3339()],
+        )?;
+        Ok(())
+    }
+
+    /// Return the current active license for an organization, if present.
+    pub fn find_active_license(&self, organization_id: &str) -> Result<Option<SignedLicense>> {
+        let conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
+        let document: Option<String> = conn.query_row(
+            "SELECT signed_document FROM organization_licenses WHERE organization_id = ?1 AND active = 1 ORDER BY imported_at DESC LIMIT 1",
+            params![organization_id],
+            |row| row.get(0),
+        ).optional()?;
+        document.map(|value| serde_json::from_str(&value).map_err(Into::into)).transpose()
     }
 
     /// Load an engagement and its explicit asset/feature scope.
