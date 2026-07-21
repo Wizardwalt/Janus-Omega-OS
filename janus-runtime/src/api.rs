@@ -30,6 +30,21 @@ struct HealthResponse {
     plugins: usize,
 }
 
+#[derive(Deserialize)]
+struct BootstrapRequest {
+    organization_name: String,
+    email: String,
+    password: String,
+}
+
+#[derive(Serialize)]
+struct BootstrapResponse {
+    organization_id: String,
+    user_id: String,
+    email: String,
+    role: String,
+}
+
 #[derive(Serialize, Deserialize)]
 struct ExecuteRequest {
     plugin: String,
@@ -82,6 +97,7 @@ impl ApiServer {
 
         let app = Router::new()
             .route("/health", get(health))
+            .route("/auth/bootstrap", post(bootstrap))
             .route("/execute", post(execute))
             .route("/plugins", get(list_plugins))
             .route("/state/:namespace/:key", get(get_state).post(set_state))
@@ -104,6 +120,39 @@ async fn health(AxumState(state): AxumState<ApiState>) -> Json<HealthResponse> {
         version: janus_core::VERSION.to_string(),
         plugins: state.executor.plugin_count(),
     })
+}
+
+async fn bootstrap(
+    AxumState(state): AxumState<ApiState>,
+    Json(request): Json<BootstrapRequest>,
+) -> (StatusCode, Json<ApiResponse<BootstrapResponse>>) {
+    match state
+        .state_manager
+        .bootstrap_first_admin(request.organization_name, request.email, request.password)
+        .await
+    {
+        Ok((organization, account)) => (
+            StatusCode::CREATED,
+            Json(ApiResponse {
+                status: "success".to_string(),
+                data: Some(BootstrapResponse {
+                    organization_id: organization.id,
+                    user_id: account.id,
+                    email: account.email,
+                    role: account.role.as_str().to_string(),
+                }),
+                error: None,
+            }),
+        ),
+        Err(error) => (
+            StatusCode::BAD_REQUEST,
+            Json(ApiResponse {
+                status: "error".to_string(),
+                data: None,
+                error: Some(error.to_string()),
+            }),
+        ),
+    }
 }
 
 async fn execute(

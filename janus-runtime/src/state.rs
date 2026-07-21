@@ -2,7 +2,7 @@
 
 use crate::database::Database;
 use anyhow::Result;
-use janus_core::{Config, StateKey, SystemState};
+use janus_core::{hash_password, AuditEntry, AuditLog, Config, Organization, StateKey, SystemState, UserAccount, UserRole};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::debug;
@@ -27,6 +27,46 @@ impl StateManager {
             state: Arc::new(RwLock::new(state)),
             db,
         })
+    }
+
+    /// Complete the one-time initial organization administrator setup.
+    pub async fn bootstrap_first_admin(
+        &self,
+        organization_name: String,
+        email: String,
+        password: String,
+    ) -> Result<(Organization, UserAccount)> {
+        let organization_name = organization_name.trim();
+        let email = email.trim().to_ascii_lowercase();
+        if organization_name.is_empty() || email.is_empty() || !email.contains('@') {
+            return Err(anyhow::anyhow!("organization name and a valid email are required"));
+        }
+
+        let now = chrono::Utc::now();
+        let organization = Organization {
+            id: format!("org_{}", uuid::Uuid::new_v4()),
+            name: organization_name.to_string(),
+            active: true,
+            created_at: now,
+        };
+        let account = UserAccount {
+            id: format!("usr_{}", uuid::Uuid::new_v4()),
+            organization_id: organization.id.clone(),
+            email,
+            role: UserRole::OrganizationAdmin,
+            active: true,
+            failed_login_count: 0,
+            locked_until: None,
+            created_at: now,
+        };
+        let password_hash = hash_password(&password)?;
+        self.db.bootstrap_first_admin(&organization, &account, &password_hash)?;
+        self.db.record(
+            AuditEntry::new("bootstrap", "INITIAL_ADMIN_CREATED", &account.id)
+                .success()
+                .with_metadata(serde_json::json!({"organization_id": organization.id, "email": account.email})),
+        )?;
+        Ok((organization, account))
     }
 
     /// Get current state

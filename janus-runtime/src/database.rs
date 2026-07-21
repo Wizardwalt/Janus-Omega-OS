@@ -141,6 +141,38 @@ impl Database {
         Ok(())
     }
 
+    /// Create the first organization and administrator exactly once.
+    ///
+    /// The existence check and inserts share a transaction, so concurrent setup
+    /// requests cannot create two initial administrators.
+    pub fn bootstrap_first_admin(
+        &self,
+        organization: &Organization,
+        account: &UserAccount,
+        password_hash: &str,
+    ) -> Result<()> {
+        let mut conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
+        let transaction = conn.transaction()?;
+        let organization_count: i64 = transaction.query_row(
+            "SELECT COUNT(*) FROM organizations",
+            [],
+            |row| row.get(0),
+        )?;
+        if organization_count != 0 {
+            return Err(anyhow::anyhow!("initial setup has already been completed"));
+        }
+        transaction.execute(
+            "INSERT INTO organizations (id, name, active, created_at) VALUES (?1, ?2, ?3, ?4)",
+            params![organization.id, organization.name, organization.active, organization.created_at.to_rfc3339()],
+        )?;
+        transaction.execute(
+            "INSERT INTO user_accounts (id, organization_id, email, password_hash, role, active, failed_login_count, locked_until, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+            params![account.id, account.organization_id, account.email, password_hash, account.role.as_str(), account.active, account.failed_login_count, account.locked_until.map(|value| value.to_rfc3339()), account.created_at.to_rfc3339()],
+        )?;
+        transaction.commit()?;
+        Ok(())
+    }
+
     /// Persist an organization.
     pub fn create_organization(&self, organization: &Organization) -> Result<()> {
         self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute(
