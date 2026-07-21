@@ -4,7 +4,7 @@ use crate::{executor::{PluginExecutor, PluginSummary}, hardware::HardwareManager
 use anyhow::Result;
 use axum::{
     extract::{Path, State as AxumState},
-    http::{HeaderMap, StatusCode},
+    http::{header, HeaderMap, HeaderValue, Method, StatusCode},
     response::Json,
     routing::{get, post},
     Router,
@@ -197,7 +197,12 @@ impl ApiServer {
             .route("/plugins", get(list_plugins))
             .route("/state/:namespace/:key", get(get_state).post(set_state))
             .route("/audit/logs", get(get_audit_logs))
-            .layer(CorsLayer::permissive())
+            .layer(
+                CorsLayer::new()
+                    .allow_origin(HeaderValue::from_static("http://localhost:5000"))
+                    .allow_methods([Method::GET, Method::POST])
+                    .allow_headers([header::AUTHORIZATION, header::CONTENT_TYPE]),
+            )
             .with_state(api_state);
 
         let bind_addr = format!("{}:{}", self.config.web_bind, self.config.web_port);
