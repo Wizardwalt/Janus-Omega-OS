@@ -53,6 +53,7 @@ class JanusRuntimeApi {
   engagements() { return this.request('/engagements'); }
   licenseStatus() { return this.request('/licenses/status'); }
   auditLogs() { return this.request('/audit/logs'); }
+  plugins() { return this.request('/plugins'); }
 
   execute(plugin, engagementId, targetAsset, args = {}) {
     return this.request('/execute', {
