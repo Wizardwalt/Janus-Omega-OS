@@ -8,6 +8,8 @@ repository.workspace = true
 description = "Janus shared types, configuration, capabilities registry, and audit trail infrastructure"
 
 [dependencies]
+base64.workspace = true
+ed25519-dalek.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 chrono.workspace = true

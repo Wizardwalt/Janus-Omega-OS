@@ -50,3 +50,6 @@ local.properties
 .env
 .env.*
 secrets/
+
+# Generated module certification inventory
+reports/module-inventory.json

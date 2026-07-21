@@ -66,8 +66,11 @@ async fn main() -> Result<()> {
 
     info!("Janus Runtime v{} starting", janus_core::VERSION);
 
-    // Load configuration
-    let mut config = Config::load()?;
+    // Load configuration, optionally from the file supplied on the command line.
+    let mut config = match args.config.as_deref() {
+        Some(path) => Config::load_from_path(path)?,
+        None => Config::load()?,
+    };
 
     // Override with CLI arguments
     if let Some(plugin_dir) = args.plugin_dir {

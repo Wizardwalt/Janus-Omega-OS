@@ -14,6 +14,8 @@ pub enum JanusError {
     PluginNotFound(String),
     /// Configuration error
     Config(String),
+    /// License validation or entitlement error
+    License(String),
     /// Database operation failed
     Database(String),
     /// Audit trail corruption or access denied
@@ -40,6 +42,7 @@ impl fmt::Display for JanusError {
             JanusError::PluginExecution(msg) => write!(f, "Plugin execution failed: {}", msg),
             JanusError::PluginNotFound(name) => write!(f, "Plugin not found: {}", name),
             JanusError::Config(msg) => write!(f, "Configuration error: {}", msg),
+            JanusError::License(msg) => write!(f, "License error: {}", msg),
             JanusError::Database(msg) => write!(f, "Database error: {}", msg),
             JanusError::Audit(msg) => write!(f, "Audit error: {}", msg),
             JanusError::LuaRuntime(msg) => write!(f, "Lua runtime error: {}", msg),

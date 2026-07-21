@@ -16,7 +16,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 use tokio::sync::broadcast;
-use tower_http::{cors::CorsLayer, services::ServeDir};
+use tower_http::services::ServeDir;
 
 // ─── Lua Sandbox Prelude ───────────────────────────────────────────────────────
 // Loaded before every module. Sets up __index auto-stub on _G so ANY undefined
@@ -723,13 +723,20 @@ async fn handle_socket(mut socket: WebSocket, state: GuiState) {
                                 }
 
                                 "run_module" => {
-                                    let file     = inc.module.clone();
-                                    let category = inc.category.clone();
-                                    let label    = inc.module
-                                        .split('/').last().unwrap_or(&inc.module)
-                                        .trim_end_matches(".lua")
-                                        .to_string();
+                                    let Some(module) = state.module_registry
+                                        .get(&inc.category)
+                                        .and_then(|modules| modules.iter().find(|module| module.file == inc.module))
+                                    else {
+                                        let _ = socket.send(Message::Text(ws_msg(
+                                            "module_error", None,
+                                            Some("Unknown module requested.".into()),
+                                        ))).await;
+                                        continue;
+                                    };
 
+                                    let file = module.file.clone();
+                                    let category = inc.category.clone();
+                                    let label = module.display.clone();
                                     let lines = tokio::task::spawn_blocking(move || {
                                         run_lua_module_file(&file, &category)
                                     }).await.unwrap_or_else(|_| {
@@ -816,7 +823,6 @@ async fn main() -> anyhow::Result<()> {
     let app = Router::new()
         .route("/ws", get(ws_handler))
         .fallback_service(ServeDir::new("web"))
-        .layer(CorsLayer::permissive())
         .with_state(state);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 5000));

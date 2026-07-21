@@ -13,4 +13,7 @@ clean:
 watch:
 	cargo watch -x 'run --bin janus-web'
 
-.PHONY: run release check clean watch
+inventory:
+	./scripts/validate-modules.sh
+
+.PHONY: run release check clean watch inventory

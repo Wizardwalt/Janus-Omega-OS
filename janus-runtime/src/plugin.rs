@@ -64,25 +64,19 @@ impl PluginLoader {
         }
     }
 
-    /// Discover and load all plugins
+    /// Discover and load all Lua plugins below the configured directory.
     pub async fn load_all(&mut self) -> Result<usize> {
         if !self.plugin_dir.exists() {
             warn!("Plugin directory not found: {}", self.plugin_dir.display());
             return Ok(0);
         }
 
+        let paths = collect_lua_paths(&self.plugin_dir)?;
         let mut count = 0;
-        let entries = tokio::fs::read_dir(&self.plugin_dir).await?;
-        let mut read_dir = entries;
-
-        while let Some(entry) = read_dir.next_entry().await? {
-            let path = entry.path();
-
-            if path.is_file() && path.extension().and_then(|s| s.to_str()) == Some("lua") {
-                match self.load_plugin_file(&path).await {
-                    Ok(_) => count += 1,
-                    Err(e) => warn!("Failed to load plugin {:?}: {}", path.file_name(), e),
-                }
+        for path in paths {
+            match self.load_plugin_file(&path).await {
+                Ok(()) => count += 1,
+                Err(error) => warn!("Failed to load plugin {:?}: {}", path.file_name(), error),
             }
         }
 
@@ -93,7 +87,7 @@ impl PluginLoader {
     /// Load single plugin file
     async fn load_plugin_file(&mut self, path: &Path) -> Result<()> {
         let code = tokio::fs::read_to_string(path).await?;
-        let manifest = extract_manifest_from_lua(&code)?;
+        let manifest = extract_manifest_from_lua(&code, path)?;
 
         let source = PluginSource {
             manifest: manifest.clone(),
@@ -128,8 +122,23 @@ impl PluginLoader {
     }
 }
 
+/// Return every Lua file in a directory tree in deterministic order.
+fn collect_lua_paths(dir: &Path) -> Result<Vec<PathBuf>> {
+    let mut paths = Vec::new();
+    for entry in std::fs::read_dir(dir)? {
+        let path = entry?.path();
+        if path.is_dir() {
+            paths.extend(collect_lua_paths(&path)?);
+        } else if path.extension().and_then(|extension| extension.to_str()) == Some("lua") {
+            paths.push(path);
+        }
+    }
+    paths.sort();
+    Ok(paths)
+}
+
 /// Extract plugin manifest from Lua code comments
-fn extract_manifest_from_lua(code: &str) -> Result<PluginManifest> {
+fn extract_manifest_from_lua(code: &str, path: &Path) -> Result<PluginManifest> {
     // Look for JSON metadata in Lua comments
     for line in code.lines() {
         if line.trim().starts_with("--[") {
@@ -146,10 +155,10 @@ fn extract_manifest_from_lua(code: &str) -> Result<PluginManifest> {
     }
 
     // Fallback: generate minimal manifest from filename
-    let filename = code.split('/').last().unwrap_or("unknown");
-    let id = filename
-        .strip_suffix(".lua")
-        .unwrap_or(filename)
+    let id = path
+        .file_stem()
+        .and_then(|name| name.to_str())
+        .unwrap_or("unknown")
         .to_string();
 
     Ok(PluginManifest {
@@ -188,7 +197,7 @@ mod tests {
 print("Plugin loaded")
 "#;
 
-        let manifest = extract_manifest_from_lua(code).unwrap();
+        let manifest = extract_manifest_from_lua(code, Path::new("test_plugin.lua")).unwrap();
         assert_eq!(manifest.id, "test_plugin");
         assert_eq!(manifest.priority, 50);
     }

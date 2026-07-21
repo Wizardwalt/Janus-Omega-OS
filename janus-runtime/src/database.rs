@@ -4,26 +4,26 @@ use anyhow::Result;
 use chrono::Utc;
 use janus_core::{AuditEntry, AuditLevel, AuditLog, StateKey, SystemState};
 use rusqlite::{params, Connection, OptionalExtension};
-use std::path::Path;
+use std::{path::Path, sync::Mutex};
 use tracing::debug;
 
 /// Database manager for persistence
 pub struct Database {
-    conn: Connection,
+    conn: Mutex<Connection>,
 }
 
 impl Database {
     /// Open or create database
     pub fn open(path: impl AsRef<Path>) -> Result<Self> {
         let conn = Connection::open(path)?;
-        let db = Self { conn };
+        let db = Self { conn: Mutex::new(conn) };
         db.init_schema()?;
         Ok(db)
     }
 
     /// Initialize database schema
     fn init_schema(&self) -> Result<()> {
-        self.conn.execute_batch(
+        self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute_batch(
             r#"
             CREATE TABLE IF NOT EXISTS state (
                 id INTEGER PRIMARY KEY,
@@ -47,6 +47,19 @@ impl Database {
             CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_log(timestamp);
             CREATE INDEX IF NOT EXISTS idx_audit_level ON audit_log(level);
             CREATE INDEX IF NOT EXISTS idx_state_key ON state(key);
+
+            CREATE TABLE IF NOT EXISTS module_certifications (
+                module_id TEXT PRIMARY KEY,
+                module_sha256 TEXT NOT NULL,
+                status TEXT NOT NULL,
+                required_feature TEXT NOT NULL,
+                reviewed_by TEXT,
+                reviewed_at TEXT,
+                notes TEXT,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE INDEX IF NOT EXISTS idx_module_certification_status
+                ON module_certifications(status);
         "#,
         )?;
         debug!("Database schema initialized");
@@ -56,7 +69,7 @@ impl Database {
     /// Store state value
     pub fn set_state(&self, key: &StateKey, value: &serde_json::Value) -> Result<()> {
         let json_str = serde_json::to_string(value)?;
-        self.conn.execute(
+        self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute(
             "INSERT OR REPLACE INTO state (key, value) VALUES (?1, ?2)",
             params![key.fqn(), json_str],
         )?;
@@ -64,11 +77,19 @@ impl Database {
         Ok(())
     }
 
+    /// Remove a persisted state value.
+    pub fn remove_state(&self, key: &StateKey) -> Result<()> {
+        self.conn
+            .lock()
+            .map_err(|_| anyhow::anyhow!("database lock poisoned"))?
+            .execute("DELETE FROM state WHERE key = ?1", params![key.fqn()])?;
+        Ok(())
+    }
+
     /// Retrieve state value
     pub fn get_state(&self, key: &StateKey) -> Result<Option<serde_json::Value>> {
-        let result = self
-            .conn
-            .query_row(
+        let conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
+        let result = conn.query_row(
                 "SELECT value FROM state WHERE key = ?1",
                 params![key.fqn()],
                 |row| row.get::<_, String>(0),
@@ -80,7 +101,8 @@ impl Database {
 
     /// Load all state
     pub fn load_all_state(&self) -> Result<SystemState> {
-        let mut stmt = self.conn.prepare("SELECT key, value FROM state")?;
+        let conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
+        let mut stmt = conn.prepare("SELECT key, value FROM state")?;
         let mut state = SystemState::new();
 
         let rows = stmt.query_map([], |row| {
@@ -111,7 +133,7 @@ impl AuditLog for Database {
         let json = serde_json::to_string(&entry.metadata)
             .unwrap_or_else(|_| "{}".to_string());
 
-        self.conn
+        self.conn.lock().map_err(|_| janus_core::JanusError::Audit("database lock poisoned".to_string()))?
             .execute(
                 r#"
                 INSERT INTO audit_log 
@@ -136,9 +158,8 @@ impl AuditLog for Database {
     }
 
     fn query(&self, limit: usize) -> janus_core::Result<Vec<AuditEntry>> {
-        let mut stmt = self
-            .conn
-            .prepare(
+        let conn = self.conn.lock().map_err(|_| janus_core::JanusError::Audit("database lock poisoned".to_string()))?;
+        let mut stmt = conn.prepare(
                 "SELECT id, timestamp, level, actor, action, resource, result, error, metadata 
                  FROM audit_log ORDER BY timestamp DESC LIMIT ?1",
             )
@@ -179,8 +200,7 @@ impl AuditLog for Database {
     fn cleanup(&self, days_old: u32) -> janus_core::Result<usize> {
         let cutoff = Utc::now()
             - chrono::Duration::days(days_old as i64);
-        let rows = self
-            .conn
+        let rows = self.conn.lock().map_err(|_| janus_core::JanusError::Audit("database lock poisoned".to_string()))?
             .execute(
                 "DELETE FROM audit_log WHERE timestamp < ?1",
                 params![cutoff.to_rfc3339()],

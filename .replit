@@ -33,16 +33,12 @@ outputType = "vnc"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cargo run"
+args = "cargo run --bin janus-web"
 
 [deployment]
 deploymentTarget = "vm"
-run = ["cargo", "run", "--release"]
+run = ["cargo", "run", "--release", "--bin", "janus-web"]
 
 [[ports]]
-localPort = 5904
+localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 8080
-externalPort = 8080

@@ -48,10 +48,17 @@ impl Default for Config {
 }
 
 impl Config {
-    /// Load configuration from file or return default
+    /// Load the default configuration.
     pub fn load() -> crate::Result<Self> {
-        // For now, return defaults. Can be extended to load from TOML/JSON.
         Ok(Self::default())
+    }
+
+    /// Load configuration from a JSON file.
+    pub fn load_from_path(path: impl AsRef<std::path::Path>) -> crate::Result<Self> {
+        let content = std::fs::read_to_string(path)
+            .map_err(|error| crate::JanusError::Config(error.to_string()))?;
+        serde_json::from_str(&content)
+            .map_err(|error| crate::JanusError::Config(error.to_string()))
     }
 
     /// Validate configuration consistency

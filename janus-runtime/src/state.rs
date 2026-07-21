@@ -46,6 +46,9 @@ impl StateManager {
     /// Remove state value
     pub async fn remove(&self, key: &StateKey) -> Result<Option<serde_json::Value>> {
         let removed = self.state.write().await.remove(key);
+        if removed.is_some() {
+            self.db.remove_state(key)?;
+        }
         Ok(removed)
     }
 }
