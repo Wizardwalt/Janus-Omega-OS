@@ -13,7 +13,7 @@ function runtimeAuthPanel() {
     <label style="display:block;margin-bottom:6px">Email <input data-field="email" type="email" autocomplete="email" style="width:100%;box-sizing:border-box"></label>
     <label style="display:block;margin-bottom:8px">Password <input data-field="password" type="password" autocomplete="current-password" style="width:100%;box-sizing:border-box"></label>
     <label data-bootstrap style="display:none;margin-bottom:8px">Organization <input data-field="organization" style="width:100%;box-sizing:border-box"></label>
-    <div style="display:flex;gap:8px"><button type="button" data-action="login">SIGN IN</button><button type="button" data-action="bootstrap">FIRST-TIME SETUP</button></div>
+    <div style="display:flex;gap:8px"><button type="button" data-action="login">SIGN IN</button><button type="button" data-action="bootstrap">FIRST-TIME SETUP</button><button type="button" data-action="logout" style="display:none" data-logout>LOG OUT</button></div>
     <div data-status style="margin-top:9px;color:#9ab3a0">Not signed in. Demo display remains separate from production access.</div>`;
   document.body.appendChild(panel);
 
@@ -26,13 +26,21 @@ function runtimeAuthPanel() {
       window.janusRuntime.setBaseUrl(field('url').value.trim());
       const session = await window.janusRuntime.login(field('email').value, field('password').value);
       field('password').value = '';
-      setStatus(`Signed in as ${session.role}. Session expires ${new Date(session.expires_at).toLocaleString()}.`);
+      panel.querySelector('[data-logout]').style.display = 'inline-block';
+      setStatus(`PRODUCTION SESSION: ${session.role}. Expires ${new Date(session.expires_at).toLocaleString()}.`);
       window.dispatchEvent(new CustomEvent('janus:session', { detail: session }));
     } catch (error) { setStatus(error.message, true); }
   };
   panel.addEventListener('click', async event => {
     const action = event.target.dataset.action;
     if (action === 'hide') { panel.style.display = 'none'; return; }
+    if (action === 'logout') {
+      try { await window.janusRuntime.logout(); } catch (_) {}
+      panel.querySelector('[data-logout]').style.display = 'none';
+      setStatus('Signed out. Production access is disabled.');
+      window.dispatchEvent(new Event('janus:logout'));
+      return;
+    }
     if (action === 'bootstrap') {
       if (bootstrap.style.display === 'none') { bootstrap.style.display = 'block'; setStatus('Enter organization name, email, and a password of at least 12 characters.'); return; }
       try {

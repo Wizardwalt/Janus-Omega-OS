@@ -36,7 +36,11 @@ async function refreshRuntimeStatus() {
       `ENGAGEMENTS: ${engagements.length}`,
       `RECENT AUDIT EVENTS: ${audits.length}`,
     ];
+    if (license && (new Date(license.expires_at) - new Date()) < 7 * 24 * 60 * 60 * 1000) {
+      lines.push('WARNING: LICENSE EXPIRES IN LESS THAN 7 DAYS');
+    }
     lines.forEach(line => { const div = document.createElement('div'); div.textContent = line; div.style.margin = '3px 0'; content.appendChild(div); });
+    audits.slice(0, 3).forEach(event => { const div = document.createElement('div'); div.textContent = `AUDIT ${event.timestamp}: ${event.action} → ${event.result}`; div.style.cssText = 'margin-top:4px;color:#9fcfff'; content.appendChild(div); });
     const refresh = document.createElement('button');
     refresh.type = 'button'; refresh.textContent = 'REFRESH'; refresh.style.marginTop = '8px';
     refresh.addEventListener('click', refreshRuntimeStatus); content.appendChild(refresh);
@@ -47,3 +51,8 @@ async function refreshRuntimeStatus() {
 
 document.addEventListener('DOMContentLoaded', createRuntimeStatusPanel);
 window.addEventListener('janus:session', refreshRuntimeStatus);
+
+window.addEventListener('janus:logout', () => {
+  const panel = document.getElementById('runtime-status-panel');
+  if (panel) panel.style.display = 'none';
+});

@@ -16,6 +16,11 @@ async function loadProductionExecutionPanel() {
   if (!panel || !content || !window.janusRuntime.hasSession()) return;
   panel.style.display = 'block'; content.textContent = 'Loading engagements and runtime plugins...';
   try {
+    const user = await window.janusRuntime.me();
+    if (!['organization_admin', 'operator'].includes(user.role)) {
+      content.textContent = `Role ${user.role} cannot request production execution.`;
+      return;
+    }
     const [engagements, plugins] = await Promise.all([window.janusRuntime.engagements(), window.janusRuntime.plugins()]);
     const active = engagements.filter(item => item.active);
     content.replaceChildren();
@@ -51,3 +56,8 @@ function selectField(label, options) {
 
 document.addEventListener('DOMContentLoaded', createExecutionPanel);
 window.addEventListener('janus:session', loadProductionExecutionPanel);
+
+window.addEventListener('janus:logout', () => {
+  const panel = document.getElementById('runtime-execution-panel');
+  if (panel) panel.style.display = 'none';
+});
