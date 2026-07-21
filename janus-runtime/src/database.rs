@@ -321,6 +321,14 @@ impl Database {
         ).optional().map_err(Into::into)
     }
 
+    /// Remove expired session records as part of normal authentication activity.
+    pub fn cleanup_expired_sessions(&self, now: chrono::DateTime<Utc>) -> Result<usize> {
+        let rows = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute(
+            "DELETE FROM sessions WHERE expires_at <= ?1", params![now.to_rfc3339()],
+        )?;
+        Ok(rows)
+    }
+
     /// Revoke an opaque session by its token hash.
     pub fn delete_session(&self, token_hash: &str) -> Result<()> {
         self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute(

@@ -356,11 +356,15 @@ async fn logout(
     AxumState(state): AxumState<ApiState>,
     headers: HeaderMap,
 ) -> (StatusCode, Json<ApiResponse<()>>) {
+    let account = match authenticated_account(&state.state_manager, &headers).await {
+        Ok(account) => account,
+        Err(error) => return unauthorized_response(error),
+    };
     let token = match bearer_token(&headers) {
         Ok(token) => token,
         Err(error) => return unauthorized_response(error),
     };
-    match state.state_manager.logout(token).await {
+    match state.state_manager.logout(&account, token).await {
         Ok(()) => (StatusCode::OK, Json(ApiResponse { status: "success".into(), data: Some(()), error: None })),
         Err(error) => unauthorized_response(error),
     }

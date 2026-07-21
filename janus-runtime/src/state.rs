@@ -81,6 +81,7 @@ impl StateManager {
     pub async fn login(&self, email: String, password: String) -> Result<LoginSession> {
         let email = email.trim().to_ascii_lowercase();
         let now = chrono::Utc::now();
+        self.db.cleanup_expired_sessions(now)?;
         let stored = self
             .db
             .find_user_by_email(&email)?
@@ -326,10 +327,12 @@ impl StateManager {
         Ok(account)
     }
 
-    /// Revoke an opaque session token.
-    pub async fn logout(&self, token: &str) -> Result<()> {
+    /// Revoke an opaque session token and record the authenticated logout.
+    pub async fn logout(&self, account: &janus_core::UserAccount, token: &str) -> Result<()> {
         let token_hash = format!("{:x}", Sha256::digest(token.as_bytes()));
-        self.db.delete_session(&token_hash)
+        self.db.delete_session(&token_hash)?;
+        self.db.record(AuditEntry::new(&account.id, "LOGOUT", "authentication").success())?;
+        Ok(())
     }
 
     /// Get current state
