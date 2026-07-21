@@ -2,7 +2,7 @@
 
 use anyhow::Result;
 use chrono::Utc;
-use janus_core::{AuditEntry, AuditLevel, AuditLog, Organization, StateKey, SystemState, UserAccount, UserRole};
+use janus_core::{AuditEntry, AuditLevel, AuditLog, CertificationStatus, Engagement, EngagementScope, LicensedFeature, ModuleCertification, Organization, StateKey, SystemState, UserAccount, UserRole};
 use rusqlite::{params, Connection, OptionalExtension};
 use std::{path::Path, sync::Mutex};
 use tracing::debug;
@@ -289,6 +289,48 @@ impl Database {
             "DELETE FROM sessions WHERE token_hash = ?1", params![token_hash],
         )?;
         Ok(())
+    }
+
+    /// Load an engagement and its explicit asset/feature scope.
+    pub fn find_engagement(&self, id: &str) -> Result<Option<Engagement>> {
+        let conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
+        let record = conn.query_row(
+            "SELECT id, organization_id, authorization_reference, starts_at, ends_at, active FROM engagements WHERE id = ?1",
+            params![id],
+            |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?, row.get::<_, String>(3)?, row.get::<_, String>(4)?, row.get::<_, bool>(5)?)),
+        ).optional()?;
+        let Some((id, organization_id, authorization_reference, starts_at, ends_at, active)) = record else { return Ok(None); };
+        let approved_assets = conn.prepare("SELECT asset FROM engagement_assets WHERE engagement_id = ?1")?
+            .query_map(params![&id], |row| row.get(0))?.collect::<std::result::Result<Vec<String>, _>>()?;
+        let feature_values = conn.prepare("SELECT feature FROM engagement_features WHERE engagement_id = ?1")?
+            .query_map(params![&id], |row| row.get::<_, String>(0))?.collect::<std::result::Result<Vec<String>, _>>()?;
+        let approved_features = feature_values.into_iter().filter_map(|value| LicensedFeature::from_str(&value)).collect();
+        Ok(Some(Engagement {
+            id, organization_id, authorization_reference,
+            starts_at: chrono::DateTime::parse_from_rfc3339(&starts_at)?.with_timezone(&Utc),
+            ends_at: chrono::DateTime::parse_from_rfc3339(&ends_at)?.with_timezone(&Utc),
+            active,
+            scope: EngagementScope { approved_assets, approved_evidence_paths: vec![], approved_features },
+        }))
+    }
+
+    /// Load a module's reviewed production certification record.
+    pub fn find_module_certification(&self, module_id: &str) -> Result<Option<ModuleCertification>> {
+        let conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
+        let record = conn.query_row(
+            "SELECT module_id, module_sha256, status, required_feature, reviewed_by, reviewed_at, notes FROM module_certifications WHERE module_id = ?1",
+            params![module_id],
+            |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?, row.get::<_, String>(3)?, row.get::<_, Option<String>>(4)?, row.get::<_, Option<String>>(5)?, row.get::<_, Option<String>>(6)?)),
+        ).optional()?;
+        let Some((module_id, module_sha256, status, required_feature, reviewed_by, reviewed_at, notes)) = record else { return Ok(None); };
+        Ok(Some(ModuleCertification {
+            module_id, module_sha256,
+            status: CertificationStatus::from_str(&status).ok_or_else(|| anyhow::anyhow!("invalid certification status"))?,
+            required_feature: LicensedFeature::from_str(&required_feature).ok_or_else(|| anyhow::anyhow!("invalid licensed feature"))?,
+            reviewed_by,
+            reviewed_at: reviewed_at.map(|value| chrono::DateTime::parse_from_rfc3339(&value).map(|value| value.with_timezone(&Utc))).transpose()?,
+            notes,
+        }))
     }
 
     /// Store state value

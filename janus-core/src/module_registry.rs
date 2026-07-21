@@ -25,6 +25,17 @@ impl CertificationStatus {
             Self::ProductionApproved => "production_approved",
         }
     }
+
+    pub fn from_str(value: &str) -> Option<Self> {
+        match value {
+            "pending_review" => Some(Self::PendingReview),
+            "unsupported" => Some(Self::Unsupported),
+            "deprecated" => Some(Self::Deprecated),
+            "demo_only" => Some(Self::DemoOnly),
+            "production_approved" => Some(Self::ProductionApproved),
+            _ => None,
+        }
+    }
 }
 
 /// Certification record required before a module can be considered for production execution.

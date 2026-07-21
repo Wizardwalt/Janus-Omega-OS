@@ -28,6 +28,29 @@ pub struct LicenseClaims {
     pub enabled_features: Vec<LicensedFeature>,
 }
 
+impl LicensedFeature {
+    pub fn from_str(value: &str) -> Option<Self> {
+        match value {
+            "forensics" => Some(Self::Forensics),
+            "network_diagnostics" => Some(Self::NetworkDiagnostics),
+            "hardware_diagnostics" => Some(Self::HardwareDiagnostics),
+            "reporting" => Some(Self::Reporting),
+            "api_access" => Some(Self::ApiAccess),
+            _ => None,
+        }
+    }
+
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Forensics => "forensics",
+            Self::NetworkDiagnostics => "network_diagnostics",
+            Self::HardwareDiagnostics => "hardware_diagnostics",
+            Self::Reporting => "reporting",
+            Self::ApiAccess => "api_access",
+        }
+    }
+}
+
 impl LicenseClaims {
     /// Returns whether a feature is licensed at the supplied time.
     pub fn permits(&self, feature: &LicensedFeature, now: DateTime<Utc>) -> bool {
