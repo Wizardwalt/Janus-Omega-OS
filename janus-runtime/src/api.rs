@@ -255,8 +255,24 @@ async fn bootstrap(
 
 async fn execute(
     AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
     Json(req): Json<ExecuteRequest>,
 ) -> (StatusCode, Json<ApiResponse<serde_json::Value>>) {
+    let account = match authenticated_account(&state.state_manager, &headers).await {
+        Ok(account) => account,
+        Err(error) => return unauthorized_response(error),
+    };
+    if !account.role.may_request_execution() {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ApiResponse {
+                status: "error".to_string(),
+                data: None,
+                error: Some("role is not allowed to request execution".to_string()),
+            }),
+        );
+    }
+
     match state.executor.execute(&req.plugin, req.args).await {
         Ok(data) => (
             StatusCode::OK,

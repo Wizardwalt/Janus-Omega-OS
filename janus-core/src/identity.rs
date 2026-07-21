@@ -27,6 +27,12 @@ impl UserRole {
         }
     }
 
+    /// Whether this role may submit an execution request. This does not bypass
+    /// engagement, license, target, or module-certification checks.
+    pub fn may_request_execution(self) -> bool {
+        matches!(self, Self::OrganizationAdmin | Self::Operator)
+    }
+
     pub fn from_str(value: &str) -> Option<Self> {
         match value {
             "platform_break_glass_admin" => Some(Self::PlatformBreakGlassAdmin),
