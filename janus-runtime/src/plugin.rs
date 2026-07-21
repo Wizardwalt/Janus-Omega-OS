@@ -5,7 +5,7 @@ use janus_core::{Plugin, PluginMetadata, PluginStatus};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use tracing::{debug, warn, error};
+use tracing::{debug, error, warn};
 
 /// Plugin manifest (parsed from TOML or JSON metadata)
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -107,11 +107,7 @@ impl PluginLoader {
 
     /// List all plugins sorted by priority
     pub fn list_sorted(&self) -> Vec<(&str, &PluginSource)> {
-        let mut plugins: Vec<_> = self
-            .plugins
-            .iter()
-            .map(|(k, v)| (k.as_str(), v))
-            .collect();
+        let mut plugins: Vec<_> = self.plugins.iter().map(|(k, v)| (k.as_str(), v)).collect();
         plugins.sort_by_key(|(_k, v)| v.manifest.priority);
         plugins
     }

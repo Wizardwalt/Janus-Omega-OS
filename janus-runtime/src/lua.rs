@@ -33,7 +33,10 @@ impl LuaEnv {
                 continue;
             }
             let source = tokio::fs::read_to_string(&path).await?;
-            let name = path.file_stem().and_then(|name| name.to_str()).unwrap_or("core_module");
+            let name = path
+                .file_stem()
+                .and_then(|name| name.to_str())
+                .unwrap_or("core_module");
             if let Err(error) = self.lua.load(&source).set_name(name).exec() {
                 error!(module = name, %error, "Core Lua module failed to load");
             } else {

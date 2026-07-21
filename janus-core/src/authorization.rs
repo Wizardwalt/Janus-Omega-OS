@@ -2,9 +2,7 @@
 
 use chrono::{DateTime, Utc};
 
-use crate::{
-    Engagement, LicensedFeature, ModuleCertification, SignedLicense,
-};
+use crate::{Engagement, LicensedFeature, ModuleCertification, SignedLicense};
 
 /// Input required to authorize a real module execution.
 pub struct ExecutionAuthorization<'a> {

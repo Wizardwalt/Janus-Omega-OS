@@ -118,6 +118,7 @@ fn uuid_simple() -> String {
         (std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap_or_default()
-            .as_nanos() % 1_000_000) as u64
+            .as_nanos()
+            % 1_000_000) as u64
     )
 }

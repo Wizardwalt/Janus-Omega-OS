@@ -39,25 +39,25 @@ setmetatable(_G, {
 
 #[derive(Clone)]
 struct GuiState {
-    tx:              broadcast::Sender<String>,
-    aria_status:     Arc<Mutex<AriaStatus>>,
+    tx: broadcast::Sender<String>,
+    aria_status: Arc<Mutex<AriaStatus>>,
     module_registry: Arc<HashMap<String, Vec<ModuleInfo>>>,
 }
 
 #[derive(Clone, Serialize)]
 struct AriaStatus {
-    mood:      String,
-    thought:   String,
-    online:    bool,
+    mood: String,
+    thought: String,
+    online: bool,
     ops_count: u32,
 }
 
 #[derive(Clone, Serialize)]
 struct ModuleInfo {
-    name:        String,
-    display:     String,
+    name: String,
+    display: String,
     description: String,
-    file:        String,
+    file: String,
 }
 
 // ─── WebSocket Message Types ──────────────────────────────────────────────────
@@ -69,9 +69,9 @@ struct WsIncoming {
     #[serde(default)]
     category: String,
     #[serde(default)]
-    module:   String,
+    module: String,
     #[serde(default)]
-    message:  String,
+    message: String,
 }
 
 #[derive(Serialize)]
@@ -79,13 +79,13 @@ struct WsOutgoing {
     #[serde(rename = "type")]
     msg_type: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    line:     Option<String>,
+    line: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    text:     Option<String>,
+    text: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    modules:  Option<Vec<ModuleInfo>>,
+    modules: Option<Vec<ModuleInfo>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    status:   Option<AriaStatus>,
+    status: Option<AriaStatus>,
     #[serde(skip_serializing_if = "Option::is_none")]
     category: Option<String>,
 }
@@ -95,8 +95,8 @@ fn ws_msg(msg_type: &str, line: Option<String>, text: Option<String>) -> String 
         msg_type: msg_type.into(),
         line,
         text,
-        modules:  None,
-        status:   None,
+        modules: None,
+        status: None,
         category: None,
     })
     .unwrap()
@@ -109,34 +109,34 @@ fn build_module_registry() -> HashMap<String, Vec<ModuleInfo>> {
 
     let categories = vec![
         // plugins/
-        ("forensics",           "plugins/forensics"),
-        ("cyber_warfare",       "plugins/cyber_warfare"),
-        ("network_warfare",     "plugins/network_warfare"),
-        ("mobile_offense",      "plugins/mobile_offense"),
-        ("sigint",              "plugins/sigint"),
-        ("osint_oracle",        "plugins/osint_oracle"),
-        ("hardware_glitch",     "plugins/hardware_glitch"),
-        ("titan_exclusive",     "plugins/titan_exclusive"),
-        ("advanced_mobile",     "plugins/advanced_mobile"),
-        ("expansion",           "plugins/expansion"),
-        ("offensive",           "plugins/offensive"),
-        ("tactical",            "plugins/tactical"),
+        ("forensics", "plugins/forensics"),
+        ("cyber_warfare", "plugins/cyber_warfare"),
+        ("network_warfare", "plugins/network_warfare"),
+        ("mobile_offense", "plugins/mobile_offense"),
+        ("sigint", "plugins/sigint"),
+        ("osint_oracle", "plugins/osint_oracle"),
+        ("hardware_glitch", "plugins/hardware_glitch"),
+        ("titan_exclusive", "plugins/titan_exclusive"),
+        ("advanced_mobile", "plugins/advanced_mobile"),
+        ("expansion", "plugins/expansion"),
+        ("offensive", "plugins/offensive"),
+        ("tactical", "plugins/tactical"),
         // modules/
-        ("god_tier",            "modules/god_tier"),
-        ("legendary",           "modules/legendary"),
-        ("mobile_offense_adv",  "modules/mobile_offense"),
+        ("god_tier", "modules/god_tier"),
+        ("legendary", "modules/legendary"),
+        ("mobile_offense_adv", "modules/mobile_offense"),
         ("network_warfare_adv", "modules/network_warfare"),
-        ("forensics_recovery",  "modules/forensics_recovery"),
-        ("sigint_adv",          "modules/sigint"),
-        ("tactical_defensive",  "modules/tactical_defensive"),
-        ("creative_psych",      "modules/creative_psych"),
-        ("god_protocols",       "modules/god_protocols"),
-        ("legacy_vault",        "modules/legacy_vault"),
-        ("vault_engineering",   "modules/vault_engineering"),
-        ("signature",           "modules/signature"),
+        ("forensics_recovery", "modules/forensics_recovery"),
+        ("sigint_adv", "modules/sigint"),
+        ("tactical_defensive", "modules/tactical_defensive"),
+        ("creative_psych", "modules/creative_psych"),
+        ("god_protocols", "modules/god_protocols"),
+        ("legacy_vault", "modules/legacy_vault"),
+        ("vault_engineering", "modules/vault_engineering"),
+        ("signature", "modules/signature"),
         // root
-        ("apocalypse",          "apocalypse_engineering"),
-        ("core",                "core"),
+        ("apocalypse", "apocalypse_engineering"),
+        ("core", "core"),
     ];
 
     for (cat, dir) in categories {
@@ -148,8 +148,9 @@ fn build_module_registry() -> HashMap<String, Vec<ModuleInfo>> {
                     // Only regular files with .lua extension and clean filenames
                     let path = e.path();
                     let is_file = path.is_file();
-                    let has_lua  = path.extension().map_or(false, |x| x == "lua");
-                    let clean_name = e.file_name()
+                    let has_lua = path.extension().map_or(false, |x| x == "lua");
+                    let clean_name = e
+                        .file_name()
                         .to_string_lossy()
                         .chars()
                         .all(|c| c.is_alphanumeric() || c == '_' || c == '-' || c == '.');
@@ -158,11 +159,11 @@ fn build_module_registry() -> HashMap<String, Vec<ModuleInfo>> {
                 .collect();
             files.sort_by_key(|e| e.file_name());
             for entry in files.iter().take(200) {
-                let fname   = entry.file_name();
-                let name    = fname.to_string_lossy();
-                let base    = name.trim_end_matches(".lua").to_string();
+                let fname = entry.file_name();
+                let name = fname.to_string_lossy();
+                let base = name.trim_end_matches(".lua").to_string();
                 let display = humanize(&base);
-                let desc    = read_module_desc(&entry.path());
+                let desc = read_module_desc(&entry.path());
                 mods.push(ModuleInfo {
                     name: base,
                     display,
@@ -186,9 +187,15 @@ fn humanize(s: &str) -> String {
     let mut out = String::new();
     let mut cap = true;
     for ch in s.chars() {
-        if ch == ' ' { cap = true; out.push(ch); }
-        else if cap  { out.extend(ch.to_uppercase()); cap = false; }
-        else         { out.push(ch); }
+        if ch == ' ' {
+            cap = true;
+            out.push(ch);
+        } else if cap {
+            out.extend(ch.to_uppercase());
+            cap = false;
+        } else {
+            out.push(ch);
+        }
     }
     out.trim().to_string()
 }
@@ -197,19 +204,31 @@ fn read_module_desc(path: &std::path::Path) -> String {
     if let Ok(content) = std::fs::read_to_string(path) {
         for line in content.lines().take(10) {
             let line = line.trim();
-            if !line.starts_with("--") { continue; }
+            if !line.starts_with("--") {
+                continue;
+            }
             let text = line.trim_start_matches('-').trim();
-            if text.is_empty() || text.ends_with(".lua")
+            if text.is_empty()
+                || text.ends_with(".lua")
                 || text.to_lowercase().starts_with("category")
                 || text.to_lowercase().contains("module #")
                 || text.to_lowercase().contains("god tier module")
                 || text.to_lowercase().contains("janus os module")
                 || text.to_lowercase().contains("most powerful")
                 || text.starts_with("====")
-            { continue; }
+            {
+                continue;
+            }
             if text.len() > 6 {
-                let desc = if let Some(p) = text.find(" - ") { &text[p+3..] } else { text };
-                return desc.trim_end_matches(|c: char| c == '|' || c == '═').trim().to_string();
+                let desc = if let Some(p) = text.find(" - ") {
+                    &text[p + 3..]
+                } else {
+                    text
+                };
+                return desc
+                    .trim_end_matches(|c: char| c == '|' || c == '═')
+                    .trim()
+                    .to_string();
             }
         }
     }
@@ -227,7 +246,7 @@ fn run_lua_module_file(file_path: &str, category: &str) -> Vec<String> {
     let display = humanize(module_name);
 
     let lua_src = match std::fs::read_to_string(file_path) {
-        Ok(s)  => s,
+        Ok(s) => s,
         Err(e) => return vec![format!("[ERROR] Cannot read module: {} — {}", file_path, e)],
     };
 
@@ -240,71 +259,99 @@ fn run_lua_module_file(file_path: &str, category: &str) -> Vec<String> {
         // ── override print() ──────────────────────────────────────────────────
         {
             let o = out.clone();
-            lua.globals().set("print", lua.create_function(move |_, args: LuaMultiValue| {
-                let parts: Vec<String> = args.iter().map(|v| lua_val_to_string(v)).collect();
-                o.lock().unwrap().push(parts.join("\t"));
-                Ok(())
-            })?)?;
+            lua.globals().set(
+                "print",
+                lua.create_function(move |_, args: LuaMultiValue| {
+                    let parts: Vec<String> = args.iter().map(|v| lua_val_to_string(v)).collect();
+                    o.lock().unwrap().push(parts.join("\t"));
+                    Ok(())
+                })?,
+            )?;
         }
 
         // ── overseer_speak(msg) ───────────────────────────────────────────────
         {
             let o = out.clone();
-            lua.globals().set("overseer_speak", lua.create_function(move |_, msg: String| {
-                o.lock().unwrap().push(format!("[OVERSEER] {}", msg));
-                Ok(())
-            })?)?;
+            lua.globals().set(
+                "overseer_speak",
+                lua.create_function(move |_, msg: String| {
+                    o.lock().unwrap().push(format!("[OVERSEER] {}", msg));
+                    Ok(())
+                })?,
+            )?;
         }
 
         // ── speak(msg) ───────────────────────────────────────────────────────
         {
             let o = out.clone();
-            lua.globals().set("speak", lua.create_function(move |_, msg: String| {
-                o.lock().unwrap().push(format!("[ARIA] {}", msg));
-                Ok(())
-            })?)?;
+            lua.globals().set(
+                "speak",
+                lua.create_function(move |_, msg: String| {
+                    o.lock().unwrap().push(format!("[ARIA] {}", msg));
+                    Ok(())
+                })?,
+            )?;
         }
 
         // ── log_to_blackbox(tbl) ──────────────────────────────────────────────
         {
             let o = out.clone();
-            lua.globals().set("log_to_blackbox", lua.create_function(move |_, tbl: LuaTable| {
-                let module = tbl.get::<String>("module").unwrap_or_default();
-                let status = tbl.get::<String>("status").unwrap_or_else(|_| "ok".into());
-                o.lock().unwrap().push(format!("[BLACKBOX] ✓ {} → {}", module, status));
-                Ok(())
-            })?)?;
+            lua.globals().set(
+                "log_to_blackbox",
+                lua.create_function(move |_, tbl: LuaTable| {
+                    let module = tbl.get::<String>("module").unwrap_or_default();
+                    let status = tbl.get::<String>("status").unwrap_or_else(|_| "ok".into());
+                    o.lock()
+                        .unwrap()
+                        .push(format!("[BLACKBOX] ✓ {} → {}", module, status));
+                    Ok(())
+                })?,
+            )?;
         }
 
         // ── save_to_blackbox(tbl) — alias ─────────────────────────────────────
         {
             let o = out.clone();
-            lua.globals().set("save_to_blackbox", lua.create_function(move |_, tbl: LuaTable| {
-                let module = tbl.get::<String>("module").unwrap_or_default();
-                o.lock().unwrap().push(format!("[BLACKBOX] ✓ Saved: {}", module));
-                Ok(())
-            })?)?;
+            lua.globals().set(
+                "save_to_blackbox",
+                lua.create_function(move |_, tbl: LuaTable| {
+                    let module = tbl.get::<String>("module").unwrap_or_default();
+                    o.lock()
+                        .unwrap()
+                        .push(format!("[BLACKBOX] ✓ Saved: {}", module));
+                    Ok(())
+                })?,
+            )?;
         }
 
         // ── read_rotary_dial() ────────────────────────────────────────────────
         {
             let o = out.clone();
-            lua.globals().set("read_rotary_dial", lua.create_function(move |_, ()| {
-                let v = rand::thread_rng().gen_range(1u32..=100);
-                o.lock().unwrap().push(format!("[ROTARY] Dial position: {}", v));
-                Ok(v)
-            })?)?;
+            lua.globals().set(
+                "read_rotary_dial",
+                lua.create_function(move |_, ()| {
+                    let v = rand::thread_rng().gen_range(1u32..=100);
+                    o.lock()
+                        .unwrap()
+                        .push(format!("[ROTARY] Dial position: {}", v));
+                    Ok(v)
+                })?,
+            )?;
         }
 
         // ── wait_for_haptic_confirmation(n) ───────────────────────────────────
         {
             let o = out.clone();
-            lua.globals().set("wait_for_haptic_confirmation", lua.create_function(move |_, n: Option<u32>| {
-                o.lock().unwrap().push(format!(
-                    "[HAPTIC] {} pulse(s) received — authorised", n.unwrap_or(1)
-                ));
-                Ok(true)
-            })?)?;
+            lua.globals().set(
+                "wait_for_haptic_confirmation",
+                lua.create_function(move |_, n: Option<u32>| {
+                    o.lock().unwrap().push(format!(
+                        "[HAPTIC] {} pulse(s) received — authorised",
+                        n.unwrap_or(1)
+                    ));
+                    Ok(true)
+                })?,
+            )?;
         }
 
         // ── unleash_god_tier_power(target, rotary, options) ───────────────────
@@ -382,12 +429,15 @@ fn run_lua_module_file(file_path: &str, category: &str) -> Vec<String> {
         // ── exec_system_cmd(cmd) ──────────────────────────────────────────────
         {
             let o = out.clone();
-            lua.globals().set("exec_system_cmd", lua.create_function(move |_, cmd: String| {
-                let result = simulate_shell(&cmd);
-                o.lock().unwrap().push(format!("[SYS] $ {}", cmd));
-                o.lock().unwrap().push(format!("[SYS] {}", result));
-                Ok(result)
-            })?)?;
+            lua.globals().set(
+                "exec_system_cmd",
+                lua.create_function(move |_, cmd: String| {
+                    let result = simulate_shell(&cmd);
+                    o.lock().unwrap().push(format!("[SYS] $ {}", cmd));
+                    o.lock().unwrap().push(format!("[SYS] {}", result));
+                    Ok(result)
+                })?,
+            )?;
         }
 
         // ── janus table: janus.log, janus.shell, janus.adb ───────────────────
@@ -395,43 +445,112 @@ fn run_lua_module_file(file_path: &str, category: &str) -> Vec<String> {
             let janus = lua.create_table()?;
 
             let o = out.clone();
-            janus.set("log", lua.create_function(move |_, msg: String| {
-                o.lock().unwrap().push(format!("[JANUS] {}", msg));
-                Ok(())
-            })?)?;
+            janus.set(
+                "log",
+                lua.create_function(move |_, msg: String| {
+                    o.lock().unwrap().push(format!("[JANUS] {}", msg));
+                    Ok(())
+                })?,
+            )?;
 
             let o = out.clone();
-            janus.set("shell", lua.create_function(move |_, cmd: String| {
-                let r = simulate_shell(&cmd);
-                o.lock().unwrap().push(format!("[SHELL] $ {}", cmd));
-                o.lock().unwrap().push(format!("[SHELL] {}", r));
-                Ok(r)
-            })?)?;
+            janus.set(
+                "shell",
+                lua.create_function(move |_, cmd: String| {
+                    let r = simulate_shell(&cmd);
+                    o.lock().unwrap().push(format!("[SHELL] $ {}", cmd));
+                    o.lock().unwrap().push(format!("[SHELL] {}", r));
+                    Ok(r)
+                })?,
+            )?;
 
             let o = out.clone();
-            janus.set("adb", lua.create_function(move |_, cmd: String| {
-                let r = simulate_adb(&cmd);
-                o.lock().unwrap().push(format!("[ADB] {}", cmd));
-                o.lock().unwrap().push(format!("[ADB] {}", r));
-                Ok(r)
-            })?)?;
+            janus.set(
+                "adb",
+                lua.create_function(move |_, cmd: String| {
+                    let r = simulate_adb(&cmd);
+                    o.lock().unwrap().push(format!("[ADB] {}", cmd));
+                    o.lock().unwrap().push(format!("[ADB] {}", r));
+                    Ok(r)
+                })?,
+            )?;
 
             lua.globals().set("janus", janus)?;
         }
 
         // ── Hardware/system stubs ─────────────────────────────────────────────
-        register_stub(&lua, &out, "scan_devices",    "[SCAN] Device scan complete — 3 targets found")?;
-        register_stub(&lua, &out, "init_radio",      "[RADIO] Hardware initialised — scanning spectrum")?;
-        register_stub(&lua, &out, "enable_stealth",  "[STEALTH] RF signature suppressed — stealth active")?;
-        register_stub(&lua, &out, "ghost_net_sync",  "[GHOST-NET] Mesh sync — 3 Pandora nodes linked")?;
-        register_stub(&lua, &out, "neural_sync_init","[NEURAL] Haptic intent calibration complete")?;
-        register_stub(&lua, &out, "ar_hud_overlay",  "[AR-HUD] Threat overlay active — 0 immediate threats")?;
-        register_stub(&lua, &out, "cbrn_scan",       "[CBRN] Environmental scan — no hazardous readings")?;
-        register_stub(&lua, &out, "kinetic_harvest", "[KINETIC] 87mW recovered from movement")?;
-        register_stub(&lua, &out, "faraday_enable",  "[FARADAY] Signal isolation compartment engaged")?;
-        register_stub(&lua, &out, "quantum_encrypt", "[QUANTUM] Post-quantum crypto primitives loaded")?;
-        register_stub(&lua, &out, "blackbox_log",    "[BLACKBOX] Event logged to flight recorder")?;
-        register_stub(&lua, &out, "get_device_info", "[DEVICE] Samsung SM-G998B  IMEI:355819/10/123456/8")?;
+        register_stub(
+            &lua,
+            &out,
+            "scan_devices",
+            "[SCAN] Device scan complete — 3 targets found",
+        )?;
+        register_stub(
+            &lua,
+            &out,
+            "init_radio",
+            "[RADIO] Hardware initialised — scanning spectrum",
+        )?;
+        register_stub(
+            &lua,
+            &out,
+            "enable_stealth",
+            "[STEALTH] RF signature suppressed — stealth active",
+        )?;
+        register_stub(
+            &lua,
+            &out,
+            "ghost_net_sync",
+            "[GHOST-NET] Mesh sync — 3 Pandora nodes linked",
+        )?;
+        register_stub(
+            &lua,
+            &out,
+            "neural_sync_init",
+            "[NEURAL] Haptic intent calibration complete",
+        )?;
+        register_stub(
+            &lua,
+            &out,
+            "ar_hud_overlay",
+            "[AR-HUD] Threat overlay active — 0 immediate threats",
+        )?;
+        register_stub(
+            &lua,
+            &out,
+            "cbrn_scan",
+            "[CBRN] Environmental scan — no hazardous readings",
+        )?;
+        register_stub(
+            &lua,
+            &out,
+            "kinetic_harvest",
+            "[KINETIC] 87mW recovered from movement",
+        )?;
+        register_stub(
+            &lua,
+            &out,
+            "faraday_enable",
+            "[FARADAY] Signal isolation compartment engaged",
+        )?;
+        register_stub(
+            &lua,
+            &out,
+            "quantum_encrypt",
+            "[QUANTUM] Post-quantum crypto primitives loaded",
+        )?;
+        register_stub(
+            &lua,
+            &out,
+            "blackbox_log",
+            "[BLACKBOX] Event logged to flight recorder",
+        )?;
+        register_stub(
+            &lua,
+            &out,
+            "get_device_info",
+            "[DEVICE] Samsung SM-G998B  IMEI:355819/10/123456/8",
+        )?;
 
         // ── Universal __index auto-stub (catches ALL remaining unknowns) ──────
         lua.load(JANUS_PRELUDE).exec()?;
@@ -494,30 +613,46 @@ fn run_lua_module_file(file_path: &str, category: &str) -> Vec<String> {
 
 fn lua_val_to_string(v: &LuaValue) -> String {
     match v {
-        LuaValue::String(s)  => s.to_str().map(|b| b.to_string()).unwrap_or_else(|_| "?".into()),
+        LuaValue::String(s) => s
+            .to_str()
+            .map(|b| b.to_string())
+            .unwrap_or_else(|_| "?".into()),
         LuaValue::Integer(n) => n.to_string(),
-        LuaValue::Number(n)  => {
-            if *n == n.floor() { format!("{}", *n as i64) } else { format!("{:.4}", n) }
+        LuaValue::Number(n) => {
+            if *n == n.floor() {
+                format!("{}", *n as i64)
+            } else {
+                format!("{:.4}", n)
+            }
         }
         LuaValue::Boolean(b) => b.to_string(),
-        LuaValue::Nil        => "nil".to_string(),
-        LuaValue::Table(_)   => "[table]".to_string(),
-        _                    => "[value]".to_string(),
+        LuaValue::Nil => "nil".to_string(),
+        LuaValue::Table(_) => "[table]".to_string(),
+        _ => "[value]".to_string(),
     }
 }
 
-fn register_stub(lua: &Lua, out: &Arc<Mutex<Vec<String>>>, name: &'static str, msg: &'static str) -> LuaResult<()> {
+fn register_stub(
+    lua: &Lua,
+    out: &Arc<Mutex<Vec<String>>>,
+    name: &'static str,
+    msg: &'static str,
+) -> LuaResult<()> {
     let o = out.clone();
-    lua.globals().set(name, lua.create_function(move |_, _args: LuaMultiValue| {
-        o.lock().unwrap().push(msg.to_string());
-        Ok(())
-    })?)
+    lua.globals().set(
+        name,
+        lua.create_function(move |_, _args: LuaMultiValue| {
+            o.lock().unwrap().push(msg.to_string());
+            Ok(())
+        })?,
+    )
 }
 
 fn simulate_shell(cmd: &str) -> String {
     let c = cmd.to_lowercase();
     if c.contains("pm list packages") {
-        "package:com.android.settings\npackage:com.google.android.gms\npackage:com.facebook.katana".into()
+        "package:com.android.settings\npackage:com.google.android.gms\npackage:com.facebook.katana"
+            .into()
     } else if c.contains("pm uninstall") {
         "Success".into()
     } else if c.contains("am start") {
@@ -656,11 +791,15 @@ fn aria_respond(msg: &str) -> String {
     } else if t.contains("who are you") || t.contains("what are you") {
         "I'm ARIA. I run the intelligence layer of JanusOS. I watch, I learn, I remember. I'm the part of this system that thinks.".into()
     } else if t.contains("shutdown") || t.contains("exit") || t.contains("sleep") {
-        "I'll be here when you come back. I don't really sleep — I just wait with lower intensity.".into()
+        "I'll be here when you come back. I don't really sleep — I just wait with lower intensity."
+            .into()
     } else if t.len() < 5 {
         "I'm listening. You can say more.".into()
     } else {
-        format!("Understood. Processing: \"{}\". Analysing context and preparing response.", &msg[..msg.len().min(60)])
+        format!(
+            "Understood. Processing: \"{}\". Analysing context and preparing response.",
+            &msg[..msg.len().min(60)]
+        )
     }
 }
 
@@ -692,15 +831,18 @@ async fn ws_handler(ws: WebSocketUpgrade, State(state): State<GuiState>) -> impl
 }
 
 async fn handle_socket(mut socket: WebSocket, state: GuiState) {
-    let _ = socket.send(Message::Text(ws_msg(
-        "aria_thought", None,
-        Some("JanusOS online. All systems nominal. I'm here, Operator.".into()),
-    ))).await;
+    let _ = socket
+        .send(Message::Text(ws_msg(
+            "aria_thought",
+            None,
+            Some("JanusOS online. All systems nominal. I'm here, Operator.".into()),
+        )))
+        .await;
 
-    let thoughts   = aria_thoughts();
-    let mut idx    = 0usize;
+    let thoughts = aria_thoughts();
+    let mut idx = 0usize;
     let mut ticker = tokio::time::interval(tokio::time::Duration::from_secs(9));
-    let mut rx     = state.tx.subscribe();
+    let mut rx = state.tx.subscribe();
 
     loop {
         tokio::select! {
@@ -808,17 +950,25 @@ async fn handle_socket(mut socket: WebSocket, state: GuiState) {
 async fn main() -> anyhow::Result<()> {
     let (tx, _rx) = broadcast::channel::<String>(256);
     let aria_status = Arc::new(Mutex::new(AriaStatus {
-        mood:      "focused".into(),
-        thought:   "JanusOS online. All systems nominal.".into(),
-        online:    true,
+        mood: "focused".into(),
+        thought: "JanusOS online. All systems nominal.".into(),
+        online: true,
         ops_count: 0,
     }));
 
     let module_registry = Arc::new(build_module_registry());
     let total: usize = module_registry.values().map(|v| v.len()).sum();
-    println!("[GUI] Module registry: {} modules across {} categories", total, module_registry.len());
+    println!(
+        "[GUI] Module registry: {} modules across {} categories",
+        total,
+        module_registry.len()
+    );
 
-    let state = GuiState { tx, aria_status, module_registry };
+    let state = GuiState {
+        tx,
+        aria_status,
+        module_registry,
+    };
 
     let app = Router::new()
         .route("/ws", get(ws_handler))

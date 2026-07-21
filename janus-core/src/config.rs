@@ -57,8 +57,7 @@ impl Config {
     pub fn load_from_path(path: impl AsRef<std::path::Path>) -> crate::Result<Self> {
         let content = std::fs::read_to_string(path)
             .map_err(|error| crate::JanusError::Config(error.to_string()))?;
-        serde_json::from_str(&content)
-            .map_err(|error| crate::JanusError::Config(error.to_string()))
+        serde_json::from_str(&content).map_err(|error| crate::JanusError::Config(error.to_string()))
     }
 
     /// Validate configuration consistency

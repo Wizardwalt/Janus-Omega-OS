@@ -60,9 +60,7 @@ async fn main() -> Result<()> {
     let filter = tracing_subscriber::EnvFilter::try_from_default_env()
         .or_else(|_| tracing_subscriber::EnvFilter::try_new(&args.log_level))?;
 
-    tracing_subscriber::fmt()
-        .with_env_filter(filter)
-        .init();
+    tracing_subscriber::fmt().with_env_filter(filter).init();
 
     info!("Janus Runtime v{} starting", janus_core::VERSION);
 
@@ -118,12 +116,7 @@ async fn main() -> Result<()> {
     info!("Lua environment initialized with core modules");
 
     // Start API server
-    let api_server = api::ApiServer::new(
-        config.clone(),
-        state_mgr,
-        executor,
-        Arc::new(hw_manager),
-    );
+    let api_server = api::ApiServer::new(config.clone(), state_mgr, executor, Arc::new(hw_manager));
     api_server.start().await?;
 
     Ok(())

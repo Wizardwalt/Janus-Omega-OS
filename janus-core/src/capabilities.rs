@@ -16,7 +16,11 @@ pub struct Capability {
 
 impl Capability {
     /// Create new capability
-    pub fn new(namespace: impl Into<String>, name: impl Into<String>, description: impl Into<String>) -> Self {
+    pub fn new(
+        namespace: impl Into<String>,
+        name: impl Into<String>,
+        description: impl Into<String>,
+    ) -> Self {
         Self {
             namespace: namespace.into(),
             name: name.into(),
@@ -109,32 +113,92 @@ impl CapabilityRegistry {
         let mut registry = Self::new();
 
         // Hardware capabilities
-        registry.register(Capability::new("hardware", "serial_port", "Access serial UART interfaces"));
-        registry.register(Capability::new("hardware", "gpio", "GPIO pin control and sensing"));
+        registry.register(Capability::new(
+            "hardware",
+            "serial_port",
+            "Access serial UART interfaces",
+        ));
+        registry.register(Capability::new(
+            "hardware",
+            "gpio",
+            "GPIO pin control and sensing",
+        ));
         registry.register(Capability::new("hardware", "i2c", "I2C bus communication"));
         registry.register(Capability::new("hardware", "spi", "SPI bus communication"));
-        registry.register(Capability::new("hardware", "adc", "Analog-to-digital conversion"));
+        registry.register(Capability::new(
+            "hardware",
+            "adc",
+            "Analog-to-digital conversion",
+        ));
 
         // Network capabilities
-        registry.register(Capability::new("network", "cellular_scan", "Scan cellular networks"));
-        registry.register(Capability::new("network", "wifi_scan", "Scan WiFi networks"));
-        registry.register(Capability::new("network", "dns_query", "Perform DNS queries"));
-        registry.register(Capability::new("network", "mitm", "Man-in-the-middle operations"));
+        registry.register(Capability::new(
+            "network",
+            "cellular_scan",
+            "Scan cellular networks",
+        ));
+        registry.register(Capability::new(
+            "network",
+            "wifi_scan",
+            "Scan WiFi networks",
+        ));
+        registry.register(Capability::new(
+            "network",
+            "dns_query",
+            "Perform DNS queries",
+        ));
+        registry.register(Capability::new(
+            "network",
+            "mitm",
+            "Man-in-the-middle operations",
+        ));
 
         // RF capabilities
-        registry.register(Capability::new("rf", "subghz", "Sub-GHz frequency operations"));
-        registry.register(Capability::new("rf", "satellite", "Satellite communication"));
-        registry.register(Capability::new("rf", "bluetooth", "Bluetooth/BLE operations"));
+        registry.register(Capability::new(
+            "rf",
+            "subghz",
+            "Sub-GHz frequency operations",
+        ));
+        registry.register(Capability::new(
+            "rf",
+            "satellite",
+            "Satellite communication",
+        ));
+        registry.register(Capability::new(
+            "rf",
+            "bluetooth",
+            "Bluetooth/BLE operations",
+        ));
 
         // Crypto capabilities
-        registry.register(Capability::new("crypto", "encryption", "Encryption/decryption"));
-        registry.register(Capability::new("crypto", "key_material", "Key generation and storage"));
+        registry.register(Capability::new(
+            "crypto",
+            "encryption",
+            "Encryption/decryption",
+        ));
+        registry.register(Capability::new(
+            "crypto",
+            "key_material",
+            "Key generation and storage",
+        ));
         registry.register(Capability::new("crypto", "signing", "Digital signatures"));
 
         // Storage capabilities
-        registry.register(Capability::new("storage", "database", "Database access and modification"));
-        registry.register(Capability::new("storage", "file_system", "File system access"));
-        registry.register(Capability::new("storage", "cloud", "Cloud storage integration"));
+        registry.register(Capability::new(
+            "storage",
+            "database",
+            "Database access and modification",
+        ));
+        registry.register(Capability::new(
+            "storage",
+            "file_system",
+            "File system access",
+        ));
+        registry.register(Capability::new(
+            "storage",
+            "cloud",
+            "Cloud storage integration",
+        ));
 
         registry
     }

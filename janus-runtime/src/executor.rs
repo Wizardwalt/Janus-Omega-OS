@@ -33,13 +33,22 @@ impl PluginExecutor {
             .loader
             .list_sorted()
             .iter()
-            .map(|(id, source)| format!("{}: {} ({})", id, source.manifest.name, source.manifest.status))
+            .map(|(id, source)| {
+                format!(
+                    "{}: {} ({})",
+                    id, source.manifest.name, source.manifest.status
+                )
+            })
             .collect();
         Ok(plugins)
     }
 
     /// Execute plugin by name
-    pub async fn execute(&self, plugin_name: &str, args: serde_json::Value) -> Result<serde_json::Value> {
+    pub async fn execute(
+        &self,
+        plugin_name: &str,
+        args: serde_json::Value,
+    ) -> Result<serde_json::Value> {
         debug!(plugin_name, ?args, "Executing plugin");
 
         if let Some(plugin) = self.loader.get(plugin_name) {

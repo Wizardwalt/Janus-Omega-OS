@@ -24,11 +24,15 @@ impl EngagementScope {
     /// Exact-match only. CIDR/range support must be implemented with a dedicated,
     /// tested parser rather than prefix matching.
     pub fn permits_asset(&self, asset: &str) -> bool {
-        self.approved_assets.iter().any(|approved| approved == asset)
+        self.approved_assets
+            .iter()
+            .any(|approved| approved == asset)
     }
 
     pub fn permits_evidence_path(&self, path: &str) -> bool {
-        self.approved_evidence_paths.iter().any(|approved| approved == path)
+        self.approved_evidence_paths
+            .iter()
+            .any(|approved| approved == path)
     }
 }
 
@@ -50,6 +54,8 @@ impl Engagement {
     }
 
     pub fn authorizes(&self, feature: &LicensedFeature, asset: &str, now: DateTime<Utc>) -> bool {
-        self.is_active_at(now) && self.scope.permits_feature(feature) && self.scope.permits_asset(asset)
+        self.is_active_at(now)
+            && self.scope.permits_feature(feature)
+            && self.scope.permits_asset(asset)
     }
 }

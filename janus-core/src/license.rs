@@ -62,10 +62,14 @@ impl SignedLicense {
             .map_err(|_| crate::JanusError::License("license signature is invalid".to_string()))?;
 
         if now < self.claims.issued_at {
-            return Err(crate::JanusError::License("license is not active yet".to_string()));
+            return Err(crate::JanusError::License(
+                "license is not active yet".to_string(),
+            ));
         }
         if now >= self.claims.expires_at {
-            return Err(crate::JanusError::License("license has expired".to_string()));
+            return Err(crate::JanusError::License(
+                "license has expired".to_string(),
+            ));
         }
         Ok(())
     }
@@ -75,7 +79,7 @@ fn decode_fixed<const N: usize>(value: &str, label: &str) -> crate::Result<[u8; 
     let bytes = STANDARD
         .decode(value)
         .map_err(|_| crate::JanusError::License(format!("invalid base64 {label}")))?;
-    bytes.try_into().map_err(|_| {
-        crate::JanusError::License(format!("{label} has an invalid length"))
-    })
+    bytes
+        .try_into()
+        .map_err(|_| crate::JanusError::License(format!("{label} has an invalid length")))
 }

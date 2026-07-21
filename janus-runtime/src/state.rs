@@ -17,7 +17,10 @@ pub struct StateManager {
 impl StateManager {
     /// Create new state manager
     pub async fn new(config: &Config, db: Arc<Database>) -> Result<Self> {
-        debug!("Initializing state manager with DB: {}", config.db_path.display());
+        debug!(
+            "Initializing state manager with DB: {}",
+            config.db_path.display()
+        );
         let state = db.load_all_state()?;
         Ok(Self {
             config: config.clone(),

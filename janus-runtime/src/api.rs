@@ -63,7 +63,7 @@ impl ApiServer {
         state_manager: StateManager,
         executor: PluginExecutor,
         hardware: Arc<HardwareManager>,
-        ) -> Self {
+    ) -> Self {
         Self {
             config,
             state_manager: Arc::new(state_manager),
@@ -98,9 +98,7 @@ impl ApiServer {
     }
 }
 
-async fn health(
-    AxumState(state): AxumState<ApiState>,
-) -> Json<HealthResponse> {
+async fn health(AxumState(state): AxumState<ApiState>) -> Json<HealthResponse> {
     Json(HealthResponse {
         status: "ok".to_string(),
         version: janus_core::VERSION.to_string(),
