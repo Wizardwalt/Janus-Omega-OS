@@ -1,0 +1,16 @@
+{
+  "system_mode": "production",
+  "db_path": "/var/lib/janus/janus.db",
+  "plugin_dir": "/opt/janus/plugins",
+  "core_modules_dir": "/opt/janus/core",
+  "web_bind": "127.0.0.1",
+  "web_port": 8080,
+  "audit_enabled": true,
+  "audit_retention_days": 365,
+  "hardware_enabled": false,
+  "serial_port": null,
+  "license_public_key": "BASE64_ED25519_PUBLIC_KEY",
+  "allowed_origins": [
+    "https://janus.example.com"
+  ]
+}

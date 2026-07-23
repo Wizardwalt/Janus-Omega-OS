@@ -53,3 +53,7 @@ secrets/
 
 # Generated module certification inventory
 reports/module-inventory.json
+
+# Local production configuration and runtime secrets
+config/janus.runtime.json
+config/janus.env
