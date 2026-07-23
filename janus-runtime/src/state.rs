@@ -178,6 +178,32 @@ impl StateManager {
         Ok(created)
     }
 
+    /// Return safe user metadata for the administrator's organization.
+    pub async fn users(&self, account: &janus_core::UserAccount) -> Result<Vec<janus_core::UserAccount>> {
+        if !account.role.may_administer_organization() { return Err(anyhow::anyhow!("role is not allowed to list users")); }
+        self.db.list_users(&account.organization_id)
+    }
+
+    /// Enable or disable an organization account and revoke sessions when disabling.
+    pub async fn set_user_active(&self, account: &janus_core::UserAccount, user_id: &str, active: bool) -> Result<()> {
+        if !account.role.may_administer_organization() { return Err(anyhow::anyhow!("role is not allowed to manage users")); }
+        if account.id == user_id && !active { return Err(anyhow::anyhow!("administrators cannot disable their own active account")); }
+        if !self.db.set_user_active(&account.organization_id, user_id, active)? { return Err(anyhow::anyhow!("user was not found in this organization")); }
+        if !active { self.db.delete_user_sessions(user_id)?; }
+        self.db.record(AuditEntry::new(&account.id, if active { "USER_ENABLED" } else { "USER_DISABLED" }, user_id).success())?;
+        Ok(())
+    }
+
+    /// Reset an organization account password and revoke every existing session.
+    pub async fn reset_user_password(&self, account: &janus_core::UserAccount, user_id: &str, password: String) -> Result<()> {
+        if !account.role.may_administer_organization() { return Err(anyhow::anyhow!("role is not allowed to reset passwords")); }
+        let hash = janus_core::hash_password(&password)?;
+        if !self.db.update_user_password(&account.organization_id, user_id, &hash)? { return Err(anyhow::anyhow!("user was not found in this organization")); }
+        self.db.delete_user_sessions(user_id)?;
+        self.db.record(AuditEntry::new(&account.id, "PASSWORD_RESET", user_id).success())?;
+        Ok(())
+    }
+
     /// Record a reviewer decision for a module's exact content hash.
     pub async fn certify_module(
         &self,
