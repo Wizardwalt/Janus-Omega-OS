@@ -1,10 +1,18 @@
 //! Hardware abstraction layer for Titan device integration.
 
 use anyhow::Result;
-use janus_core::{AuditEntry, AuditLevel};
+use serde::Serialize;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::{debug, info};
+
+/// Honest adapter status returned to authenticated clients.
+#[derive(Debug, Clone, Serialize)]
+pub struct HardwareAdapterStatus {
+    pub adapter: String,
+    pub state: String,
+    pub detail: String,
+}
 
 /// Hardware interface trait
 pub trait HardwareInterface: Send + Sync {
@@ -83,7 +91,7 @@ impl HardwareInterface for GpioInterface {
     }
 
     fn available(&self) -> bool {
-        true
+        false
     }
 }
 
@@ -107,7 +115,7 @@ impl HardwareInterface for CellularInterface {
     }
 
     fn available(&self) -> bool {
-        true
+        false
     }
 }
 
@@ -137,7 +145,7 @@ impl HardwareInterface for RfInterface {
     }
 
     fn available(&self) -> bool {
-        true
+        false
     }
 }
 
@@ -173,7 +181,7 @@ impl HardwareInterface for SensorInterface {
     }
 
     fn available(&self) -> bool {
-        true
+        false
     }
 }
 
@@ -202,6 +210,19 @@ impl HardwareManager {
         info!("Initializing hardware manager");
         // Would initialize each interface
         Ok(())
+    }
+
+    /// Report only verified adapter availability; unsupported adapters never claim readiness.
+    pub async fn status(&self) -> Vec<HardwareAdapterStatus> {
+        let serial = self.serial.read().await;
+        let serial_exists = std::path::Path::new(&serial.port).exists();
+        vec![
+            HardwareAdapterStatus { adapter: "serial".into(), state: if serial_exists { "available" } else { "unavailable" }.into(), detail: format!("configured path: {}", serial.port) },
+            HardwareAdapterStatus { adapter: "gpio".into(), state: "unsupported".into(), detail: "No production GPIO driver is installed.".into() },
+            HardwareAdapterStatus { adapter: "cellular".into(), state: "unsupported".into(), detail: "No production cellular adapter is installed.".into() },
+            HardwareAdapterStatus { adapter: "rf".into(), state: "unsupported".into(), detail: "No production RF adapter is installed.".into() },
+            HardwareAdapterStatus { adapter: "sensors".into(), state: "unsupported".into(), detail: "No production sensor adapter is installed.".into() },
+        ]
     }
 
     pub fn serial(&self) -> Arc<RwLock<SerialInterface>> {
