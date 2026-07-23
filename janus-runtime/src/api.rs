@@ -195,7 +195,10 @@ impl ApiServer {
             .route("/auth/login", post(login))
             .route("/auth/me", get(current_user))
             .route("/auth/logout", post(logout))
-            .route("/auth/users", post(create_user))
+            .route("/auth/users", get(list_users).post(create_user))
+            .route("/auth/users/:user_id/disable", post(disable_user))
+            .route("/auth/users/:user_id/enable", post(enable_user))
+            .route("/auth/users/:user_id/password-reset", post(reset_user_password))
             .route("/licenses/import", post(import_license))
             .route("/licenses/status", get(license_status))
             .route("/engagements", get(list_engagements).post(create_engagement))
@@ -315,6 +318,43 @@ async fn import_license(
     };
     match state.state_manager.import_license(&account, request.license).await {
         Ok(()) => (StatusCode::CREATED, Json(ApiResponse { status: "success".into(), data: Some(()), error: None })),
+        Err(error) => (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
+    }
+}
+
+async fn list_users(
+    AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
+) -> (StatusCode, Json<ApiResponse<Vec<UserResponse>>>) {
+    let account = match authenticated_account(&state.state_manager, &headers).await { Ok(account) => account, Err(error) => return unauthorized_response(error) };
+    match state.state_manager.users(&account).await {
+        Ok(users) => (StatusCode::OK, Json(ApiResponse { status: "success".into(), data: Some(users.into_iter().map(|user| UserResponse { user_id: user.id, organization_id: user.organization_id, email: user.email, role: user.role.as_str().into() }).collect()), error: None })),
+        Err(error) => (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
+    }
+}
+
+async fn set_user_active_route(
+    state: ApiState, headers: HeaderMap, user_id: String, active: bool,
+) -> (StatusCode, Json<ApiResponse<()>>) {
+    let account = match authenticated_account(&state.state_manager, &headers).await { Ok(account) => account, Err(error) => return unauthorized_response(error) };
+    match state.state_manager.set_user_active(&account, &user_id, active).await {
+        Ok(()) => (StatusCode::OK, Json(ApiResponse { status: "success".into(), data: Some(()), error: None })),
+        Err(error) => (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
+    }
+}
+
+async fn disable_user(AxumState(state): AxumState<ApiState>, headers: HeaderMap, Path(user_id): Path<String>) -> (StatusCode, Json<ApiResponse<()>>) { set_user_active_route(state, headers, user_id, false).await }
+async fn enable_user(AxumState(state): AxumState<ApiState>, headers: HeaderMap, Path(user_id): Path<String>) -> (StatusCode, Json<ApiResponse<()>>) { set_user_active_route(state, headers, user_id, true).await }
+
+#[derive(Deserialize)]
+struct PasswordResetRequest { password: String }
+
+async fn reset_user_password(
+    AxumState(state): AxumState<ApiState>, headers: HeaderMap, Path(user_id): Path<String>, Json(request): Json<PasswordResetRequest>,
+) -> (StatusCode, Json<ApiResponse<()>>) {
+    let account = match authenticated_account(&state.state_manager, &headers).await { Ok(account) => account, Err(error) => return unauthorized_response(error) };
+    match state.state_manager.reset_user_password(&account, &user_id, request.password).await {
+        Ok(()) => (StatusCode::OK, Json(ApiResponse { status: "success".into(), data: Some(()), error: None })),
         Err(error) => (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
     }
 }
