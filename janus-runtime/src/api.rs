@@ -1,6 +1,6 @@
 //! HTTP/WebSocket API server.
 
-use crate::{executor::{PluginExecutor, PluginSummary}, hardware::HardwareManager, state::StateManager};
+use crate::{executor::{PluginExecutor, PluginSummary}, hardware::{HardwareAdapterStatus, HardwareManager}, state::StateManager};
 use anyhow::Result;
 use axum::{
     extract::{Path, State as AxumState},
@@ -191,6 +191,7 @@ impl ApiServer {
 
         let app = Router::new()
             .route("/health", get(health))
+            .route("/hardware/status", get(hardware_status))
             .route("/auth/bootstrap", post(bootstrap))
             .route("/auth/login", post(login))
             .route("/auth/me", get(current_user))
