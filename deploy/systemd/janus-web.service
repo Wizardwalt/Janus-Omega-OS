@@ -1,0 +1,23 @@
+[Unit]
+Description=Janus browser dashboard
+After=network-online.target janus-runtime.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=janus
+Group=janus
+WorkingDirectory=/opt/janus
+EnvironmentFile=/etc/janus/janus.env
+# Legacy simulated module execution remains disabled unless JANUS_DEMO_MODE=true is explicitly set.
+ExecStart=/opt/janus/bin/janus-web
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/janus /var/log/janus
+
+[Install]
+WantedBy=multi-user.target

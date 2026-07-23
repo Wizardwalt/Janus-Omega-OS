@@ -42,3 +42,25 @@ Every execution must have a valid session, an execution-capable role, valid sign
 - Disable engagements when customer authorization expires or changes.
 - Test restore procedures before relying on backups.
 - Apply OS and Rust dependency security updates on a regular schedule.
+
+## systemd deployment
+
+Install the supplied templates from `deploy/systemd/` as:
+
+```text
+/etc/systemd/system/janus-runtime.service
+/etc/systemd/system/janus-web.service
+```
+
+Create a non-login service account and writable state directories:
+
+```bash
+sudo useradd --system --home /var/lib/janus --shell /usr/sbin/nologin janus
+sudo install -d -o janus -g janus -m 0750 /var/lib/janus /var/log/janus /etc/janus
+sudo install -o root -g janus -m 0640 config/janus.runtime.example.json /etc/janus/janus.runtime.json
+sudo install -o root -g janus -m 0640 config/janus.env.example /etc/janus/janus.env
+sudo systemctl daemon-reload
+sudo systemctl enable --now janus-runtime janus-web
+```
+
+Place the dashboard behind a customer-managed HTTPS reverse proxy. Do not expose the runtime port directly to the internet.
