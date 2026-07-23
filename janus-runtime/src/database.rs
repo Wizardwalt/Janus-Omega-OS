@@ -423,6 +423,14 @@ impl Database {
         Ok(())
     }
 
+    /// Update engagement activity only when it belongs to the stated organization.
+    pub fn set_engagement_active(&self, organization_id: &str, engagement_id: &str, active: bool) -> Result<bool> {
+        let changed = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute(
+            "UPDATE engagements SET active = ?1 WHERE id = ?2 AND organization_id = ?3", params![active, engagement_id, organization_id],
+        )?;
+        Ok(changed == 1)
+    }
+
     /// List all engagements belonging to one organization.
     pub fn list_engagements(&self, organization_id: &str) -> Result<Vec<Engagement>> {
         let ids = {

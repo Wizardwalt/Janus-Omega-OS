@@ -202,6 +202,8 @@ impl ApiServer {
             .route("/licenses/import", post(import_license))
             .route("/licenses/status", get(license_status))
             .route("/engagements", get(list_engagements).post(create_engagement))
+            .route("/engagements/:engagement_id/disable", post(disable_engagement))
+            .route("/engagements/:engagement_id/enable", post(enable_engagement))
             .route("/modules/certifications", post(certify_module))
             .route("/execute", post(execute))
             .route("/plugins", get(list_plugins))
@@ -252,6 +254,16 @@ async fn certify_module(
         Err(error) => (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
     }
 }
+
+async fn set_engagement_active_route(state: ApiState, headers: HeaderMap, engagement_id: String, active: bool) -> (StatusCode, Json<ApiResponse<()>>) {
+    let account = match authenticated_account(&state.state_manager, &headers).await { Ok(account) => account, Err(error) => return unauthorized_response(error) };
+    match state.state_manager.set_engagement_active(&account, &engagement_id, active).await {
+        Ok(()) => (StatusCode::OK, Json(ApiResponse { status: "success".into(), data: Some(()), error: None })),
+        Err(error) => (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
+    }
+}
+async fn disable_engagement(AxumState(state): AxumState<ApiState>, headers: HeaderMap, Path(engagement_id): Path<String>) -> (StatusCode, Json<ApiResponse<()>>) { set_engagement_active_route(state, headers, engagement_id, false).await }
+async fn enable_engagement(AxumState(state): AxumState<ApiState>, headers: HeaderMap, Path(engagement_id): Path<String>) -> (StatusCode, Json<ApiResponse<()>>) { set_engagement_active_route(state, headers, engagement_id, true).await }
 
 async fn list_engagements(
     AxumState(state): AxumState<ApiState>,

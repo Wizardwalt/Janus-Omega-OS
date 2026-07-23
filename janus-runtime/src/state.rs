@@ -120,6 +120,14 @@ impl StateManager {
         })
     }
 
+    /// Activate or deactivate an engagement in the administrator's organization.
+    pub async fn set_engagement_active(&self, account: &janus_core::UserAccount, engagement_id: &str, active: bool) -> Result<()> {
+        if !account.role.may_administer_organization() { return Err(anyhow::anyhow!("role is not allowed to manage engagements")); }
+        if !self.db.set_engagement_active(&account.organization_id, engagement_id, active)? { return Err(anyhow::anyhow!("engagement was not found in this organization")); }
+        self.db.record(AuditEntry::new(&account.id, if active { "ENGAGEMENT_ENABLED" } else { "ENGAGEMENT_DISABLED" }, engagement_id).success())?;
+        Ok(())
+    }
+
     /// Return engagements belonging only to the authenticated organization.
     pub async fn engagements(&self, account: &janus_core::UserAccount) -> Result<Vec<janus_core::Engagement>> {
         self.db.list_engagements(&account.organization_id)
