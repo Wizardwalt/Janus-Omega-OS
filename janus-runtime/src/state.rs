@@ -334,7 +334,8 @@ impl StateManager {
             Ok(()) => entry.success(),
             Err(error) => entry.failed(error),
         };
-        self.db.record(entry)
+        self.db.record(entry)?;
+        Ok(())
     }
 
     /// Apply the complete license, engagement, target, and module certification gate.
