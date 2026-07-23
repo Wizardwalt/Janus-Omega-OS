@@ -82,3 +82,20 @@ sudo systemctl stop janus-web janus-runtime
 sudo scripts/restore_database.sh /var/backups/janus/janus-YYYYMMDDTHHMMSSZ.sqlite /var/lib/janus/janus.db
 sudo systemctl start janus-runtime janus-web
 ```
+
+## HTTPS reverse proxy
+
+The runtime API remains bound to `127.0.0.1:8080`. Publish only the dashboard through HTTPS. An example Caddy configuration is provided in `deploy/caddy/Caddyfile.example`.
+
+```bash
+sudo install -m 0644 deploy/caddy/Caddyfile.example /etc/caddy/Caddyfile
+sudo systemctl reload caddy
+```
+
+Update `allowed_origins` in `/etc/janus/janus.runtime.json` to the exact public dashboard origin, for example:
+
+```json
+"allowed_origins": ["https://janus.example.com"]
+```
+
+Do not proxy the runtime port directly to the public internet. The browser dashboard calls the runtime only through its explicit trusted-origin policy.
