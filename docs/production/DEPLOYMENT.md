@@ -64,3 +64,21 @@ sudo systemctl enable --now janus-runtime janus-web
 ```
 
 Place the dashboard behind a customer-managed HTTPS reverse proxy. Do not expose the runtime port directly to the internet.
+
+## Database backup and restore
+
+Create a verified SQLite backup:
+
+```bash
+sudo scripts/backup_database.sh /var/lib/janus/janus.db
+```
+
+The script uses SQLite's online backup command, checks integrity, and writes a `0600` timestamped backup. Test restoration in a non-production environment first.
+
+To restore, stop both Janus services, run the restore script, then start services again:
+
+```bash
+sudo systemctl stop janus-web janus-runtime
+sudo scripts/restore_database.sh /var/backups/janus/janus-YYYYMMDDTHHMMSSZ.sqlite /var/lib/janus/janus.db
+sudo systemctl start janus-runtime janus-web
+```
