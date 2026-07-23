@@ -227,6 +227,23 @@ impl ApiServer {
     }
 }
 
+async fn hardware_status(
+    AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
+) -> (StatusCode, Json<ApiResponse<Vec<HardwareAdapterStatus>>>) {
+    if let Err(error) = authenticated_account(&state.state_manager, &headers).await {
+        return unauthorized_response(error);
+    }
+    (
+        StatusCode::OK,
+        Json(ApiResponse {
+            status: "success".into(),
+            data: Some(state.hardware.status().await),
+            error: None,
+        }),
+    )
+}
+
 async fn health(AxumState(state): AxumState<ApiState>) -> Json<HealthResponse> {
     Json(HealthResponse {
         status: "ok".to_string(),
