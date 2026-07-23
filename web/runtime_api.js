@@ -54,6 +54,7 @@ class JanusRuntimeApi {
   licenseStatus() { return this.request('/licenses/status'); }
   auditLogs() { return this.request('/audit/logs'); }
   plugins() { return this.request('/plugins'); }
+  hardwareStatus() { return this.request('/hardware/status'); }
   users() { return this.request('/auth/users'); }
   setUserActive(userId, active) { return this.request(`/auth/users/${encodeURIComponent(userId)}/${active ? 'enable' : 'disable'}`, { method: 'POST' }); }
   resetUserPassword(userId, password) { return this.request(`/auth/users/${encodeURIComponent(userId)}/password-reset`, { method: 'POST', body: JSON.stringify({ password }) }); }
