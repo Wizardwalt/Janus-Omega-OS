@@ -263,6 +263,36 @@ impl Database {
         Ok(rows.collect::<std::result::Result<Vec<_>, _>>()?)
     }
 
+    /// List safe account metadata for one organization.
+    pub fn list_users(&self, organization_id: &str) -> Result<Vec<UserAccount>> {
+        let conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
+        let mut statement = conn.prepare("SELECT id, organization_id, email, role, active, failed_login_count, locked_until, created_at FROM user_accounts WHERE organization_id = ?1 ORDER BY email")?;
+        let rows = statement.query_map(params![organization_id], |row| {
+            let role: String = row.get(3)?;
+            let locked_until: Option<String> = row.get(6)?;
+            let created_at: String = row.get(7)?;
+            Ok(UserAccount { id: row.get(0)?, organization_id: row.get(1)?, email: row.get(2)?, role: UserRole::from_str(&role).ok_or(rusqlite::Error::InvalidQuery)?, active: row.get(4)?, failed_login_count: row.get(5)?, locked_until: locked_until.and_then(|value| chrono::DateTime::parse_from_rfc3339(&value).ok()).map(|value| value.with_timezone(&Utc)), created_at: chrono::DateTime::parse_from_rfc3339(&created_at).map_err(|_| rusqlite::Error::InvalidQuery)?.with_timezone(&Utc) })
+        })?;
+        Ok(rows.collect::<std::result::Result<Vec<_>, _>>()?)
+    }
+
+    /// Update account activation only when it belongs to the stated organization.
+    pub fn set_user_active(&self, organization_id: &str, user_id: &str, active: bool) -> Result<bool> {
+        let changed = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute("UPDATE user_accounts SET active = ?1 WHERE id = ?2 AND organization_id = ?3", params![active, user_id, organization_id])?;
+        Ok(changed == 1)
+    }
+
+    /// Replace a password hash for an account in the stated organization.
+    pub fn update_user_password(&self, organization_id: &str, user_id: &str, password_hash: &str) -> Result<bool> {
+        let changed = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute("UPDATE user_accounts SET password_hash = ?1, failed_login_count = 0, locked_until = NULL WHERE id = ?2 AND organization_id = ?3", params![password_hash, user_id, organization_id])?;
+        Ok(changed == 1)
+    }
+
+    /// Revoke all sessions owned by an account.
+    pub fn delete_user_sessions(&self, user_id: &str) -> Result<usize> {
+        Ok(self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute("DELETE FROM sessions WHERE user_id = ?1", params![user_id])?)
+    }
+
     /// Clear failed-login state after a successful authentication.
     pub fn reset_login_failures(&self, user_id: &str) -> Result<()> {
         self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute(
