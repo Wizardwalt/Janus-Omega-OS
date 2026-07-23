@@ -99,3 +99,17 @@ Update `allowed_origins` in `/etc/janus/janus.runtime.json` to the exact public 
 ```
 
 Do not proxy the runtime port directly to the public internet. The browser dashboard calls the runtime only through its explicit trusted-origin policy.
+
+## Health verification
+
+After starting or upgrading services, verify both local endpoints:
+
+```bash
+scripts/health_check.sh
+```
+
+For a deployed HTTPS dashboard, provide the public dashboard URL while keeping the runtime local:
+
+```bash
+JANUS_DASHBOARD_URL=https://janus.example.com scripts/health_check.sh
+```
