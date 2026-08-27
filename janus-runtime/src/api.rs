@@ -1,6 +1,10 @@
 //! HTTP/WebSocket API server.
 
-use crate::{executor::{PluginExecutor, PluginSummary}, hardware::{HardwareAdapterStatus, HardwareManager}, state::StateManager};
+use crate::{
+    executor::{PluginExecutor, PluginSummary},
+    hardware::{HardwareAdapterStatus, HardwareManager},
+    state::StateManager,
+};
 use anyhow::Result;
 use axum::{
     extract::{Path, State as AxumState},
@@ -9,7 +13,10 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use janus_core::{AuditEntry, CertificationStatus, Config, EngagementScope, LicensedFeature, SignedLicense, StateKey, UserRole};
+use janus_core::{
+    AuditEntry, CertificationStatus, Config, EngagementScope, LicensedFeature, SignedLicense,
+    StateKey, UserRole,
+};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tower_http::cors::{AllowOrigin, CorsLayer};
@@ -95,7 +102,9 @@ struct EngagementResponse {
     active: bool,
 }
 
-fn default_active() -> bool { true }
+fn default_active() -> bool {
+    true
+}
 
 #[derive(Deserialize)]
 struct LicenseImportRequest {
@@ -182,11 +191,16 @@ impl ApiServer {
             hardware: self.hardware,
         };
 
-        let allowed_origins = self.config.allowed_origins.iter()
+        let allowed_origins = self
+            .config
+            .allowed_origins
+            .iter()
             .filter_map(|origin| origin.parse::<HeaderValue>().ok())
             .collect::<Vec<_>>();
         if allowed_origins.is_empty() {
-            return Err(anyhow::anyhow!("no valid allowed runtime API origins configured"));
+            return Err(anyhow::anyhow!(
+                "no valid allowed runtime API origins configured"
+            ));
         }
 
         let app = Router::new()
@@ -199,12 +213,24 @@ impl ApiServer {
             .route("/auth/users", get(list_users).post(create_user))
             .route("/auth/users/:user_id/disable", post(disable_user))
             .route("/auth/users/:user_id/enable", post(enable_user))
-            .route("/auth/users/:user_id/password-reset", post(reset_user_password))
+            .route(
+                "/auth/users/:user_id/password-reset",
+                post(reset_user_password),
+            )
             .route("/licenses/import", post(import_license))
             .route("/licenses/status", get(license_status))
-            .route("/engagements", get(list_engagements).post(create_engagement))
-            .route("/engagements/:engagement_id/disable", post(disable_engagement))
-            .route("/engagements/:engagement_id/enable", post(enable_engagement))
+            .route(
+                "/engagements",
+                get(list_engagements).post(create_engagement),
+            )
+            .route(
+                "/engagements/:engagement_id/disable",
+                post(disable_engagement),
+            )
+            .route(
+                "/engagements/:engagement_id/enable",
+                post(enable_engagement),
+            )
             .route("/modules/certifications", post(certify_module))
             .route("/execute", post(execute))
             .route("/plugins", get(list_plugins))
@@ -261,27 +287,88 @@ async fn certify_module(
         Ok(account) => account,
         Err(error) => return unauthorized_response(error),
     };
-    match state.state_manager.certify_module(
-        &account, request.module_id, request.module_sha256, request.status, request.required_feature, request.notes,
-    ).await {
-        Ok(certification) => (StatusCode::CREATED, Json(ApiResponse {
-            status: "success".into(),
-            data: Some(ModuleCertificationResponse { module_id: certification.module_id, status: certification.status.as_str().into(), module_sha256: certification.module_sha256 }),
-            error: None,
-        })),
-        Err(error) => (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
+    match state
+        .state_manager
+        .certify_module(
+            &account,
+            request.module_id,
+            request.module_sha256,
+            request.status,
+            request.required_feature,
+            request.notes,
+        )
+        .await
+    {
+        Ok(certification) => (
+            StatusCode::CREATED,
+            Json(ApiResponse {
+                status: "success".into(),
+                data: Some(ModuleCertificationResponse {
+                    module_id: certification.module_id,
+                    status: certification.status.as_str().into(),
+                    module_sha256: certification.module_sha256,
+                }),
+                error: None,
+            }),
+        ),
+        Err(error) => (
+            StatusCode::FORBIDDEN,
+            Json(ApiResponse {
+                status: "error".into(),
+                data: None,
+                error: Some(error.to_string()),
+            }),
+        ),
     }
 }
 
-async fn set_engagement_active_route(state: ApiState, headers: HeaderMap, engagement_id: String, active: bool) -> (StatusCode, Json<ApiResponse<()>>) {
-    let account = match authenticated_account(&state.state_manager, &headers).await { Ok(account) => account, Err(error) => return unauthorized_response(error) };
-    match state.state_manager.set_engagement_active(&account, &engagement_id, active).await {
-        Ok(()) => (StatusCode::OK, Json(ApiResponse { status: "success".into(), data: Some(()), error: None })),
-        Err(error) => (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
+async fn set_engagement_active_route(
+    state: ApiState,
+    headers: HeaderMap,
+    engagement_id: String,
+    active: bool,
+) -> (StatusCode, Json<ApiResponse<()>>) {
+    let account = match authenticated_account(&state.state_manager, &headers).await {
+        Ok(account) => account,
+        Err(error) => return unauthorized_response(error),
+    };
+    match state
+        .state_manager
+        .set_engagement_active(&account, &engagement_id, active)
+        .await
+    {
+        Ok(()) => (
+            StatusCode::OK,
+            Json(ApiResponse {
+                status: "success".into(),
+                data: Some(()),
+                error: None,
+            }),
+        ),
+        Err(error) => (
+            StatusCode::FORBIDDEN,
+            Json(ApiResponse {
+                status: "error".into(),
+                data: None,
+                error: Some(error.to_string()),
+            }),
+        ),
     }
 }
-async fn disable_engagement(AxumState(state): AxumState<ApiState>, headers: HeaderMap, Path(engagement_id): Path<String>) -> (StatusCode, Json<ApiResponse<()>>) { set_engagement_active_route(state, headers, engagement_id, false).await }
-async fn enable_engagement(AxumState(state): AxumState<ApiState>, headers: HeaderMap, Path(engagement_id): Path<String>) -> (StatusCode, Json<ApiResponse<()>>) { set_engagement_active_route(state, headers, engagement_id, true).await }
+async fn disable_engagement(
+    AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
+    Path(engagement_id): Path<String>,
+) -> (StatusCode, Json<ApiResponse<()>>) {
+    set_engagement_active_route(state, headers, engagement_id, false).await
+}
+async fn enable_engagement(
+    AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
+    Path(engagement_id): Path<String>,
+) -> (StatusCode, Json<ApiResponse<()>>) {
+    set_engagement_active_route(state, headers, engagement_id, true).await
+}
 
 async fn list_engagements(
     AxumState(state): AxumState<ApiState>,
@@ -292,8 +379,22 @@ async fn list_engagements(
         Err(error) => return unauthorized_response(error),
     };
     match state.state_manager.engagements(&account).await {
-        Ok(engagements) => (StatusCode::OK, Json(ApiResponse { status: "success".into(), data: Some(engagements), error: None })),
-        Err(error) => (StatusCode::INTERNAL_SERVER_ERROR, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
+        Ok(engagements) => (
+            StatusCode::OK,
+            Json(ApiResponse {
+                status: "success".into(),
+                data: Some(engagements),
+                error: None,
+            }),
+        ),
+        Err(error) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ApiResponse {
+                status: "error".into(),
+                data: None,
+                error: Some(error.to_string()),
+            }),
+        ),
     }
 }
 
@@ -311,15 +412,38 @@ async fn create_engagement(
         approved_evidence_paths: request.approved_evidence_paths,
         approved_features: request.approved_features,
     };
-    match state.state_manager.create_engagement(
-        &account, request.authorization_reference, request.starts_at, request.ends_at, scope, request.active,
-    ).await {
-        Ok(engagement) => (StatusCode::CREATED, Json(ApiResponse {
-            status: "success".into(),
-            data: Some(EngagementResponse { engagement_id: engagement.id, organization_id: engagement.organization_id, active: engagement.active }),
-            error: None,
-        })),
-        Err(error) => (StatusCode::BAD_REQUEST, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
+    match state
+        .state_manager
+        .create_engagement(
+            &account,
+            request.authorization_reference,
+            request.starts_at,
+            request.ends_at,
+            scope,
+            request.active,
+        )
+        .await
+    {
+        Ok(engagement) => (
+            StatusCode::CREATED,
+            Json(ApiResponse {
+                status: "success".into(),
+                data: Some(EngagementResponse {
+                    engagement_id: engagement.id,
+                    organization_id: engagement.organization_id,
+                    active: engagement.active,
+                }),
+                error: None,
+            }),
+        ),
+        Err(error) => (
+            StatusCode::BAD_REQUEST,
+            Json(ApiResponse {
+                status: "error".into(),
+                data: None,
+                error: Some(error.to_string()),
+            }),
+        ),
     }
 }
 
@@ -332,8 +456,22 @@ async fn license_status(
         Err(error) => return unauthorized_response(error),
     };
     match state.state_manager.license_claims(&account).await {
-        Ok(claims) => (StatusCode::OK, Json(ApiResponse { status: "success".into(), data: Some(claims), error: None })),
-        Err(error) => (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
+        Ok(claims) => (
+            StatusCode::OK,
+            Json(ApiResponse {
+                status: "success".into(),
+                data: Some(claims),
+                error: None,
+            }),
+        ),
+        Err(error) => (
+            StatusCode::FORBIDDEN,
+            Json(ApiResponse {
+                status: "error".into(),
+                data: None,
+                error: Some(error.to_string()),
+            }),
+        ),
     }
 }
 
@@ -346,9 +484,27 @@ async fn import_license(
         Ok(account) => account,
         Err(error) => return unauthorized_response(error),
     };
-    match state.state_manager.import_license(&account, request.license).await {
-        Ok(()) => (StatusCode::CREATED, Json(ApiResponse { status: "success".into(), data: Some(()), error: None })),
-        Err(error) => (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
+    match state
+        .state_manager
+        .import_license(&account, request.license)
+        .await
+    {
+        Ok(()) => (
+            StatusCode::CREATED,
+            Json(ApiResponse {
+                status: "success".into(),
+                data: Some(()),
+                error: None,
+            }),
+        ),
+        Err(error) => (
+            StatusCode::FORBIDDEN,
+            Json(ApiResponse {
+                status: "error".into(),
+                data: None,
+                error: Some(error.to_string()),
+            }),
+        ),
     }
 }
 
@@ -356,36 +512,125 @@ async fn list_users(
     AxumState(state): AxumState<ApiState>,
     headers: HeaderMap,
 ) -> (StatusCode, Json<ApiResponse<Vec<UserResponse>>>) {
-    let account = match authenticated_account(&state.state_manager, &headers).await { Ok(account) => account, Err(error) => return unauthorized_response(error) };
+    let account = match authenticated_account(&state.state_manager, &headers).await {
+        Ok(account) => account,
+        Err(error) => return unauthorized_response(error),
+    };
     match state.state_manager.users(&account).await {
-        Ok(users) => (StatusCode::OK, Json(ApiResponse { status: "success".into(), data: Some(users.into_iter().map(|user| UserResponse { user_id: user.id, organization_id: user.organization_id, email: user.email, role: user.role.as_str().into() }).collect()), error: None })),
-        Err(error) => (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
+        Ok(users) => (
+            StatusCode::OK,
+            Json(ApiResponse {
+                status: "success".into(),
+                data: Some(
+                    users
+                        .into_iter()
+                        .map(|user| UserResponse {
+                            user_id: user.id,
+                            organization_id: user.organization_id,
+                            email: user.email,
+                            role: user.role.as_str().into(),
+                        })
+                        .collect(),
+                ),
+                error: None,
+            }),
+        ),
+        Err(error) => (
+            StatusCode::FORBIDDEN,
+            Json(ApiResponse {
+                status: "error".into(),
+                data: None,
+                error: Some(error.to_string()),
+            }),
+        ),
     }
 }
 
 async fn set_user_active_route(
-    state: ApiState, headers: HeaderMap, user_id: String, active: bool,
+    state: ApiState,
+    headers: HeaderMap,
+    user_id: String,
+    active: bool,
 ) -> (StatusCode, Json<ApiResponse<()>>) {
-    let account = match authenticated_account(&state.state_manager, &headers).await { Ok(account) => account, Err(error) => return unauthorized_response(error) };
-    match state.state_manager.set_user_active(&account, &user_id, active).await {
-        Ok(()) => (StatusCode::OK, Json(ApiResponse { status: "success".into(), data: Some(()), error: None })),
-        Err(error) => (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
+    let account = match authenticated_account(&state.state_manager, &headers).await {
+        Ok(account) => account,
+        Err(error) => return unauthorized_response(error),
+    };
+    match state
+        .state_manager
+        .set_user_active(&account, &user_id, active)
+        .await
+    {
+        Ok(()) => (
+            StatusCode::OK,
+            Json(ApiResponse {
+                status: "success".into(),
+                data: Some(()),
+                error: None,
+            }),
+        ),
+        Err(error) => (
+            StatusCode::FORBIDDEN,
+            Json(ApiResponse {
+                status: "error".into(),
+                data: None,
+                error: Some(error.to_string()),
+            }),
+        ),
     }
 }
 
-async fn disable_user(AxumState(state): AxumState<ApiState>, headers: HeaderMap, Path(user_id): Path<String>) -> (StatusCode, Json<ApiResponse<()>>) { set_user_active_route(state, headers, user_id, false).await }
-async fn enable_user(AxumState(state): AxumState<ApiState>, headers: HeaderMap, Path(user_id): Path<String>) -> (StatusCode, Json<ApiResponse<()>>) { set_user_active_route(state, headers, user_id, true).await }
+async fn disable_user(
+    AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
+    Path(user_id): Path<String>,
+) -> (StatusCode, Json<ApiResponse<()>>) {
+    set_user_active_route(state, headers, user_id, false).await
+}
+async fn enable_user(
+    AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
+    Path(user_id): Path<String>,
+) -> (StatusCode, Json<ApiResponse<()>>) {
+    set_user_active_route(state, headers, user_id, true).await
+}
 
 #[derive(Deserialize)]
-struct PasswordResetRequest { password: String }
+struct PasswordResetRequest {
+    password: String,
+}
 
 async fn reset_user_password(
-    AxumState(state): AxumState<ApiState>, headers: HeaderMap, Path(user_id): Path<String>, Json(request): Json<PasswordResetRequest>,
+    AxumState(state): AxumState<ApiState>,
+    headers: HeaderMap,
+    Path(user_id): Path<String>,
+    Json(request): Json<PasswordResetRequest>,
 ) -> (StatusCode, Json<ApiResponse<()>>) {
-    let account = match authenticated_account(&state.state_manager, &headers).await { Ok(account) => account, Err(error) => return unauthorized_response(error) };
-    match state.state_manager.reset_user_password(&account, &user_id, request.password).await {
-        Ok(()) => (StatusCode::OK, Json(ApiResponse { status: "success".into(), data: Some(()), error: None })),
-        Err(error) => (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
+    let account = match authenticated_account(&state.state_manager, &headers).await {
+        Ok(account) => account,
+        Err(error) => return unauthorized_response(error),
+    };
+    match state
+        .state_manager
+        .reset_user_password(&account, &user_id, request.password)
+        .await
+    {
+        Ok(()) => (
+            StatusCode::OK,
+            Json(ApiResponse {
+                status: "success".into(),
+                data: Some(()),
+                error: None,
+            }),
+        ),
+        Err(error) => (
+            StatusCode::FORBIDDEN,
+            Json(ApiResponse {
+                status: "error".into(),
+                data: None,
+                error: Some(error.to_string()),
+            }),
+        ),
     }
 }
 
@@ -398,13 +643,32 @@ async fn create_user(
         Ok(account) => account,
         Err(error) => return unauthorized_response(error),
     };
-    match state.state_manager.create_user(&account, request.email, request.password, request.role).await {
-        Ok(created) => (StatusCode::CREATED, Json(ApiResponse {
-            status: "success".into(),
-            data: Some(UserResponse { user_id: created.id, organization_id: created.organization_id, email: created.email, role: created.role.as_str().into() }),
-            error: None,
-        })),
-        Err(error) => (StatusCode::BAD_REQUEST, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
+    match state
+        .state_manager
+        .create_user(&account, request.email, request.password, request.role)
+        .await
+    {
+        Ok(created) => (
+            StatusCode::CREATED,
+            Json(ApiResponse {
+                status: "success".into(),
+                data: Some(UserResponse {
+                    user_id: created.id,
+                    organization_id: created.organization_id,
+                    email: created.email,
+                    role: created.role.as_str().into(),
+                }),
+                error: None,
+            }),
+        ),
+        Err(error) => (
+            StatusCode::BAD_REQUEST,
+            Json(ApiResponse {
+                status: "error".into(),
+                data: None,
+                error: Some(error.to_string()),
+            }),
+        ),
     }
 }
 
@@ -413,11 +677,19 @@ async fn current_user(
     headers: HeaderMap,
 ) -> (StatusCode, Json<ApiResponse<CurrentUserResponse>>) {
     match authenticated_account(&state.state_manager, &headers).await {
-        Ok(account) => (StatusCode::OK, Json(ApiResponse {
-            status: "success".into(),
-            data: Some(CurrentUserResponse { user_id: account.id, organization_id: account.organization_id, email: account.email, role: account.role.as_str().into() }),
-            error: None,
-        })),
+        Ok(account) => (
+            StatusCode::OK,
+            Json(ApiResponse {
+                status: "success".into(),
+                data: Some(CurrentUserResponse {
+                    user_id: account.id,
+                    organization_id: account.organization_id,
+                    email: account.email,
+                    role: account.role.as_str().into(),
+                }),
+                error: None,
+            }),
+        ),
         Err(error) => unauthorized_response(error),
     }
 }
@@ -435,30 +707,57 @@ async fn logout(
         Err(error) => return unauthorized_response(error),
     };
     match state.state_manager.logout(&account, token).await {
-        Ok(()) => (StatusCode::OK, Json(ApiResponse { status: "success".into(), data: Some(()), error: None })),
+        Ok(()) => (
+            StatusCode::OK,
+            Json(ApiResponse {
+                status: "success".into(),
+                data: Some(()),
+                error: None,
+            }),
+        ),
         Err(error) => unauthorized_response(error),
     }
 }
 
 fn bearer_token(headers: &HeaderMap) -> Result<&str, anyhow::Error> {
-    let value = headers.get("authorization").and_then(|value| value.to_str().ok())
+    let value = headers
+        .get("authorization")
+        .and_then(|value| value.to_str().ok())
         .ok_or_else(|| anyhow::anyhow!("missing authorization bearer token"))?;
-    value.strip_prefix("Bearer ").ok_or_else(|| anyhow::anyhow!("invalid authorization scheme"))
+    value
+        .strip_prefix("Bearer ")
+        .ok_or_else(|| anyhow::anyhow!("invalid authorization scheme"))
 }
 
-async fn authenticated_account(state_manager: &StateManager, headers: &HeaderMap) -> Result<janus_core::UserAccount> {
-    state_manager.authenticate_session(bearer_token(headers)?).await
+async fn authenticated_account(
+    state_manager: &StateManager,
+    headers: &HeaderMap,
+) -> Result<janus_core::UserAccount> {
+    state_manager
+        .authenticate_session(bearer_token(headers)?)
+        .await
 }
 
 fn unauthorized_response<T>(error: anyhow::Error) -> (StatusCode, Json<ApiResponse<T>>) {
-    (StatusCode::UNAUTHORIZED, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) }))
+    (
+        StatusCode::UNAUTHORIZED,
+        Json(ApiResponse {
+            status: "error".into(),
+            data: None,
+            error: Some(error.to_string()),
+        }),
+    )
 }
 
 async fn login(
     AxumState(state): AxumState<ApiState>,
     Json(request): Json<LoginRequest>,
 ) -> (StatusCode, Json<ApiResponse<LoginResponse>>) {
-    match state.state_manager.login(request.email, request.password).await {
+    match state
+        .state_manager
+        .login(request.email, request.password)
+        .await
+    {
         Ok(session) => (
             StatusCode::OK,
             Json(ApiResponse {
@@ -538,27 +837,101 @@ async fn execute(
     }
     let module_sha256 = match state.executor.plugin_sha256(&req.plugin) {
         Ok(hash) => hash,
-        Err(error) => return (StatusCode::NOT_FOUND, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
+        Err(error) => {
+            return (
+                StatusCode::NOT_FOUND,
+                Json(ApiResponse {
+                    status: "error".into(),
+                    data: None,
+                    error: Some(error.to_string()),
+                }),
+            )
+        }
     };
-    if let Err(error) = state.state_manager.authorize_production_execution(
-        &account, &req.engagement_id, &req.target_asset, &req.plugin, &module_sha256,
-    ).await {
+    if let Err(error) = state
+        .state_manager
+        .authorize_production_execution(
+            &account,
+            &req.engagement_id,
+            &req.target_asset,
+            &req.plugin,
+            &module_sha256,
+        )
+        .await
+    {
         let message = error.to_string();
-        let _ = state.state_manager.audit_execution_event(&account, "EXECUTION_DENIED", &req.plugin, &req.target_asset, Err(&message)).await;
-        return (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some(message) }));
+        let _ = state
+            .state_manager
+            .audit_execution_event(
+                &account,
+                "EXECUTION_DENIED",
+                &req.plugin,
+                &req.target_asset,
+                Err(&message),
+            )
+            .await;
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ApiResponse {
+                status: "error".into(),
+                data: None,
+                error: Some(message),
+            }),
+        );
     }
-    let _ = state.state_manager.audit_execution_event(&account, "EXECUTION_AUTHORIZED", &req.plugin, &req.target_asset, Ok(())).await;
+    let _ = state
+        .state_manager
+        .audit_execution_event(
+            &account,
+            "EXECUTION_AUTHORIZED",
+            &req.plugin,
+            &req.target_asset,
+            Ok(()),
+        )
+        .await;
 
     match state.executor.execute(&req.plugin, req.args).await {
         Ok(data) => {
-            let _ = state.state_manager.audit_execution_event(&account, "EXECUTION_SUCCESS", &req.plugin, &req.target_asset, Ok(())).await;
-            (StatusCode::OK, Json(ApiResponse { status: "success".to_string(), data: Some(data), error: None }))
+            let _ = state
+                .state_manager
+                .audit_execution_event(
+                    &account,
+                    "EXECUTION_SUCCESS",
+                    &req.plugin,
+                    &req.target_asset,
+                    Ok(()),
+                )
+                .await;
+            (
+                StatusCode::OK,
+                Json(ApiResponse {
+                    status: "success".to_string(),
+                    data: Some(data),
+                    error: None,
+                }),
+            )
         }
         Err(error) => {
             let message = error.to_string();
-            let _ = state.state_manager.audit_execution_event(&account, "EXECUTION_FAILURE", &req.plugin, &req.target_asset, Err(&message)).await;
-            (StatusCode::INTERNAL_SERVER_ERROR, Json(ApiResponse { status: "error".to_string(), data: None, error: Some(message) }))
-        },
+            let _ = state
+                .state_manager
+                .audit_execution_event(
+                    &account,
+                    "EXECUTION_FAILURE",
+                    &req.plugin,
+                    &req.target_asset,
+                    Err(&message),
+                )
+                .await;
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ApiResponse {
+                    status: "error".to_string(),
+                    data: None,
+                    error: Some(message),
+                }),
+            )
+        }
     }
 }
 
@@ -637,7 +1010,14 @@ async fn set_state(
         Err(error) => return unauthorized_response(error),
     };
     if !account.role.may_modify_state() {
-        return (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some("role is not allowed to modify state".into()) }));
+        return (
+            StatusCode::FORBIDDEN,
+            Json(ApiResponse {
+                status: "error".into(),
+                data: None,
+                error: Some("role is not allowed to modify state".into()),
+            }),
+        );
     }
     let state_key = StateKey::new(namespace, key);
     match state.state_manager.update_state(&state_key, req).await {
@@ -669,7 +1049,21 @@ async fn get_audit_logs(
         Err(error) => return unauthorized_response(error),
     };
     match state.state_manager.audit_logs(&account, 100).await {
-        Ok(entries) => (StatusCode::OK, Json(ApiResponse { status: "success".into(), data: Some(entries), error: None })),
-        Err(error) => (StatusCode::FORBIDDEN, Json(ApiResponse { status: "error".into(), data: None, error: Some(error.to_string()) })),
+        Ok(entries) => (
+            StatusCode::OK,
+            Json(ApiResponse {
+                status: "success".into(),
+                data: Some(entries),
+                error: None,
+            }),
+        ),
+        Err(error) => (
+            StatusCode::FORBIDDEN,
+            Json(ApiResponse {
+                status: "error".into(),
+                data: None,
+                error: Some(error.to_string()),
+            }),
+        ),
     }
 }

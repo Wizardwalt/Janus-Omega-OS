@@ -132,7 +132,10 @@ mod tests {
         };
 
         assert!(license
-            .verify(&STANDARD.encode(signing_key.verifying_key().to_bytes()), now)
+            .verify(
+                &STANDARD.encode(signing_key.verifying_key().to_bytes()),
+                now
+            )
             .is_ok());
     }
 }

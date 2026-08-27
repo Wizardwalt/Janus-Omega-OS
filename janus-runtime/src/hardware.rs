@@ -217,11 +217,36 @@ impl HardwareManager {
         let serial = self.serial.read().await;
         let serial_exists = std::path::Path::new(&serial.port).exists();
         vec![
-            HardwareAdapterStatus { adapter: "serial".into(), state: if serial_exists { "available" } else { "unavailable" }.into(), detail: format!("configured path: {}", serial.port) },
-            HardwareAdapterStatus { adapter: "gpio".into(), state: "unsupported".into(), detail: "No production GPIO driver is installed.".into() },
-            HardwareAdapterStatus { adapter: "cellular".into(), state: "unsupported".into(), detail: "No production cellular adapter is installed.".into() },
-            HardwareAdapterStatus { adapter: "rf".into(), state: "unsupported".into(), detail: "No production RF adapter is installed.".into() },
-            HardwareAdapterStatus { adapter: "sensors".into(), state: "unsupported".into(), detail: "No production sensor adapter is installed.".into() },
+            HardwareAdapterStatus {
+                adapter: "serial".into(),
+                state: if serial_exists {
+                    "available"
+                } else {
+                    "unavailable"
+                }
+                .into(),
+                detail: format!("configured path: {}", serial.port),
+            },
+            HardwareAdapterStatus {
+                adapter: "gpio".into(),
+                state: "unsupported".into(),
+                detail: "No production GPIO driver is installed.".into(),
+            },
+            HardwareAdapterStatus {
+                adapter: "cellular".into(),
+                state: "unsupported".into(),
+                detail: "No production cellular adapter is installed.".into(),
+            },
+            HardwareAdapterStatus {
+                adapter: "rf".into(),
+                state: "unsupported".into(),
+                detail: "No production RF adapter is installed.".into(),
+            },
+            HardwareAdapterStatus {
+                adapter: "sensors".into(),
+                state: "unsupported".into(),
+                detail: "No production sensor adapter is installed.".into(),
+            },
         ]
     }
 

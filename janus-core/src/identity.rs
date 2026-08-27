@@ -1,6 +1,9 @@
 //! Organization and operator identity primitives.
 
-use argon2::{password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString}, Argon2};
+use argon2::{
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    Argon2,
+};
 use chrono::{DateTime, Utc};
 use rand_core::OsRng;
 use serde::{Deserialize, Serialize};
@@ -87,7 +90,6 @@ pub struct UserAccount {
     pub locked_until: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
 }
-
 
 /// Hash a Janus-managed password with Argon2id and a cryptographically random salt.
 /// Passwords are never persisted or logged in plaintext.

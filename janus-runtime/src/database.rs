@@ -2,7 +2,11 @@
 
 use anyhow::Result;
 use chrono::Utc;
-use janus_core::{AuditEntry, AuditLevel, AuditLog, CertificationStatus, Engagement, EngagementScope, LicensedFeature, ModuleCertification, Organization, SignedLicense, StateKey, SystemState, UserAccount, UserRole};
+use janus_core::{
+    AuditEntry, AuditLevel, AuditLog, CertificationStatus, Engagement, EngagementScope,
+    LicensedFeature, ModuleCertification, Organization, SignedLicense, StateKey, SystemState,
+    UserAccount, UserRole,
+};
 use rusqlite::{params, Connection, OptionalExtension};
 use std::{path::Path, sync::Mutex};
 use tracing::debug;
@@ -178,19 +182,24 @@ impl Database {
         account: &UserAccount,
         password_hash: &str,
     ) -> Result<()> {
-        let mut conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
+        let mut conn = self
+            .conn
+            .lock()
+            .map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
         let transaction = conn.transaction()?;
-        let organization_count: i64 = transaction.query_row(
-            "SELECT COUNT(*) FROM organizations",
-            [],
-            |row| row.get(0),
-        )?;
+        let organization_count: i64 =
+            transaction.query_row("SELECT COUNT(*) FROM organizations", [], |row| row.get(0))?;
         if organization_count != 0 {
             return Err(anyhow::anyhow!("initial setup has already been completed"));
         }
         transaction.execute(
             "INSERT INTO organizations (id, name, active, created_at) VALUES (?1, ?2, ?3, ?4)",
-            params![organization.id, organization.name, organization.active, organization.created_at.to_rfc3339()],
+            params![
+                organization.id,
+                organization.name,
+                organization.active,
+                organization.created_at.to_rfc3339()
+            ],
         )?;
         transaction.execute(
             "INSERT INTO user_accounts (id, organization_id, email, password_hash, role, active, failed_login_count, locked_until, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
@@ -202,10 +211,18 @@ impl Database {
 
     /// Persist an organization.
     pub fn create_organization(&self, organization: &Organization) -> Result<()> {
-        self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute(
-            "INSERT INTO organizations (id, name, active, created_at) VALUES (?1, ?2, ?3, ?4)",
-            params![organization.id, organization.name, organization.active, organization.created_at.to_rfc3339()],
-        )?;
+        self.conn
+            .lock()
+            .map_err(|_| anyhow::anyhow!("database lock poisoned"))?
+            .execute(
+                "INSERT INTO organizations (id, name, active, created_at) VALUES (?1, ?2, ?3, ?4)",
+                params![
+                    organization.id,
+                    organization.name,
+                    organization.active,
+                    organization.created_at.to_rfc3339()
+                ],
+            )?;
         Ok(())
     }
 
@@ -221,7 +238,10 @@ impl Database {
     /// Retrieve an account for authentication. Callers must not expose the
     /// returned password hash outside the authentication service.
     pub fn find_user_by_email(&self, email: &str) -> Result<Option<StoredUserAccount>> {
-        let conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
         conn.query_row(
             "SELECT id, organization_id, email, password_hash, role, active, failed_login_count, locked_until, created_at FROM user_accounts WHERE email = ?1",
             params![email],
@@ -244,8 +264,15 @@ impl Database {
     }
 
     /// Query audit records created by accounts in one organization.
-    pub fn query_audit_for_organization(&self, organization_id: &str, limit: usize) -> Result<Vec<AuditEntry>> {
-        let conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
+    pub fn query_audit_for_organization(
+        &self,
+        organization_id: &str,
+        limit: usize,
+    ) -> Result<Vec<AuditEntry>> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
         let mut statement = conn.prepare(
             "SELECT a.id, a.timestamp, a.level, a.actor, a.action, a.resource, a.result, a.error, a.metadata FROM audit_log a JOIN user_accounts u ON u.id = a.actor WHERE u.organization_id = ?1 ORDER BY a.timestamp DESC LIMIT ?2",
         )?;
@@ -254,10 +281,24 @@ impl Database {
             let level: String = row.get(2)?;
             Ok(AuditEntry {
                 id: row.get(0)?,
-                timestamp: chrono::DateTime::parse_from_rfc3339(&timestamp).map_err(|_| rusqlite::Error::InvalidQuery)?.with_timezone(&Utc),
-                level: match level.as_str() { "WARN" => AuditLevel::Warn, "ERROR" => AuditLevel::Error, "CRITICAL" => AuditLevel::Critical, _ => AuditLevel::Info },
-                actor: row.get(3)?, action: row.get(4)?, resource: row.get(5)?, result: row.get(6)?, error: row.get(7)?,
-                metadata: row.get::<_, Option<String>>(8)?.and_then(|value| serde_json::from_str(&value).ok()).unwrap_or_else(|| serde_json::json!({})),
+                timestamp: chrono::DateTime::parse_from_rfc3339(&timestamp)
+                    .map_err(|_| rusqlite::Error::InvalidQuery)?
+                    .with_timezone(&Utc),
+                level: match level.as_str() {
+                    "WARN" => AuditLevel::Warn,
+                    "ERROR" => AuditLevel::Error,
+                    "CRITICAL" => AuditLevel::Critical,
+                    _ => AuditLevel::Info,
+                },
+                actor: row.get(3)?,
+                action: row.get(4)?,
+                resource: row.get(5)?,
+                result: row.get(6)?,
+                error: row.get(7)?,
+                metadata: row
+                    .get::<_, Option<String>>(8)?
+                    .and_then(|value| serde_json::from_str(&value).ok())
+                    .unwrap_or_else(|| serde_json::json!({})),
             })
         })?;
         Ok(rows.collect::<std::result::Result<Vec<_>, _>>()?)
@@ -265,32 +306,69 @@ impl Database {
 
     /// List safe account metadata for one organization.
     pub fn list_users(&self, organization_id: &str) -> Result<Vec<UserAccount>> {
-        let conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
         let mut statement = conn.prepare("SELECT id, organization_id, email, role, active, failed_login_count, locked_until, created_at FROM user_accounts WHERE organization_id = ?1 ORDER BY email")?;
         let rows = statement.query_map(params![organization_id], |row| {
             let role: String = row.get(3)?;
             let locked_until: Option<String> = row.get(6)?;
             let created_at: String = row.get(7)?;
-            Ok(UserAccount { id: row.get(0)?, organization_id: row.get(1)?, email: row.get(2)?, role: UserRole::from_str(&role).ok_or(rusqlite::Error::InvalidQuery)?, active: row.get(4)?, failed_login_count: row.get(5)?, locked_until: locked_until.and_then(|value| chrono::DateTime::parse_from_rfc3339(&value).ok()).map(|value| value.with_timezone(&Utc)), created_at: chrono::DateTime::parse_from_rfc3339(&created_at).map_err(|_| rusqlite::Error::InvalidQuery)?.with_timezone(&Utc) })
+            Ok(UserAccount {
+                id: row.get(0)?,
+                organization_id: row.get(1)?,
+                email: row.get(2)?,
+                role: UserRole::from_str(&role).ok_or(rusqlite::Error::InvalidQuery)?,
+                active: row.get(4)?,
+                failed_login_count: row.get(5)?,
+                locked_until: locked_until
+                    .and_then(|value| chrono::DateTime::parse_from_rfc3339(&value).ok())
+                    .map(|value| value.with_timezone(&Utc)),
+                created_at: chrono::DateTime::parse_from_rfc3339(&created_at)
+                    .map_err(|_| rusqlite::Error::InvalidQuery)?
+                    .with_timezone(&Utc),
+            })
         })?;
         Ok(rows.collect::<std::result::Result<Vec<_>, _>>()?)
     }
 
     /// Update account activation only when it belongs to the stated organization.
-    pub fn set_user_active(&self, organization_id: &str, user_id: &str, active: bool) -> Result<bool> {
-        let changed = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute("UPDATE user_accounts SET active = ?1 WHERE id = ?2 AND organization_id = ?3", params![active, user_id, organization_id])?;
+    pub fn set_user_active(
+        &self,
+        organization_id: &str,
+        user_id: &str,
+        active: bool,
+    ) -> Result<bool> {
+        let changed = self
+            .conn
+            .lock()
+            .map_err(|_| anyhow::anyhow!("database lock poisoned"))?
+            .execute(
+                "UPDATE user_accounts SET active = ?1 WHERE id = ?2 AND organization_id = ?3",
+                params![active, user_id, organization_id],
+            )?;
         Ok(changed == 1)
     }
 
     /// Replace a password hash for an account in the stated organization.
-    pub fn update_user_password(&self, organization_id: &str, user_id: &str, password_hash: &str) -> Result<bool> {
+    pub fn update_user_password(
+        &self,
+        organization_id: &str,
+        user_id: &str,
+        password_hash: &str,
+    ) -> Result<bool> {
         let changed = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute("UPDATE user_accounts SET password_hash = ?1, failed_login_count = 0, locked_until = NULL WHERE id = ?2 AND organization_id = ?3", params![password_hash, user_id, organization_id])?;
         Ok(changed == 1)
     }
 
     /// Revoke all sessions owned by an account.
     pub fn delete_user_sessions(&self, user_id: &str) -> Result<usize> {
-        Ok(self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute("DELETE FROM sessions WHERE user_id = ?1", params![user_id])?)
+        Ok(self
+            .conn
+            .lock()
+            .map_err(|_| anyhow::anyhow!("database lock poisoned"))?
+            .execute("DELETE FROM sessions WHERE user_id = ?1", params![user_id])?)
     }
 
     /// Clear failed-login state after a successful authentication.
@@ -304,9 +382,14 @@ impl Database {
 
     /// Record a failed authentication. Five failures produce a fifteen-minute lockout.
     pub fn record_login_failure(&self, user_id: &str, now: chrono::DateTime<Utc>) -> Result<()> {
-        let conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
         let attempts: i64 = conn.query_row(
-            "SELECT failed_login_count FROM user_accounts WHERE id = ?1", params![user_id], |row| row.get(0),
+            "SELECT failed_login_count FROM user_accounts WHERE id = ?1",
+            params![user_id],
+            |row| row.get(0),
         )?;
         let next_attempt = attempts + 1;
         let locked_until = if next_attempt >= 5 {
@@ -322,7 +405,12 @@ impl Database {
     }
 
     /// Persist a hashed opaque session token.
-    pub fn create_session(&self, token_hash: &str, user_id: &str, expires_at: chrono::DateTime<Utc>) -> Result<()> {
+    pub fn create_session(
+        &self,
+        token_hash: &str,
+        user_id: &str,
+        expires_at: chrono::DateTime<Utc>,
+    ) -> Result<()> {
         self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute(
             "INSERT INTO sessions (token_hash, user_id, expires_at, created_at) VALUES (?1, ?2, ?3, ?4)",
             params![token_hash, user_id, expires_at.to_rfc3339(), Utc::now().to_rfc3339()],
@@ -331,8 +419,15 @@ impl Database {
     }
 
     /// Resolve an unexpired session hash to its active user account.
-    pub fn find_session_user(&self, token_hash: &str, now: chrono::DateTime<Utc>) -> Result<Option<UserAccount>> {
-        let conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
+    pub fn find_session_user(
+        &self,
+        token_hash: &str,
+        now: chrono::DateTime<Utc>,
+    ) -> Result<Option<UserAccount>> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
         conn.query_row(
             "SELECT u.id, u.organization_id, u.email, u.role, u.active, u.failed_login_count, u.locked_until, u.created_at FROM sessions s JOIN user_accounts u ON u.id = s.user_id WHERE s.token_hash = ?1 AND s.expires_at > ?2",
             params![token_hash, now.to_rfc3339()],
@@ -353,17 +448,26 @@ impl Database {
 
     /// Remove expired session records as part of normal authentication activity.
     pub fn cleanup_expired_sessions(&self, now: chrono::DateTime<Utc>) -> Result<usize> {
-        let rows = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute(
-            "DELETE FROM sessions WHERE expires_at <= ?1", params![now.to_rfc3339()],
-        )?;
+        let rows = self
+            .conn
+            .lock()
+            .map_err(|_| anyhow::anyhow!("database lock poisoned"))?
+            .execute(
+                "DELETE FROM sessions WHERE expires_at <= ?1",
+                params![now.to_rfc3339()],
+            )?;
         Ok(rows)
     }
 
     /// Revoke an opaque session by its token hash.
     pub fn delete_session(&self, token_hash: &str) -> Result<()> {
-        self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute(
-            "DELETE FROM sessions WHERE token_hash = ?1", params![token_hash],
-        )?;
+        self.conn
+            .lock()
+            .map_err(|_| anyhow::anyhow!("database lock poisoned"))?
+            .execute(
+                "DELETE FROM sessions WHERE token_hash = ?1",
+                params![token_hash],
+            )?;
         Ok(())
     }
 
@@ -393,105 +497,185 @@ impl Database {
 
     /// Return the current active license for an organization, if present.
     pub fn find_active_license(&self, organization_id: &str) -> Result<Option<SignedLicense>> {
-        let conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
         let document: Option<String> = conn.query_row(
             "SELECT signed_document FROM organization_licenses WHERE organization_id = ?1 AND active = 1 ORDER BY imported_at DESC LIMIT 1",
             params![organization_id],
             |row| row.get(0),
         ).optional()?;
-        document.map(|value| serde_json::from_str(&value).map_err(Into::into)).transpose()
+        document
+            .map(|value| serde_json::from_str(&value).map_err(Into::into))
+            .transpose()
     }
 
     /// Persist an engagement and its explicit approved scope in one transaction.
     pub fn create_engagement(&self, engagement: &Engagement) -> Result<()> {
-        let mut conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
+        let mut conn = self
+            .conn
+            .lock()
+            .map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
         let transaction = conn.transaction()?;
         transaction.execute(
             "INSERT INTO engagements (id, organization_id, authorization_reference, starts_at, ends_at, active, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
             params![engagement.id, engagement.organization_id, engagement.authorization_reference, engagement.starts_at.to_rfc3339(), engagement.ends_at.to_rfc3339(), engagement.active, Utc::now().to_rfc3339()],
         )?;
         for asset in &engagement.scope.approved_assets {
-            transaction.execute("INSERT INTO engagement_assets (engagement_id, asset) VALUES (?1, ?2)", params![engagement.id, asset])?;
+            transaction.execute(
+                "INSERT INTO engagement_assets (engagement_id, asset) VALUES (?1, ?2)",
+                params![engagement.id, asset],
+            )?;
         }
         for path in &engagement.scope.approved_evidence_paths {
             transaction.execute("INSERT INTO engagement_evidence_paths (engagement_id, evidence_path) VALUES (?1, ?2)", params![engagement.id, path])?;
         }
         for feature in &engagement.scope.approved_features {
-            transaction.execute("INSERT INTO engagement_features (engagement_id, feature) VALUES (?1, ?2)", params![engagement.id, feature.as_str()])?;
+            transaction.execute(
+                "INSERT INTO engagement_features (engagement_id, feature) VALUES (?1, ?2)",
+                params![engagement.id, feature.as_str()],
+            )?;
         }
         transaction.commit()?;
         Ok(())
     }
 
     /// Update engagement activity only when it belongs to the stated organization.
-    pub fn set_engagement_active(&self, organization_id: &str, engagement_id: &str, active: bool) -> Result<bool> {
-        let changed = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?.execute(
-            "UPDATE engagements SET active = ?1 WHERE id = ?2 AND organization_id = ?3", params![active, engagement_id, organization_id],
-        )?;
+    pub fn set_engagement_active(
+        &self,
+        organization_id: &str,
+        engagement_id: &str,
+        active: bool,
+    ) -> Result<bool> {
+        let changed = self
+            .conn
+            .lock()
+            .map_err(|_| anyhow::anyhow!("database lock poisoned"))?
+            .execute(
+                "UPDATE engagements SET active = ?1 WHERE id = ?2 AND organization_id = ?3",
+                params![active, engagement_id, organization_id],
+            )?;
         Ok(changed == 1)
     }
 
     /// List all engagements belonging to one organization.
     pub fn list_engagements(&self, organization_id: &str) -> Result<Vec<Engagement>> {
         let ids = {
-            let conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
-            let mut statement = conn.prepare("SELECT id FROM engagements WHERE organization_id = ?1 ORDER BY starts_at DESC")?;
-            let rows = statement.query_map(params![organization_id], |row| row.get::<_, String>(0))?;
+            let conn = self
+                .conn
+                .lock()
+                .map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
+            let mut statement = conn.prepare(
+                "SELECT id FROM engagements WHERE organization_id = ?1 ORDER BY starts_at DESC",
+            )?;
+            let rows =
+                statement.query_map(params![organization_id], |row| row.get::<_, String>(0))?;
             let ids = rows.collect::<std::result::Result<Vec<String>, _>>()?;
             ids
         };
-        ids.into_iter().map(|id| self.find_engagement(&id)?.ok_or_else(|| anyhow::anyhow!("engagement disappeared during lookup"))).collect()
+        ids.into_iter()
+            .map(|id| {
+                self.find_engagement(&id)?
+                    .ok_or_else(|| anyhow::anyhow!("engagement disappeared during lookup"))
+            })
+            .collect()
     }
 
     /// Load an engagement and its explicit asset/feature scope.
     pub fn find_engagement(&self, id: &str) -> Result<Option<Engagement>> {
-        let conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
         let record = conn.query_row(
             "SELECT id, organization_id, authorization_reference, starts_at, ends_at, active FROM engagements WHERE id = ?1",
             params![id],
             |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?, row.get::<_, String>(3)?, row.get::<_, String>(4)?, row.get::<_, bool>(5)?)),
         ).optional()?;
-        let Some((id, organization_id, authorization_reference, starts_at, ends_at, active)) = record else { return Ok(None); };
+        let Some((id, organization_id, authorization_reference, starts_at, ends_at, active)) =
+            record
+        else {
+            return Ok(None);
+        };
         let approved_assets = {
-            let mut statement = conn.prepare("SELECT asset FROM engagement_assets WHERE engagement_id = ?1")?;
+            let mut statement =
+                conn.prepare("SELECT asset FROM engagement_assets WHERE engagement_id = ?1")?;
             let rows = statement.query_map(params![&id], |row| row.get(0))?;
             rows.collect::<std::result::Result<Vec<String>, _>>()?
         };
         let approved_evidence_paths = {
-            let mut statement = conn.prepare("SELECT evidence_path FROM engagement_evidence_paths WHERE engagement_id = ?1")?;
+            let mut statement = conn.prepare(
+                "SELECT evidence_path FROM engagement_evidence_paths WHERE engagement_id = ?1",
+            )?;
             let rows = statement.query_map(params![&id], |row| row.get(0))?;
             rows.collect::<std::result::Result<Vec<String>, _>>()?
         };
         let feature_values = {
-            let mut statement = conn.prepare("SELECT feature FROM engagement_features WHERE engagement_id = ?1")?;
+            let mut statement =
+                conn.prepare("SELECT feature FROM engagement_features WHERE engagement_id = ?1")?;
             let rows = statement.query_map(params![&id], |row| row.get::<_, String>(0))?;
             rows.collect::<std::result::Result<Vec<String>, _>>()?
         };
-        let approved_features = feature_values.into_iter().filter_map(|value| LicensedFeature::from_str(&value)).collect();
+        let approved_features = feature_values
+            .into_iter()
+            .filter_map(|value| LicensedFeature::from_str(&value))
+            .collect();
         Ok(Some(Engagement {
-            id, organization_id, authorization_reference,
+            id,
+            organization_id,
+            authorization_reference,
             starts_at: chrono::DateTime::parse_from_rfc3339(&starts_at)?.with_timezone(&Utc),
             ends_at: chrono::DateTime::parse_from_rfc3339(&ends_at)?.with_timezone(&Utc),
             active,
-            scope: EngagementScope { approved_assets, approved_evidence_paths, approved_features },
+            scope: EngagementScope {
+                approved_assets,
+                approved_evidence_paths,
+                approved_features,
+            },
         }))
     }
 
     /// Load a module's reviewed production certification record.
-    pub fn find_module_certification(&self, module_id: &str) -> Result<Option<ModuleCertification>> {
-        let conn = self.conn.lock().map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
+    pub fn find_module_certification(
+        &self,
+        module_id: &str,
+    ) -> Result<Option<ModuleCertification>> {
+        let conn = self
+            .conn
+            .lock()
+            .map_err(|_| anyhow::anyhow!("database lock poisoned"))?;
         let record = conn.query_row(
             "SELECT module_id, module_sha256, status, required_feature, reviewed_by, reviewed_at, notes FROM module_certifications WHERE module_id = ?1",
             params![module_id],
             |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?, row.get::<_, String>(3)?, row.get::<_, Option<String>>(4)?, row.get::<_, Option<String>>(5)?, row.get::<_, Option<String>>(6)?)),
         ).optional()?;
-        let Some((module_id, module_sha256, status, required_feature, reviewed_by, reviewed_at, notes)) = record else { return Ok(None); };
-        Ok(Some(ModuleCertification {
-            module_id, module_sha256,
-            status: CertificationStatus::from_str(&status).ok_or_else(|| anyhow::anyhow!("invalid certification status"))?,
-            required_feature: LicensedFeature::from_str(&required_feature).ok_or_else(|| anyhow::anyhow!("invalid licensed feature"))?,
+        let Some((
+            module_id,
+            module_sha256,
+            status,
+            required_feature,
             reviewed_by,
-            reviewed_at: reviewed_at.map(|value| chrono::DateTime::parse_from_rfc3339(&value).map(|value| value.with_timezone(&Utc))).transpose()?,
+            reviewed_at,
+            notes,
+        )) = record
+        else {
+            return Ok(None);
+        };
+        Ok(Some(ModuleCertification {
+            module_id,
+            module_sha256,
+            status: CertificationStatus::from_str(&status)
+                .ok_or_else(|| anyhow::anyhow!("invalid certification status"))?,
+            required_feature: LicensedFeature::from_str(&required_feature)
+                .ok_or_else(|| anyhow::anyhow!("invalid licensed feature"))?,
+            reviewed_by,
+            reviewed_at: reviewed_at
+                .map(|value| {
+                    chrono::DateTime::parse_from_rfc3339(&value)
+                        .map(|value| value.with_timezone(&Utc))
+                })
+                .transpose()?,
             notes,
         }))
     }

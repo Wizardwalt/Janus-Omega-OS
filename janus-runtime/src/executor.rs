@@ -7,7 +7,6 @@ use sha2::{Digest, Sha256};
 use std::path::PathBuf;
 use tracing::debug;
 
-
 /// Safe plugin metadata returned to authenticated API clients.
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct PluginSummary {
@@ -41,18 +40,25 @@ impl PluginExecutor {
 
     /// List available plugins with structured metadata for authenticated clients.
     pub async fn list_plugins(&self) -> Result<Vec<PluginSummary>> {
-        Ok(self.loader.list_sorted().into_iter().map(|(id, source)| PluginSummary {
-            id: id.to_string(),
-            name: source.manifest.name.clone(),
-            category: source.manifest.category.clone(),
-            status: source.manifest.status.clone(),
-            description: source.manifest.description.clone(),
-        }).collect())
+        Ok(self
+            .loader
+            .list_sorted()
+            .into_iter()
+            .map(|(id, source)| PluginSummary {
+                id: id.to_string(),
+                name: source.manifest.name.clone(),
+                category: source.manifest.category.clone(),
+                status: source.manifest.status.clone(),
+                description: source.manifest.description.clone(),
+            })
+            .collect())
     }
 
     /// Return the current content hash for an installed plugin.
     pub fn plugin_sha256(&self, plugin_name: &str) -> Result<String> {
-        let plugin = self.loader.get(plugin_name)
+        let plugin = self
+            .loader
+            .get(plugin_name)
             .ok_or_else(|| anyhow::anyhow!("Plugin not found: {}", plugin_name))?;
         Ok(format!("{:x}", Sha256::digest(plugin.code.as_bytes())))
     }

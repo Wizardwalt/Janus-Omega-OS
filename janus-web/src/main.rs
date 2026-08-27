@@ -967,13 +967,23 @@ async fn main() -> anyhow::Result<()> {
 
     let module_registry = Arc::new(build_module_registry());
     let total: usize = module_registry.values().map(|v| v.len()).sum();
-    let demo_mode = matches!(std::env::var("JANUS_DEMO_MODE").as_deref(), Ok("1") | Ok("true") | Ok("TRUE"));
+    let demo_mode = matches!(
+        std::env::var("JANUS_DEMO_MODE").as_deref(),
+        Ok("1") | Ok("true") | Ok("TRUE")
+    );
     println!(
         "[GUI] Module registry: {} modules across {} categories",
         total,
         module_registry.len()
     );
-    println!("[GUI] Legacy simulated module execution: {}", if demo_mode { "DEMO ENABLED" } else { "DISABLED" });
+    println!(
+        "[GUI] Legacy simulated module execution: {}",
+        if demo_mode {
+            "DEMO ENABLED"
+        } else {
+            "DISABLED"
+        }
+    );
 
     let state = GuiState {
         tx,

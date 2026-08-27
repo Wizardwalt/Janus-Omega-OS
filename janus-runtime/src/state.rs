@@ -2,7 +2,10 @@
 
 use crate::database::Database;
 use anyhow::Result;
-use janus_core::{hash_password, AuditEntry, AuditLog, Config, Organization, StateKey, SystemState, UserAccount, UserRole};
+use janus_core::{
+    hash_password, AuditEntry, AuditLog, Config, Organization, StateKey, SystemState, UserAccount,
+    UserRole,
+};
 use sha2::{Digest, Sha256};
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -47,7 +50,9 @@ impl StateManager {
         let organization_name = organization_name.trim();
         let email = email.trim().to_ascii_lowercase();
         if organization_name.is_empty() || email.is_empty() || !email.contains('@') {
-            return Err(anyhow::anyhow!("organization name and a valid email are required"));
+            return Err(anyhow::anyhow!(
+                "organization name and a valid email are required"
+            ));
         }
 
         let now = chrono::Utc::now();
@@ -68,11 +73,14 @@ impl StateManager {
             created_at: now,
         };
         let password_hash = hash_password(&password)?;
-        self.db.bootstrap_first_admin(&organization, &account, &password_hash)?;
+        self.db
+            .bootstrap_first_admin(&organization, &account, &password_hash)?;
         self.db.record(
             AuditEntry::new("bootstrap", "INITIAL_ADMIN_CREATED", &account.id)
                 .success()
-                .with_metadata(serde_json::json!({"organization_id": organization.id, "email": account.email})),
+                .with_metadata(
+                    serde_json::json!({"organization_id": organization.id, "email": account.email}),
+                ),
         )?;
         Ok((organization, account))
     }
@@ -107,10 +115,10 @@ impl StateManager {
         let token = format!("janus_{}", uuid::Uuid::new_v4());
         let token_hash = format!("{:x}", Sha256::digest(token.as_bytes()));
         let expires_at = now + chrono::Duration::hours(12);
-        self.db.create_session(&token_hash, &stored.account.id, expires_at)?;
+        self.db
+            .create_session(&token_hash, &stored.account.id, expires_at)?;
         self.db.record(
-            AuditEntry::new(&stored.account.id, "LOGIN_SUCCESS", "authentication")
-                .success(),
+            AuditEntry::new(&stored.account.id, "LOGIN_SUCCESS", "authentication").success(),
         )?;
 
         Ok(LoginSession {
@@ -121,15 +129,43 @@ impl StateManager {
     }
 
     /// Activate or deactivate an engagement in the administrator's organization.
-    pub async fn set_engagement_active(&self, account: &janus_core::UserAccount, engagement_id: &str, active: bool) -> Result<()> {
-        if !account.role.may_administer_organization() { return Err(anyhow::anyhow!("role is not allowed to manage engagements")); }
-        if !self.db.set_engagement_active(&account.organization_id, engagement_id, active)? { return Err(anyhow::anyhow!("engagement was not found in this organization")); }
-        self.db.record(AuditEntry::new(&account.id, if active { "ENGAGEMENT_ENABLED" } else { "ENGAGEMENT_DISABLED" }, engagement_id).success())?;
+    pub async fn set_engagement_active(
+        &self,
+        account: &janus_core::UserAccount,
+        engagement_id: &str,
+        active: bool,
+    ) -> Result<()> {
+        if !account.role.may_administer_organization() {
+            return Err(anyhow::anyhow!("role is not allowed to manage engagements"));
+        }
+        if !self
+            .db
+            .set_engagement_active(&account.organization_id, engagement_id, active)?
+        {
+            return Err(anyhow::anyhow!(
+                "engagement was not found in this organization"
+            ));
+        }
+        self.db.record(
+            AuditEntry::new(
+                &account.id,
+                if active {
+                    "ENGAGEMENT_ENABLED"
+                } else {
+                    "ENGAGEMENT_DISABLED"
+                },
+                engagement_id,
+            )
+            .success(),
+        )?;
         Ok(())
     }
 
     /// Return engagements belonging only to the authenticated organization.
-    pub async fn engagements(&self, account: &janus_core::UserAccount) -> Result<Vec<janus_core::Engagement>> {
+    pub async fn engagements(
+        &self,
+        account: &janus_core::UserAccount,
+    ) -> Result<Vec<janus_core::Engagement>> {
         self.db.list_engagements(&account.organization_id)
     }
 
@@ -142,7 +178,8 @@ impl StateManager {
         if !account.role.may_view_audit_logs() {
             return Err(anyhow::anyhow!("role is not allowed to view audit logs"));
         }
-        self.db.query_audit_for_organization(&account.organization_id, limit.min(500))
+        self.db
+            .query_audit_for_organization(&account.organization_id, limit.min(500))
     }
 
     /// Create a user inside the administrator's organization.
@@ -157,7 +194,9 @@ impl StateManager {
             return Err(anyhow::anyhow!("role is not allowed to create users"));
         }
         if role == janus_core::UserRole::PlatformBreakGlassAdmin {
-            return Err(anyhow::anyhow!("break-glass administrators cannot be created through organization administration"));
+            return Err(anyhow::anyhow!(
+                "break-glass administrators cannot be created through organization administration"
+            ));
         }
         let email = email.trim().to_ascii_lowercase();
         if !email.contains('@') {
@@ -181,34 +220,83 @@ impl StateManager {
         self.db.record(
             AuditEntry::new(&account.id, "USER_CREATED", &created.id)
                 .success()
-                .with_metadata(serde_json::json!({"role": created.role.as_str(), "email": created.email})),
+                .with_metadata(
+                    serde_json::json!({"role": created.role.as_str(), "email": created.email}),
+                ),
         )?;
         Ok(created)
     }
 
     /// Return safe user metadata for the administrator's organization.
-    pub async fn users(&self, account: &janus_core::UserAccount) -> Result<Vec<janus_core::UserAccount>> {
-        if !account.role.may_administer_organization() { return Err(anyhow::anyhow!("role is not allowed to list users")); }
+    pub async fn users(
+        &self,
+        account: &janus_core::UserAccount,
+    ) -> Result<Vec<janus_core::UserAccount>> {
+        if !account.role.may_administer_organization() {
+            return Err(anyhow::anyhow!("role is not allowed to list users"));
+        }
         self.db.list_users(&account.organization_id)
     }
 
     /// Enable or disable an organization account and revoke sessions when disabling.
-    pub async fn set_user_active(&self, account: &janus_core::UserAccount, user_id: &str, active: bool) -> Result<()> {
-        if !account.role.may_administer_organization() { return Err(anyhow::anyhow!("role is not allowed to manage users")); }
-        if account.id == user_id && !active { return Err(anyhow::anyhow!("administrators cannot disable their own active account")); }
-        if !self.db.set_user_active(&account.organization_id, user_id, active)? { return Err(anyhow::anyhow!("user was not found in this organization")); }
-        if !active { self.db.delete_user_sessions(user_id)?; }
-        self.db.record(AuditEntry::new(&account.id, if active { "USER_ENABLED" } else { "USER_DISABLED" }, user_id).success())?;
+    pub async fn set_user_active(
+        &self,
+        account: &janus_core::UserAccount,
+        user_id: &str,
+        active: bool,
+    ) -> Result<()> {
+        if !account.role.may_administer_organization() {
+            return Err(anyhow::anyhow!("role is not allowed to manage users"));
+        }
+        if account.id == user_id && !active {
+            return Err(anyhow::anyhow!(
+                "administrators cannot disable their own active account"
+            ));
+        }
+        if !self
+            .db
+            .set_user_active(&account.organization_id, user_id, active)?
+        {
+            return Err(anyhow::anyhow!("user was not found in this organization"));
+        }
+        if !active {
+            self.db.delete_user_sessions(user_id)?;
+        }
+        self.db.record(
+            AuditEntry::new(
+                &account.id,
+                if active {
+                    "USER_ENABLED"
+                } else {
+                    "USER_DISABLED"
+                },
+                user_id,
+            )
+            .success(),
+        )?;
         Ok(())
     }
 
     /// Reset an organization account password and revoke every existing session.
-    pub async fn reset_user_password(&self, account: &janus_core::UserAccount, user_id: &str, password: String) -> Result<()> {
-        if !account.role.may_administer_organization() { return Err(anyhow::anyhow!("role is not allowed to reset passwords")); }
+    pub async fn reset_user_password(
+        &self,
+        account: &janus_core::UserAccount,
+        user_id: &str,
+        password: String,
+    ) -> Result<()> {
+        if !account.role.may_administer_organization() {
+            return Err(anyhow::anyhow!("role is not allowed to reset passwords"));
+        }
         let hash = janus_core::hash_password(&password)?;
-        if !self.db.update_user_password(&account.organization_id, user_id, &hash)? { return Err(anyhow::anyhow!("user was not found in this organization")); }
+        if !self
+            .db
+            .update_user_password(&account.organization_id, user_id, &hash)?
+        {
+            return Err(anyhow::anyhow!("user was not found in this organization"));
+        }
         self.db.delete_user_sessions(user_id)?;
-        self.db.record(AuditEntry::new(&account.id, "PASSWORD_RESET", user_id).success())?;
+        self.db
+            .record(AuditEntry::new(&account.id, "PASSWORD_RESET", user_id).success())?;
         Ok(())
     }
 
@@ -225,7 +313,10 @@ impl StateManager {
         if !account.role.may_certify_modules() {
             return Err(anyhow::anyhow!("role is not allowed to certify modules"));
         }
-        if module_id.trim().is_empty() || module_sha256.len() != 64 || !module_sha256.chars().all(|value| value.is_ascii_hexdigit()) {
+        if module_id.trim().is_empty()
+            || module_sha256.len() != 64
+            || !module_sha256.chars().all(|value| value.is_ascii_hexdigit())
+        {
             return Err(anyhow::anyhow!("a module ID and SHA-256 hash are required"));
         }
         let certification = janus_core::ModuleCertification {
@@ -260,13 +351,19 @@ impl StateManager {
             return Err(anyhow::anyhow!("role is not allowed to create engagements"));
         }
         if authorization_reference.trim().is_empty() || ends_at <= starts_at {
-            return Err(anyhow::anyhow!("valid authorization reference and date range are required"));
+            return Err(anyhow::anyhow!(
+                "valid authorization reference and date range are required"
+            ));
         }
         if scope.approved_assets.is_empty() && scope.approved_evidence_paths.is_empty() {
-            return Err(anyhow::anyhow!("an engagement requires at least one approved asset or evidence path"));
+            return Err(anyhow::anyhow!(
+                "an engagement requires at least one approved asset or evidence path"
+            ));
         }
         if scope.approved_features.is_empty() {
-            return Err(anyhow::anyhow!("an engagement requires at least one approved feature"));
+            return Err(anyhow::anyhow!(
+                "an engagement requires at least one approved feature"
+            ));
         }
         let engagement = janus_core::Engagement {
             id: format!("eng_{}", uuid::Uuid::new_v4()),
@@ -287,11 +384,17 @@ impl StateManager {
     }
 
     /// Return the active entitlement claims without exposing the signed document.
-    pub async fn license_claims(&self, account: &janus_core::UserAccount) -> Result<janus_core::LicenseClaims> {
+    pub async fn license_claims(
+        &self,
+        account: &janus_core::UserAccount,
+    ) -> Result<janus_core::LicenseClaims> {
         if !account.role.may_administer_organization() {
-            return Err(anyhow::anyhow!("role is not allowed to view license status"));
+            return Err(anyhow::anyhow!(
+                "role is not allowed to view license status"
+            ));
         }
-        self.db.find_active_license(&account.organization_id)?
+        self.db
+            .find_active_license(&account.organization_id)?
             .map(|license| license.claims)
             .ok_or_else(|| anyhow::anyhow!("organization has no active license"))
     }
@@ -306,9 +409,14 @@ impl StateManager {
             return Err(anyhow::anyhow!("role is not allowed to import licenses"));
         }
         if license.claims.organization_id != account.organization_id {
-            return Err(anyhow::anyhow!("license belongs to a different organization"));
+            return Err(anyhow::anyhow!(
+                "license belongs to a different organization"
+            ));
         }
-        let public_key = self.config.license_public_key.as_deref()
+        let public_key = self
+            .config
+            .license_public_key
+            .as_deref()
             .ok_or_else(|| anyhow::anyhow!("JANUS_LICENSE_PUBLIC_KEY is not configured"))?;
         self.db.store_license(&license, public_key)?;
         self.db.record(
@@ -347,13 +455,22 @@ impl StateManager {
         module_id: &str,
         module_sha256: &str,
     ) -> Result<()> {
-        let public_key = self.config.license_public_key.as_deref()
+        let public_key = self
+            .config
+            .license_public_key
+            .as_deref()
             .ok_or_else(|| anyhow::anyhow!("JANUS_LICENSE_PUBLIC_KEY is not configured"))?;
-        let license = self.db.find_active_license(&account.organization_id)?
+        let license = self
+            .db
+            .find_active_license(&account.organization_id)?
             .ok_or_else(|| anyhow::anyhow!("organization has no active license"))?;
-        let engagement = self.db.find_engagement(engagement_id)?
+        let engagement = self
+            .db
+            .find_engagement(engagement_id)?
             .ok_or_else(|| anyhow::anyhow!("engagement was not found"))?;
-        let certification = self.db.find_module_certification(module_id)?
+        let certification = self
+            .db
+            .find_module_certification(module_id)?
             .ok_or_else(|| anyhow::anyhow!("module has no certification record"))?;
         janus_core::authorize_execution(janus_core::ExecutionAuthorization {
             license: &license,
@@ -384,7 +501,8 @@ impl StateManager {
     pub async fn logout(&self, account: &janus_core::UserAccount, token: &str) -> Result<()> {
         let token_hash = format!("{:x}", Sha256::digest(token.as_bytes()));
         self.db.delete_session(&token_hash)?;
-        self.db.record(AuditEntry::new(&account.id, "LOGOUT", "authentication").success())?;
+        self.db
+            .record(AuditEntry::new(&account.id, "LOGOUT", "authentication").success())?;
         Ok(())
     }
 

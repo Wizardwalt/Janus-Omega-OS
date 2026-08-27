@@ -92,10 +92,6 @@ mod tests {
             "unapproved.example.com",
             now,
         ));
-        assert!(!engagement.authorizes(
-            &LicensedFeature::Forensics,
-            "diagnostic.example.com",
-            now,
-        ));
+        assert!(!engagement.authorizes(&LicensedFeature::Forensics, "diagnostic.example.com", now,));
     }
 }

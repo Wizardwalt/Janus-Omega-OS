@@ -78,7 +78,9 @@ impl Config {
             return Err(crate::JanusError::Config("Invalid port: 0".to_string()));
         }
         if self.allowed_origins.is_empty() {
-            return Err(crate::JanusError::Config("At least one allowed browser origin is required".to_string()));
+            return Err(crate::JanusError::Config(
+                "At least one allowed browser origin is required".to_string(),
+            ));
         }
         Ok(())
     }
