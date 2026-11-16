@@ -860,7 +860,7 @@ async fn execute(
         .await
     {
         let message = error.to_string();
-        let _ = state
+        if let Err(audit_error) = state
             .state_manager
             .audit_execution_event(
                 &account,
@@ -869,7 +869,22 @@ async fn execute(
                 &req.target_asset,
                 Err(&message),
             )
-            .await;
+            .await
+        {
+            tracing::error!(
+                plugin = %req.plugin,
+                error = %audit_error,
+                "Failed to persist denied-execution audit event"
+            );
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ApiResponse {
+                    status: "error".into(),
+                    data: None,
+                    error: Some("execution denied; audit persistence failed".into()),
+                }),
+            );
+        }
         return (
             StatusCode::FORBIDDEN,
             Json(ApiResponse {
@@ -879,7 +894,9 @@ async fn execute(
             }),
         );
     }
-    let _ = state
+
+    // The authorization record must be durable before any plugin code can run.
+    if let Err(error) = state
         .state_manager
         .audit_execution_event(
             &account,
@@ -888,11 +905,26 @@ async fn execute(
             &req.target_asset,
             Ok(()),
         )
-        .await;
+        .await
+    {
+        tracing::error!(
+            plugin = %req.plugin,
+            error = %error,
+            "Aborting plugin execution because the authorization audit could not be persisted"
+        );
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(ApiResponse {
+                status: "error".into(),
+                data: None,
+                error: Some("execution aborted because authorization audit persistence failed".into()),
+            }),
+        );
+    }
 
     match state.executor.execute(&req.plugin, req.args).await {
         Ok(data) => {
-            let _ = state
+            if let Err(error) = state
                 .state_manager
                 .audit_execution_event(
                     &account,
@@ -901,7 +933,22 @@ async fn execute(
                     &req.target_asset,
                     Ok(()),
                 )
-                .await;
+                .await
+            {
+                tracing::error!(
+                    plugin = %req.plugin,
+                    error = %error,
+                    "Plugin execution completed but success audit persistence failed"
+                );
+                return (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(ApiResponse {
+                        status: "error".into(),
+                        data: None,
+                        error: Some("plugin execution completed, but its result could not be durably audited".into()),
+                    }),
+                );
+            }
             (
                 StatusCode::OK,
                 Json(ApiResponse {
@@ -913,7 +960,7 @@ async fn execute(
         }
         Err(error) => {
             let message = error.to_string();
-            let _ = state
+            if let Err(audit_error) = state
                 .state_manager
                 .audit_execution_event(
                     &account,
@@ -922,7 +969,23 @@ async fn execute(
                     &req.target_asset,
                     Err(&message),
                 )
-                .await;
+                .await
+            {
+                tracing::error!(
+                    plugin = %req.plugin,
+                    execution_error = %message,
+                    audit_error = %audit_error,
+                    "Plugin execution failed and failure audit persistence also failed"
+                );
+                return (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    Json(ApiResponse {
+                        status: "error".into(),
+                        data: None,
+                        error: Some("plugin execution failed and its failure audit could not be durably persisted".into()),
+                    }),
+                );
+            }
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ApiResponse {
