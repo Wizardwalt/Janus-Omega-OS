@@ -324,3 +324,12 @@ The above merges are small, real code changes and test improvements. They do not
 - The limit is independent of the existing 100,000-instruction and 256 KiB JSON input/output limits. This closes the Lua-heap-quota gap at the VM level.
 - CI run [44199948036](https://github.com/Wizardwalt/Janus-OS/actions/runs/44199948036) is in progress. Do not merge until the exact head passes.
 - This is not an OS process boundary, total runtime memory quota, or complete plugin isolation. Process-level CPU/memory limits, cancellation, and authenticated API-to-plugin audit integration remain open.
+
+
+### Aria conversation-history foundation — PR opened
+
+- **Janus-OS PR #24**: [Add owner-scoped durable Aria conversation storage](https://github.com/Wizardwalt/Janus-OS/pull/24), head `4e484789b80a79ece95cfb15a54d40487ab5afc0`.
+- Adds a SQLite event store separate from long-term memory. Events preserve role, content, provider/model metadata, timestamps, and owner/conversation IDs.
+- Appends are transactional; list/read/delete queries are owner-scoped; content and identifiers are bounded; deletion cascades to events. Tests cover owner separation, delete isolation, invalid roles, and oversized content.
+- **Not yet integrated** into the authenticated API, chat UI, live provider, or export/retention workflow. The API must always derive owner IDs from the authenticated session.
+- CI status: waiting for/monitoring the workflow associated with the exact PR head; do not merge before full CI passes.
