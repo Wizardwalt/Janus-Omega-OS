@@ -298,3 +298,20 @@ The above merges are small, real code changes and test improvements. They do not
 - Fresh CI run [44198721688](https://github.com/Wizardwalt/OmniVault-Android/actions/runs/44198721688) has passed Android SDK/Gradle setup and **unit tests**.
 - Debug APK assembly is currently running; artifact upload is pending.
 - PR #8 is mergeable, but remains open. Do not merge until this exact-head run succeeds and the debug APK artifact is uploaded successfully.
+
+
+## 2026-11-17 continuation — OmniVault provider-filter build verified
+
+- **OmniVault PR #8 is merged** to `main`: [Add provider filters to the OmniVault conversation browser](https://github.com/Wizardwalt/OmniVault-Android/pull/8). Merge commit: `1f2a665429b32102eab0c637270c646970578fe4`.
+- Exact PR head `02b52d7f430d892142cd2445449566c637d0b002` passed unit tests, debug APK assembly, and artifact upload in workflow run [44198721688](https://github.com/Wizardwalt/OmniVault-Android/actions/runs/44198721688).
+- Uploaded artifact: `omnivault-debug-apk`, 11,200,021 bytes, SHA-256 `458320d836b63281e179f552edfcb3d0695059940d49182d80f55ed07c886910`; artifact ID `14379867803`; expires 2027-02-15. This is a CI debug build, not a signed production release and not evidence of a physical-device install.
+- PR #8 adds provider filter chips and combines provider selection with title/provider/message-content search. Its filtering helper has unit coverage.
+
+### Next active gates
+
+1. **Janus runtime:** move beyond Tokio scheduling isolation. The current Lua sandbox has instruction and JSON bounds, but no hard VM heap quota or OS process boundary. Select and implement a separately enforced resource boundary before enabling untrusted plugins; then test cancellation, memory exhaustion, and authenticated API-to-plugin audit behavior.
+2. **Aria:** the existing architecture requires provider-neutral server-side adapters and user-scoped durable conversation history. The adapter/provider deployment and protected secret-storage choices remain open; do not expose credentials to browser assets or use organization-scoped generic state as private memory.
+3. **OmniVault:** use the uploaded debug artifact for physical Android installation and SAF/low-storage/restart/round-trip acceptance. Encryption and recovery-key format remain an explicit design gate; current backups are plaintext.
+4. **Communities:** both websites remain local-only prototypes. Production identity, persistence, moderation, privacy/export, and deployment require independent architecture decisions for each community.
+
+**External test still required:** install the debug APK on a physical Android device and report device/Android version plus import → backup → restore → re-backup results. CI success alone does not close this gate.
