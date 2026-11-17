@@ -20,8 +20,8 @@
 | Janus-Omega-OS lineage | [Wizardwalt/Janus-Omega-OS](https://github.com/Wizardwalt/Janus-Omega-OS) — preserved original lineage and separate repository | Original Janus-Omega identity, ArchISO/Pandora/module/manual history preserved; paired lineage reports prepared | Full Git ancestry and recursive file inventory; determine which unique assets should remain or be migrated; independent ArchISO verification |
 | Aria | Implemented in [Wizardwalt/Janus-OS](https://github.com/Wizardwalt/Janus-OS), PR #10 | Constitution, ten-domain knowledge taxonomy, portable record schema, SQLite knowledge store, source-preserving ingestion, scoped retrieval, reviewed learning, owner memory and encrypted-memory implementation, authenticated APIs, read-only OmniVault snapshot contract | Live model provider/chat-context wiring, full semantic retrieval/evaluation, key lifecycle and recovery, live cross-app OmniVault gateway |
 | OmniVault | [Wizardwalt/OmniVault-Android](https://github.com/Wizardwalt/OmniVault-Android) | Local-first Android Vault Engine; PR #1 reliability work; CI unit tests and debug APK passed | PR review/merge; physical-device install test; interruption/recovery tests; broader real-provider fixtures; encrypted backups are not implemented |
-| Janus Community | Planned independent repository: `Wizardwalt/Janus-Community`; static prototype staged at `community-sites/janus-community/` in the Phase 1 branch | Charter, requirements, README, responsive landing-page prototype | Standalone repository creation and migration, governance/moderation implementation, CI, privacy/export/backup |
-| Multicolored Hat Society | Planned independent repository: `Wizardwalt/Multicolored-Hat-Society`; static prototype staged at `community-sites/multicolored-hat-society/` in the Phase 1 branch | Six-community charter, requirements, README, responsive landing-page prototype | Standalone repository creation and migration, research moderation/disclosure process, CI, privacy/export/backup |
+| Janus Community | [Wizardwalt/Janus-Community](https://github.com/Wizardwalt/Janus-Community) — standalone private repository created | README, charter, shared platform requirements, responsive static landing page, GitHub Actions structural check | Fresh CI confirmation; governance/moderation implementation, privacy/export/backup, deployment decision |
+| Multicolored Hat Society | [Wizardwalt/Multicolored-Hat-Society](https://github.com/Wizardwalt/Multicolored-Hat-Society) — standalone private repository created | README, six-community charter, shared platform requirements, responsive static landing page, GitHub Actions structural check and authorized-lab safety framing | Fresh CI confirmation; research moderation/disclosure process, privacy/export/backup, deployment decision |
 
 The portfolio contains five initiatives. Janus-OS and Janus-Omega-OS are two distinct repositories within the Janus product lineage, not two additional initiatives.
 
@@ -59,7 +59,7 @@ The independent **Multicolored Hat Society** has **six communities** (White, Bla
 2. Close the highest-risk Janus runtime gaps: core Lua trust policy, sandbox resource limits, auth/audit integration tests.
 3. Review OmniVault PR #1, install the APK on a physical device, and test interruption/recovery.
 4. Consolidate Aria's host/API contract and build the real read-only OmniVault bridge only after authorization/revocation tests exist.
-5. Create the two independent community repositories and migrate the staged static prototypes and approved charters into them.
+5. Confirm CI in the two newly created community repositories; then implement moderation, privacy/export/backup, and deployment foundations.
 6. Clean up repository-wide Rust formatting in a focused PR; keep the warning visible until the check is fully clean.
 7. Keep a fresh CI/build/test record for each project; do not claim Stage 1 parity until every exit criterion is met.
 
