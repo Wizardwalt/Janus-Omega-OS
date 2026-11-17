@@ -118,3 +118,14 @@ The community prototypes are still local-only; no production account, shared pub
 - No physical serial hardware or ArchISO VM boot acceptance has been demonstrated.
 - Aria live provider/chat-history wiring is not implemented yet.
 - Community production authentication, persistence, moderation, privacy controls, and deployment are not implemented.
+
+
+## 2026-11-17 follow-up — recovery and adversarial restore
+
+- **Janus recovery:** PR #6 was closed without merging because its implementation is superseded by the newer recovery command already on Janus-OS `main`. The stale PR used unconditional DELETE statements against optional tables and its workspace tests failed. Current main checks table existence, clears applicable session/enrollment/trust tables, uses owner-only plaintext staging, and verifies SQLite integrity. [Closed superseded PR #6](https://github.com/Wizardwalt/Janus-OS/pull/6).
+- **Janus regression coverage:** [PR #16](https://github.com/Wizardwalt/Janus-OS/pull/16) adds a partial-schema restore test: clear the session table when present, tolerate absent optional tables, and preserve unrelated application state. CI run [44040722746](https://github.com/Wizardwalt/Janus-OS/actions/runs/44040722746) was in progress at the last check; do not merge until complete.
+- **OmniVault adversarial coverage:** [PR #5](https://github.com/Wizardwalt/OmniVault-Android/pull/5) adds a valid-manifest plus unreferenced-ZIP-entry attack fixture and asserts rejection without committing originals. CI run [44040727648](https://github.com/Wizardwalt/OmniVault-Android/actions/runs/44040727648) was in progress at the last check; do not merge until unit tests and APK assembly complete.
+
+## Architecture decisions still gated
+
+The next implementation gates for live Aria provider/history wiring, Janus trusted-core Lua and hard sandbox resource boundaries, OmniVault encrypted backup/key recovery, and production authentication/database/moderation for both communities require explicit architecture and threat-model decisions. No production stack, cryptographic/key-management scheme, Lua memory-isolation mechanism, external provider, or deployment target has been selected in this follow-up. These are not complete implementations. The five project issue trackers contain the acceptance sequences and blockers.
