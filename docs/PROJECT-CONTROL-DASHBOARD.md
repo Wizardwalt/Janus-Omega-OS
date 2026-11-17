@@ -129,3 +129,9 @@ The community prototypes are still local-only; no production account, shared pub
 ## Architecture decisions still gated
 
 The next implementation gates for live Aria provider/history wiring, Janus trusted-core Lua and hard sandbox resource boundaries, OmniVault encrypted backup/key recovery, and production authentication/database/moderation for both communities require explicit architecture and threat-model decisions. No production stack, cryptographic/key-management scheme, Lua memory-isolation mechanism, external provider, or deployment target has been selected in this follow-up. These are not complete implementations. The five project issue trackers contain the acceptance sequences and blockers.
+
+
+### Fresh verification update — 2026-11-17
+
+- Janus-OS PR #16 is now **merged** to `main`. CI run [44040722746](https://github.com/Wizardwalt/Janus-OS/actions/runs/44040722746) passed Clippy, web/workspace cargo checks, all workspace tests, frontend/shell checks, release build, and binary existence checks. It adds partial-schema recovery coverage and confirms unrelated application state is preserved while existing session data is cleared.
+- OmniVault PR #5 remains open while CI run [44040727648](https://github.com/Wizardwalt/OmniVault-Android/actions/runs/44040727648) completes. Unit tests passed; debug APK assembly was still running at the last check. Do not merge until APK assembly/upload and workflow completion succeed.
