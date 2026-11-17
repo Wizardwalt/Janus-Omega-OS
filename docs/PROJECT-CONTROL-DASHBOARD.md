@@ -271,3 +271,23 @@ Five focused product changes have been opened; no PR is to be merged until its w
 - The community and Society changes repair malformed HTML/CSS markup only. Both remain local-only prototypes without production accounts, shared publishing, or server persistence.
 
 The next code-focused work should continue with real device validation and the protected runtime's actual execution path. Do not begin production backend deployment until the account, authorization, privacy, moderation, and hosting decisions are approved.
+
+
+## 2026-11-17 implementation follow-up — verified merges and Android compile fix
+
+The five-PR product implementation round has advanced:
+
+### Merged after exact-head CI success
+- **Janus-OS PR #21** merged as `b3d6197488c9e70d5ebad7b132c773ad53610fff`. CI run [44195516304](https://github.com/Wizardwalt/Janus-OS/actions/runs/44195516304) passed Clippy, web/workspace checks, workspace tests, frontend and shell checks, release build, and binary checks. Aria equal-score retrieval ties now use explicit stable identity keys.
+- **Janus-OS PR #22** merged as `2423fb36d3392483615e1cd4f7dc4be3a2f072d7`. CI run [44195587578](https://github.com/Wizardwalt/Janus-OS/actions/runs/44195587578) passed the same complete pipeline. Synchronous bounded Lua execution now runs on Tokio's blocking pool and raw plugin arguments are no longer logged. This remains scheduling isolation, not OS process isolation or a hard memory/time quota.
+- **Janus Community PR #3** merged as `79dd678cc746176a5e9159cce1ac1664033dfd86`; validation run [44195765955](https://github.com/Wizardwalt/janus-community/actions/runs/44195765955) passed.
+- **Multicolored Hat Society PR #3** merged as `0de330a589e34d251c4be74d03fc8aaf392c4e08`; validation run [44195779775](https://github.com/Wizardwalt/multicolored-hat-society/actions/runs/44195779775) passed.
+
+### OmniVault PR #8 — corrected, not yet verified
+- Initial Android CI run [44195694958](https://github.com/Wizardwalt/OmniVault-Android/actions/runs/44195694958) failed at Kotlin compilation: `MainActivity.kt:197:37 Unresolved reference 'query'`.
+- The cause was a stale heading reference left after search filtering was extracted into `ConversationFilters`.
+- Fixed the heading to derive from `searchQuery.trim()` in commit `02b52d7f430d892142cd2445449566c637d0b002` on the PR branch.
+- **Do not merge yet.** The corrected head needs a fresh Android unit-test run, debug APK assembly, and artifact upload. The prior failed run does not validate the corrected commit.
+
+### Current product truth
+The above merges are small, real code changes and test improvements. They do not complete Janus OS, Aria, OmniVault, or the two community products. Physical Android installation, end-to-end product workflows, live Aria provider/history integration, portable encrypted backups, OS-enforced plugin isolation, and production community backends remain open acceptance work.
