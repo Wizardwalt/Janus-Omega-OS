@@ -223,3 +223,29 @@ Do not merge any of these PRs until the exact head commit has a successful full 
 - Janus-OS PR #19 workflow [44043257513](https://github.com/Wizardwalt/Janus-OS/actions/runs/44043257513) is running; dependency/cache preparation is in progress.
 - Janus-OS PR #20 workflow [44043265298](https://github.com/Wizardwalt/Janus-OS/actions/runs/44043265298) has now been dispatched and is running.
 - All three PRs remain open. No merge is authorized until each corresponding exact-head workflow completes successfully.
+
+
+## 2026-11-17 execution update — next regression round merged
+
+The three follow-up regression PRs have now passed CI on their exact head commits and have been squash-merged:
+
+- **OmniVault PR #7** — merge commit `dc12b119ee1cb7feca7b448de497ebce83b04cb5`; workflow [44043253144](https://github.com/Wizardwalt/OmniVault-Android/actions/runs/44043253144) passed unit tests, debug APK assembly, and artifact upload. The new test rejects a truncated ZIP restore and verifies no original archive is committed.
+- **Janus-OS PR #19** — merge commit `e8d5757140e4a572ec8694e81cfa87a4e9bed28d`; workflow [44043257513](https://github.com/Wizardwalt/Janus-OS/actions/runs/44043257513) passed Clippy, workspace checks/tests, frontend and shell checks, release build, and binary checks. The test verifies a fresh Lua VM per plugin execution; it does not establish OS process isolation or a hard heap quota.
+- **Janus-OS PR #20** — merge commit `cec50d9be5c4732e7ade1c335df05ccf124df7e8`; workflow [44043265298](https://github.com/Wizardwalt/Janus-OS/actions/runs/44043265298) passed the same full Janus checks. The test verifies deterministic equal-score personal-memory ordering and provenance references.
+
+### Current verified project reality
+
+- **Janus-OS:** protected runtime and test coverage are progressing. Lua executes in a fresh VM per plugin request with an instruction limit and 256 KiB JSON input/output limits. These controls do not impose an OS-enforced heap/CPU/time boundary. The public README confirms that live Aria chat remains scripted, and non-serial hardware drivers remain unsupported.
+- **Aria:** the knowledge foundation, scoped stores, encrypted personal-memory implementation, ingestion/review flow, and retrieval tests exist in Janus-OS. Live model-provider wiring, durable user-scoped conversation history, chat-context integration, full semantic retrieval/evaluation, and host-managed key lifecycle remain incomplete. Do not confuse this with the separate Society's six tracks.
+- **OmniVault:** local-first import, original preservation, SHA-256 fingerprinting, search, and staged/validated ZIP backup/restore exist. Backup ZIPs remain unencrypted. Physical Android install, SAF, low-storage, restart, and byte-identical round-trip testing remain outstanding.
+- **Janus Community:** a standalone static prototype exists. Production identity, shared persistence, moderation/governance, privacy/export/backup, and deployment are not implemented.
+- **Multicolored Hat Society:** a standalone six-track static prototype exists. Production identity, persistent discussions, moderation/reporting, authorized-lab governance, privacy/export/backup, and deployment are not implemented.
+- **Janus-Omega-OS:** remains a separate lineage repository. Its README still contains legacy claims and simulated/stubbed capability descriptions; the protected-runtime README in Janus-OS is the more current operational contract. Full ancestry and recursive asset comparison remain outstanding.
+
+### Next three portfolio steps
+
+1. **Reconcile lineage and runtime truth:** complete a full Git ancestry and recursive tree comparison of Janus-Omega-OS versus Janus-OS; identify unique assets before any migration. Separately trace the Janus core-Lua startup path and authenticated API-to-plugin execution path so core modules are not described as connected until proven.
+2. **Close the three highest-risk product gaps through explicit design decisions:** Janus OS needs an OS-enforced plugin worker/resource boundary; Aria needs a selected provider strategy and a durable owner-scoped conversation-history contract; OmniVault needs a versioned portable authenticated-encryption backup and key-recovery design. Do not implement these by guessing.
+3. **Turn the two community prototypes into independently operable products:** document separate authorization, moderation, privacy, and data-retention policies; then select whether hosting infrastructure may be shared while keeping accounts, data, and governance independent. Implement only after those choices are recorded.
+
+No physical-device validation, live AI provider integration, portable encrypted backup, OS-level plugin isolation, production community backend, or deployed website is claimed by this update.
