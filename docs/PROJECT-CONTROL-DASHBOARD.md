@@ -249,3 +249,25 @@ The three follow-up regression PRs have now passed CI on their exact head commit
 3. **Turn the two community prototypes into independently operable products:** document separate authorization, moderation, privacy, and data-retention policies; then select whether hosting infrastructure may be shared while keeping accounts, data, and governance independent. Implement only after those choices are recorded.
 
 No physical-device validation, live AI provider integration, portable encrypted backup, OS-level plugin isolation, production community backend, or deployed website is claimed by this update.
+
+
+## 2026-11-17 product implementation round
+
+Five focused product changes have been opened; no PR is to be merged until its workflow passes on the exact head SHA.
+
+| Product | Change | PR | Exact head | CI |
+| --- | --- | --- | --- | --- |
+| Aria / Janus OS | Explicit stable-ID tie-break for equal relevance scores across knowledge, source passages, and personal memories | [Janus-OS #21](https://github.com/Wizardwalt/Janus-OS/pull/21) | `4f84e5368adfacd69973364139995b85c680ce85` | Run [44195516304](https://github.com/Wizardwalt/Janus-OS/actions/runs/44195516304): workspace tests passed; release build still running at last check |
+| Janus runtime | Run bounded synchronous Lua execution on Tokio blocking pool; stop logging raw plugin arguments | [Janus-OS #22](https://github.com/Wizardwalt/Janus-OS/pull/22) | `496778abc785397ffae3cfae3b3f198a9e37bb2b` | Run [44195587578](https://github.com/Wizardwalt/Janus-OS/actions/runs/44195587578): workspace tests passed; release build still running at last check |
+| OmniVault | Provider filter chips combined with text search; pure filtering helper and unit tests | [OmniVault #8](https://github.com/Wizardwalt/OmniVault-Android/pull/8) | `b9680d4c3e75f92d31b4d359ff2ac4d378f67937` | Run [44195694958](https://github.com/Wizardwalt/OmniVault-Android/actions/runs/44195694958): unit tests running at last check |
+| Janus Community | Correct malformed nested style element in the prototype page | [Janus Community #3](https://github.com/Wizardwalt/janus-community/pull/3) | `3ae680f8e33fd8b18484298132ee8c19d60c2a01` | Run [44195765955](https://github.com/Wizardwalt/janus-community/actions/runs/44195765955): passed |
+| Multicolored Hat Society | Correct malformed nested style element in the prototype page | [Society #3](https://github.com/Wizardwalt/multicolored-hat-society/pull/3) | `751a5e58accfbcef957465935879563c8eafbb00` | Run [44195779775](https://github.com/Wizardwalt/multicolored-hat-society/actions/runs/44195779775): queued at last check |
+
+### Implementation notes and limits
+
+- Aria retrieval remains lexical relevance scoring; this change makes tie order explicit but does not add semantic/vector retrieval.
+- Janus blocking-pool execution protects Tokio async worker scheduling and avoids logging user-supplied arguments. It is not OS process isolation and does not add hard memory or wall-clock limits.
+- OmniVault provider filtering is an on-device browsing feature. It does not alter originals or backup format.
+- The community and Society changes repair malformed HTML/CSS markup only. Both remain local-only prototypes without production accounts, shared publishing, or server persistence.
+
+The next code-focused work should continue with real device validation and the protected runtime's actual execution path. Do not begin production backend deployment until the account, authorization, privacy, moderation, and hosting decisions are approved.
