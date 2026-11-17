@@ -171,3 +171,11 @@ This section supersedes earlier status lines above wherever they conflict.
 ### External acceptance still needed
 
 A person with the Android device must install the generated debug APK and report results for first launch, import through the system file picker, backup to a user-selected SAF destination, restore from that destination, low-storage behavior, app restart, and byte-identical source verification. CI APK assembly is not a substitute for this test.
+
+
+## 2026-11-17 execution update — regression coverage round
+
+- **OmniVault PR #6** (test/restore-manifest-integrity-cases) initially failed unit-test compilation because a fixture parameter was substituted into the wrong test. The failed CI log identified the exact unresolved reference. The fixture was corrected in commit 3ea4690cc23c0efcedff79b30a29851bbb37f99f; a fresh Android build run [44042186455](https://github.com/Wizardwalt/OmniVault-Android/actions/runs/44042186455) is now running. The PR remains open and must not be merged until unit tests, APK assembly, and artifact upload pass.
+- **Janus-OS PR #17** adds a regression test for rejecting excessively nested plugin result tables at the JSON conversion boundary. It does not claim to limit Lua heap memory or isolate the VM. CI run [44042252468](https://github.com/Wizardwalt/Janus-OS/actions/runs/44042252468) is running.
+- **Janus-OS PR #18** adds Aria unified-retrieval coverage proving expired personal memories are excluded and source references remain attached to active memories. CI status is pending at this update.
+- These are test-only changes. Live Aria provider/chat history, encrypted OmniVault backups, a hard Janus Lua resource boundary, and production community services remain unimplemented pending their respective design decisions and acceptance evidence.
