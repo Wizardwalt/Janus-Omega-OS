@@ -215,3 +215,11 @@ The three previous regression PRs (#6 OmniVault, #17 Janus-OS, #18 Janus-OS) wer
 5. Updated this dashboard with the exact PRs, commit-level CI references, and remaining verification gates.
 
 Do not merge any of these PRs until the exact head commit has a successful full workflow. A missing workflow result is not a pass. Continue to keep portable encrypted backup, live provider/history integration, OS-enforced Lua resource isolation, and production community infrastructure gated on their explicit architecture decisions.
+
+
+### CI dispatch confirmation — 2026-11-17
+
+- OmniVault PR #7 workflow [44043253144](https://github.com/Wizardwalt/OmniVault-Android/actions/runs/44043253144) is running; unit tests are in progress.
+- Janus-OS PR #19 workflow [44043257513](https://github.com/Wizardwalt/Janus-OS/actions/runs/44043257513) is running; dependency/cache preparation is in progress.
+- Janus-OS PR #20 workflow [44043265298](https://github.com/Wizardwalt/Janus-OS/actions/runs/44043265298) has now been dispatched and is running.
+- All three PRs remain open. No merge is authorized until each corresponding exact-head workflow completes successfully.
