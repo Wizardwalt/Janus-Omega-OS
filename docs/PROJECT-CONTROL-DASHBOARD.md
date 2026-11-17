@@ -142,3 +142,32 @@ The next implementation gates for live Aria provider/history wiring, Janus trust
 - Janus-OS PR #16 merged to `main`; CI [44040722746](https://github.com/Wizardwalt/Janus-OS/actions/runs/44040722746) passed every job step, including Clippy, workspace tests, release build, and binary checks.
 - OmniVault PR #5 merged to `main`; CI [44040727648](https://github.com/Wizardwalt/OmniVault-Android/actions/runs/44040727648) passed all unit tests, debug APK assembly, and artifact upload. It rejects unreferenced archive entries before originals are committed.
 - The previous recovery PR #6 remains closed as superseded, not merged. Current main's recovery command is the maintained implementation.
+
+
+## 2026-11-17 continuation — latest verified state
+
+This section supersedes earlier status lines above wherever they conflict.
+
+### Completed since the previous dashboard update
+
+- **Janus-OS PR #16 is merged.** CI run [44040722746](https://github.com/Wizardwalt/Janus-OS/actions/runs/44040722746) completed successfully. It adds partial-schema recovery coverage and confirms that optional tables may be absent without breaking restore, existing sessions are invalidated, and unrelated application state is preserved.
+- **OmniVault PR #5 is merged.** CI run [44040727648](https://github.com/Wizardwalt/OmniVault-Android/actions/runs/44040727648) completed successfully, including unit tests, debug APK assembly, and artifact upload. Restore rejects unreferenced ZIP archive entries before committing originals.
+- **OmniVault PR #6 is now open:** [restore manifest metadata rejection](https://github.com/Wizardwalt/OmniVault-Android/pull/6). It adds tests for a mismatched aggregate byte count and an unsafe original filename, both asserting no original is committed. CI has not yet reported a run for this head; do not merge until it passes.
+
+### Next implementation tracks — active work and gates
+
+1. **Janus runtime safety:** inspect the current mlua memory-limit and worker-isolation options, then implement only after selecting the hard resource-boundary design. Keep plugin VMs separate from trusted-core state. Add authenticated API → plugin → audit integration coverage. Physical ArchISO/serial acceptance remains external.
+2. **Aria:** select a provider-neutral adapter contract and a first remote/local provider pair; then add user-scoped conversation persistence, retention/export/deletion, and provenance-linked memory context. Keep model credentials server-side and all model/tool output untrusted. No live provider is connected yet.
+3. **OmniVault:** continue adversarial restore tests (PR #6), then choose a portable encrypted-backup/key-recovery format before implementing encryption. Existing backup format omnivault.backup.v1 remains plaintext. Device install, Storage Access Framework, low-storage, and round-trip tests require a physical Android device and are not claimed complete.
+4. **Janus Community and Multicolored Hat Society:** choose production hosting/API/database and identity architecture separately for each site, or explicitly approve a shared identity service with independent product authorization. Define privacy, deletion/export, moderation, appeals, audit, backup, and incident response before production accounts or publishing are enabled.
+
+### Decisions required before production/security-sensitive implementation
+
+- **Aria provider and history:** confirm first provider(s), whether local inference must work fully offline, where the runtime is hosted, and the required conversation retention/export/deletion policy.
+- **OmniVault encryption:** choose whether backups must restore on a different device without the original Android Keystore. This determines whether portable passphrase-based key wrapping is required in addition to device-bound keys. No key scheme has been selected.
+- **Janus sandbox:** choose a hard in-process Lua allocator limit only if supported and demonstrably enforced by the exact mlua/Lua build, or an isolated worker process with OS-enforced memory/CPU/time limits. JSON byte limits and instruction hooks are not memory isolation.
+- **Community production stack:** choose hosting constraints, expected scale, account recovery model, and whether the two sites may share infrastructure. Their user databases, moderation policies, and authorization remain independent regardless.
+
+### External acceptance still needed
+
+A person with the Android device must install the generated debug APK and report results for first launch, import through the system file picker, backup to a user-selected SAF destination, restore from that destination, low-storage behavior, app restart, and byte-identical source verification. CI APK assembly is not a substitute for this test.
