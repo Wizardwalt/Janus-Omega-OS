@@ -315,3 +315,12 @@ The above merges are small, real code changes and test improvements. They do not
 4. **Communities:** both websites remain local-only prototypes. Production identity, persistence, moderation, privacy/export, and deployment require independent architecture decisions for each community.
 
 **External test still required:** install the debug APK on a physical Android device and report device/Android version plus import → backup → restore → re-backup results. CI success alone does not close this gate.
+
+
+### Janus runtime update — per-plugin Lua heap cap under CI
+
+- **Janus-OS PR #23**: [Enforce a per-plugin Lua heap limit](https://github.com/Wizardwalt/Janus-OS/pull/23), head `e05ffbc6a7e33c201157dacae6629ee06331163e`.
+- Adds an allocator-enforced **16 MiB cap per fresh Lua VM** using the existing mlua 0.9 / Lua 5.4 runtime and a regression test that attempts a 32 MiB allocation.
+- The limit is independent of the existing 100,000-instruction and 256 KiB JSON input/output limits. This closes the Lua-heap-quota gap at the VM level.
+- CI run [44199948036](https://github.com/Wizardwalt/Janus-OS/actions/runs/44199948036) is in progress. Do not merge until the exact head passes.
+- This is not an OS process boundary, total runtime memory quota, or complete plugin isolation. Process-level CPU/memory limits, cancellation, and authenticated API-to-plugin audit integration remain open.
