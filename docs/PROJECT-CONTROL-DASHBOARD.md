@@ -179,3 +179,20 @@ A person with the Android device must install the generated debug APK and report
 - **Janus-OS PR #17** adds a regression test for rejecting excessively nested plugin result tables at the JSON conversion boundary. It does not claim to limit Lua heap memory or isolate the VM. CI run [44042252468](https://github.com/Wizardwalt/Janus-OS/actions/runs/44042252468) is running.
 - **Janus-OS PR #18** adds Aria unified-retrieval coverage proving expired personal memories are excluded and source references remain attached to active memories. CI status is pending at this update.
 - These are test-only changes. Live Aria provider/chat history, encrypted OmniVault backups, a hard Janus Lua resource boundary, and production community services remain unimplemented pending their respective design decisions and acceptance evidence.
+
+
+## 2026-11-17 execution update — three regression PRs merged
+
+This update supersedes the immediately preceding “regression coverage round” status above.
+
+- **OmniVault PR #6 is merged** to `main` (merge commit `ce5b4d05b1b91838b89d2a215885f42b981027c8`). Android CI run [44042186455](https://github.com/Wizardwalt/OmniVault-Android/actions/runs/44042186455) passed unit tests, debug APK assembly, and artifact upload. The added tests cover manifest aggregate-byte-count mismatch and unsafe original filenames, asserting restore does not commit originals on failure.
+- **Janus-OS PR #17 is merged** to `main` (merge commit `1f7026442bac6f61f91014086a350b59e0269ac2`). CI run [44042252468](https://github.com/Wizardwalt/Janus-OS/actions/runs/44042252468) passed Clippy, workspace checks/tests, frontend and shell checks, release build, and binary checks. The regression test confirms excessively nested plugin result tables are rejected at the JSON conversion boundary. This is not a Lua VM memory quota or process-isolation boundary.
+- **Janus-OS PR #18 is merged** to `main` (merge commit `baadafc3aeb695bf65eb49f75d90b01a8296e102`). CI run [44042359954](https://github.com/Wizardwalt/Janus-OS/actions/runs/44042359954) passed the same workspace validation and release build. The test confirms expired personal memories are excluded from unified retrieval and source references remain attached to active results.
+- No production provider, durable conversation history, portable encrypted backup, OS-enforced Lua resource isolation, or production community backend was introduced by these test-only merges.
+
+### Next four bounded steps
+
+1. Extend OmniVault restore tests for digest/size mismatch and truncated archives; preserve the invariant that no originals are committed until the entire archive is validated.
+2. Add Janus plugin cancellation/timeout regression coverage at the existing public execution boundary; do not imply a hard CPU or heap quota.
+3. Extend Aria retrieval tests for owner isolation and deterministic ranking/tie behavior, retaining provenance references.
+4. Reconcile this dashboard against the live default branches and CI before selecting architecture-sensitive implementation work. The provider, encryption/key-recovery, sandbox-isolation, and production community-stack decisions remain gated; do not guess them.
