@@ -196,3 +196,22 @@ This update supersedes the immediately preceding “regression coverage round”
 2. Add Janus plugin cancellation/timeout regression coverage at the existing public execution boundary; do not imply a hard CPU or heap quota.
 3. Extend Aria retrieval tests for owner isolation and deterministic ranking/tie behavior, retaining provenance references.
 4. Reconcile this dashboard against the live default branches and CI before selecting architecture-sensitive implementation work. The provider, encryption/key-recovery, sandbox-isolation, and production community-stack decisions remain gated; do not guess them.
+
+
+## 2026-11-17 continuation — next regression round
+
+The three previous regression PRs (#6 OmniVault, #17 Janus-OS, #18 Janus-OS) were merged after their CI workflows passed, as recorded above. This round opens three additional test-only PRs:
+
+- **OmniVault PR #7 — truncated restore archive rejection:** [PR #7](https://github.com/Wizardwalt/OmniVault-Android/pull/7). Adds a truncated ZIP fixture and checks no original file is committed on rejection. Android CI run [44043253144](https://github.com/Wizardwalt/OmniVault-Android/actions/runs/44043253144) was in progress at the time of this update.
+- **Janus-OS PR #19 — fresh plugin VM state isolation:** [PR #19](https://github.com/Wizardwalt/Janus-OS/pull/19). Verifies globals written in one plugin execution do not leak into the next. Janus CI run [44043257513](https://github.com/Wizardwalt/Janus-OS/actions/runs/44043257513) was in progress at the time of this update. This preserves the per-execution VM contract but does not claim OS process isolation or a hard heap quota.
+- **Janus-OS PR #20 — deterministic Aria retrieval ties:** [PR #20](https://github.com/Wizardwalt/Janus-OS/pull/20). Verifies equal-score personal memory results use stable ID ordering and retain their individual source references. No workflow run was returned for this head at the time of this update; verify workflow dispatch/status before merge.
+
+### Five-step execution record
+
+1. Added a truncated-archive rejection test to OmniVault; awaiting Android CI.
+2. Added a fresh-VM-per-execution isolation regression test to Janus; awaiting Janus CI.
+3. Added deterministic equal-score retrieval ordering and provenance assertions to Aria; CI dispatch/status still needs confirmation.
+4. Opened the three focused PRs against current `main`; none is merged at this update.
+5. Updated this dashboard with the exact PRs, commit-level CI references, and remaining verification gates.
+
+Do not merge any of these PRs until the exact head commit has a successful full workflow. A missing workflow result is not a pass. Continue to keep portable encrypted backup, live provider/history integration, OS-enforced Lua resource isolation, and production community infrastructure gated on their explicit architecture decisions.
