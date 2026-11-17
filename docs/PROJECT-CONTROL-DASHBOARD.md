@@ -291,3 +291,10 @@ The five-PR product implementation round has advanced:
 
 ### Current product truth
 The above merges are small, real code changes and test improvements. They do not complete Janus OS, Aria, OmniVault, or the two community products. Physical Android installation, end-to-end product workflows, live Aria provider/history integration, portable encrypted backups, OS-enforced plugin isolation, and production community backends remain open acceptance work.
+
+
+### OmniVault provider-filter PR #8 — corrected CI in progress
+- Corrected head: `02b52d7f430d892142cd2445449566c637d0b002`.
+- Fresh CI run [44198721688](https://github.com/Wizardwalt/OmniVault-Android/actions/runs/44198721688) has passed Android SDK/Gradle setup and **unit tests**.
+- Debug APK assembly is currently running; artifact upload is pending.
+- PR #8 is mergeable, but remains open. Do not merge until this exact-head run succeeds and the debug APK artifact is uploaded successfully.
