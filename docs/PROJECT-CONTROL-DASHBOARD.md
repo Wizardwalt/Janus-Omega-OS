@@ -135,3 +135,10 @@ The next implementation gates for live Aria provider/history wiring, Janus trust
 
 - Janus-OS PR #16 is now **merged** to `main`. CI run [44040722746](https://github.com/Wizardwalt/Janus-OS/actions/runs/44040722746) passed Clippy, web/workspace cargo checks, all workspace tests, frontend/shell checks, release build, and binary existence checks. It adds partial-schema recovery coverage and confirms unrelated application state is preserved while existing session data is cleared.
 - OmniVault PR #5 remains open while CI run [44040727648](https://github.com/Wizardwalt/OmniVault-Android/actions/runs/44040727648) completes. Unit tests passed; debug APK assembly was still running at the last check. Do not merge until APK assembly/upload and workflow completion succeed.
+
+
+### Fresh verification update — 2026-11-17 (final)
+
+- Janus-OS PR #16 merged to `main`; CI [44040722746](https://github.com/Wizardwalt/Janus-OS/actions/runs/44040722746) passed every job step, including Clippy, workspace tests, release build, and binary checks.
+- OmniVault PR #5 merged to `main`; CI [44040727648](https://github.com/Wizardwalt/OmniVault-Android/actions/runs/44040727648) passed all unit tests, debug APK assembly, and artifact upload. It rejects unreferenced archive entries before originals are committed.
+- The previous recovery PR #6 remains closed as superseded, not merged. Current main's recovery command is the maintained implementation.
