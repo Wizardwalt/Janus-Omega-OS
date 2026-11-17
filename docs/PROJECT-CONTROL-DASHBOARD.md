@@ -68,3 +68,53 @@ The independent **Multicolored Hat Society** has **six communities** (White, Bla
 ## Limitations
 
 This dashboard reports repository evidence and CI status observed during the current review. It does not claim physical-device validation, ISO boot validation, production deployment, encrypted OmniVault backups, live AI provider integration, or deployed community sites. The two community repositories exist and their initial static-site and local-only profile/discussion prototype checks have passed. The new prototype PRs remain open; production authentication, shared persistence, moderation, privacy/export/backup, and deployment are not implemented.
+
+
+## 2026-11-16 merge round — authoritative status update
+
+The following pull requests have now been merged into their respective `main` branches:
+
+- **Janus-OS:** #15 (plugin JSON bounds and Aria delivery gates), #10 (Aria knowledge architecture), #12 (runtime/web CI), #13 (repository lineage report), #14 (runtime reality audit), and #8 (encrypted append-only Aria memory journal).
+- **Janus-Omega-OS:** #5 (ecosystem foundation/dashboard) and #6 (lineage preservation documentation).
+- **OmniVault-Android:** #4 (restore negative tests and acceptance gates), #3 (Stage 1 audit), and #1 (vault reliability implementation).
+- **Janus-Community:** #1 (local-only profile/discussion prototype).
+- **Multicolored-Hat-Society:** #1 (local-only six-track profile/discussion prototype).
+
+**Still open:** Janus-OS PR #6, “Add safe one-shot Janus recovery restore.” Its exact head SHA `62f5d394206bae9053b78229d4cf5a902956b332` has a failing `Build & Check` workflow: workspace checks pass, but workspace tests fail. It has not been merged. This is a concrete blocker to diagnose and fix before merging.
+
+## Next three implementation steps per initiative
+
+### Janus OS
+1. Define a read-only, allowlisted trusted-core Lua module interface; do not share a mutable Lua VM with plugins.
+2. Add a real VM memory/resource boundary (or isolated worker-process boundary), plus adversarial memory, instruction, JSON, output, and cancellation tests. The 256 KiB JSON limits are not a VM memory quota.
+3. Add end-to-end authenticated API → plugin → audit tests, then reproduce and boot the actual ArchISO in a VM.
+
+### Aria
+1. Implement provider-neutral live adapters for one OpenAI-compatible remote provider and one local model, with server-side secrets and timeout/cancellation/rate/size limits.
+2. Implement durable user-scoped conversation history, ownership enforcement, migrations, retention, export, and deletion; keep it separate from long-term memory.
+3. Integrate provenance-linked, authorized memory retrieval into chat context with correction/review/deletion and read-only capability boundaries.
+
+### OmniVault
+1. Expand adversarial restore tests for duplicate/unreferenced entries, manifest errors, traversal, digest/size mismatch, truncated/oversized/ZIP-bomb inputs, and interruption recovery.
+2. Design and implement a versioned authenticated-encryption backup format with vetted Android crypto APIs, key lifecycle/recovery/rotation, and wrong-key/tamper tests. Existing backups remain unencrypted until this is implemented.
+3. Perform physical Android install/SAF/low-storage tests and verify byte-identical import → backup → restore → re-backup across app restarts.
+
+### Janus Community
+1. Decide and document production web/API/database architecture and privacy/threat model.
+2. Implement real identity, sessions, account recovery, profile ownership, and privacy controls.
+3. Implement shared discussions/replies plus reporting, moderation, appeals, rate limits, audit, backup, and recovery.
+
+### Multicolored Hat Society
+1. Decide and document production architecture and the authorized-lab safety model for all six communities.
+2. Implement least-privilege identity, sessions, profile privacy, and role/lab authorization checks.
+3. Implement persistent six-track discussions, human reporting/moderation/appeals, incident escalation, audit, backup, and recovery.
+
+The community prototypes are still local-only; no production account, shared publishing, backend, or deployment is implied by the merges.
+
+## Current unverified external acceptance
+
+- Janus-OS PR #6 recovery restore remains blocked by failing workspace tests.
+- No physical Android device acceptance has been performed for OmniVault.
+- No physical serial hardware or ArchISO VM boot acceptance has been demonstrated.
+- Aria live provider/chat-history wiring is not implemented yet.
+- Community production authentication, persistence, moderation, privacy controls, and deployment are not implemented.
