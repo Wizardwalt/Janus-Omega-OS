@@ -333,3 +333,10 @@ The above merges are small, real code changes and test improvements. They do not
 - Appends are transactional; list/read/delete queries are owner-scoped; content and identifiers are bounded; deletion cascades to events. Tests cover owner separation, delete isolation, invalid roles, and oversized content.
 - **Not yet integrated** into the authenticated API, chat UI, live provider, or export/retention workflow. The API must always derive owner IDs from the authenticated session.
 - CI status: waiting for/monitoring the workflow associated with the exact PR head; do not merge before full CI passes.
+
+
+### Fresh CI status — Janus runtime and Aria foundations
+
+- Janus-OS PR #23 workflow [44199948036](https://github.com/Wizardwalt/Janus-OS/actions/runs/44199948036): Clippy, both cargo checks, workspace tests, frontend/shell checks, and module checks have passed; release build is running.
+- Janus-OS PR #24 workflow [44200105084](https://github.com/Wizardwalt/Janus-OS/actions/runs/44200105084): dependency setup is running; no test result is claimed yet.
+- Both PRs remain open and must pass on their exact heads before merge.
