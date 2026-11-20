@@ -1,0 +1,45 @@
+name: Recursive submodule checkout verification
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  recursive-checkout:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the Omega PR head with recursive submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Verify the historical repository has no orphaned self-gitlink
+        shell: bash
+        run: |
+          if git ls-files --stage | awk '$1 == "160000" && $4 == "Janus-Omega-OS" { found = 1 } END { exit !found }'; then
+            echo "Unexpected recursive self-gitlink remains in Janus-Omega-OS."
+            exit 1
+          fi
+          git submodule status --recursive
+
+      - name: Check out the canonical Janus OS integration source
+        uses: actions/checkout@v4
+        with:
+          repository: Wizardwalt/Janus-OS
+          ref: main
+          path: janus-os
+          submodules: false
+
+      - name: Verify Janus OS still maps and resolves the Omega submodule pin
+        shell: bash
+        run: |
+          grep -F 'path = Janus-Omega-OS' janus-os/.gitmodules
+          git -C janus-os ls-tree HEAD Janus-Omega-OS | grep -E '^160000 commit '
+          git -C janus-os submodule update --init --recursive --depth 1 Janus-Omega-OS
+          expected="$(git -C janus-os ls-tree HEAD Janus-Omega-OS | awk '{ print $3 }')"
+          actual="$(git -C janus-os/Janus-Omega-OS rev-parse HEAD)"
+          test "$actual" = "$expected"
